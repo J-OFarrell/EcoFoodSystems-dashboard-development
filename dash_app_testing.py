@@ -46,20 +46,8 @@ green_gradient = [
     "#d1e7a8"
 ]
 
-green_pie =  [
-    "#095d40",  
-    "#8aa97f",  
-    "#206044",  
-    "#d1e7a8",   
-    "#6f946d",  
-    "#c1d88e", 
-    "#547d5b",  
-    "#aabf7e",  
-    "#3e571e",  
-]
-
-
-brand_colors = {    "Brown":         "#313715",
+brand_colors = {    'Black':         '#333333',
+                    "Brown":         "#313715",
                     "Red":           "#A80050",
                     "Dark green":    "#939f5c",
                     "Mid green":     "#bbce8a",
@@ -67,6 +55,42 @@ brand_colors = {    "Brown":         "#313715",
                     "White":         "#ffffff"  
 }
 
+greens_pie_palette = [
+    brand_colors['Light green'],   # "#E8F0DA"
+    brand_colors['Mid green'],     # "#bbce8a"
+    brand_colors['Dark green'],    # "#939f5c"
+    "#b7c49a",                     # lighter tint of Dark green
+    "#d6e5b8",                     # lighter tint of Mid green
+    "#e3f6d5",                     # very light green
+    "#c1d88e",                     # soft khaki-green
+    "#d1e7a8",                     # pastel green
+    "#aabf7e",                     # olive green
+    "#8aa97f",                     # muted green
+]
+
+reds_pie_palette = [
+    "#a80050",   # main brand red
+    "#84003d",   # deep accent red
+    "#C97A9A",   # soft pink
+    "#E07A5F",   # warm accent
+    "#F2D16B",   # harvest yellow (for contrast)
+    "#F5F5F5",   # neutral light
+    "#7B5E34",   # earth brown
+    "#C97A9A",   # repeat pink
+    "#E07A5F",   # repeat accent
+    "#F2D16B"    # repeat yellow
+]
+
+plotting_palette_cat_cat = [
+    "#a80050",  
+    "#84003d",   
+    "#F5F5F5",   
+    '#E8F0DA',
+    "#bbce8a",
+    "#939f5c",
+    "#E07A5F",   
+    "#d33030",
+]
 
 tabs = [
         'Food Systems Stakeholders',
@@ -135,10 +159,19 @@ fig_ch.update_layout(
 # Initialising the stakeholder piechart
 df_sh_area_count = pd.DataFrame(df_sh['Area of Activity in the food system'].value_counts()).reset_index()
 df_sh_area_count.columns = ['name','count']
+slice_colors = plotting_palette_cat  # or greens_pie_palette
+text_colors = []
+for color in slice_colors:
+    # Simple luminance check for hex color
+    rgb = tuple(int(color.lstrip('#')[i:i+2], 16) for i in (0, 2, 4))
+    luminance = 0.299*rgb[0] + 0.587*rgb[1] + 0.114*rgb[2]
+    text_colors.append('white' if luminance < 180 else brand_colors['Brown'])
+
 initial_piechart_1 = px.pie(df_sh_area_count, values='count', names='name', hole=0, 
-                color_discrete_sequence=green_pie)
+                color_discrete_sequence=slice_colors)
+
 initial_piechart_1.update(layout_showlegend=False)
-initial_piechart_1.update_traces(hoverinfo='percent', textinfo='label', textposition='inside', insidetextorientation='radial')
+initial_piechart_1.update_traces(textfont_color=text_colors, hoverinfo='percent', textinfo='label', textposition='inside', insidetextorientation='radial')
 initial_piechart_1.update_layout(margin = dict(t=0.25, l=0.25, r=0.25, b=0.25))
 
 # Preloading Sankey Diagram 2022
@@ -157,7 +190,7 @@ target_indices = df_sankey_final['target'].apply(lambda x: labels.index(x))
 weights = df_sankey_final['supply']
 
 #node_colors = [brand_colors['Seagreen'] if l in [ 'Hanoi rural', 'Hanoi urban'] else brand_colors['Dark khaki'] if "Hanoi" == l else brand_colors['Dark slate grey'] for l in labels]
-node_colors = [brand_colors['Dark green'] for l in labels]
+node_colors = [brand_colors['Red'] for l in labels]
 link_colors = ["rgba(209, 231, 168, 0.5)" for link in df_sankey_final['source']]
 fig_sankey = go.Figure(data=[go.Sankey(
     node=dict(label=labels, color=node_colors, pad=15, thickness=20),
@@ -170,11 +203,7 @@ fig_sankey.update_layout(
     paper_bgcolor=brand_colors['White'],
     plot_bgcolor=brand_colors['White'],
     margin=dict(l=10, r=10, t=30, b=10),  # reduce margins
-    #height=750,  
-    width=None  # let it auto-scale
 )
-fig_sankey.update_layout(transition={'duration':50, 'easing':'cubic-in-out'})
-
 
 # Custom styling 
 tabs_style = {
@@ -196,13 +225,14 @@ tabs_style = {
             }
 
 kpi_card_style ={"textAlign": "center", 
-                "backgroundColor": brand_colors['Dark green'], 
-                "color":brand_colors['Light green'],
+                "backgroundColor": brand_colors['White'], 
+                "color":brand_colors['Brown'],
                 "font-weight":"bold",
                 "border-radius": "8px",
                 "padding":"10px",
                 "margin-bottom":"10px",
-                "flexDirection": "column"
+                "flexDirection": "column",
+                "border": "2px solid " + brand_colors['White'],
                 }
 
 header_style = {"color": brand_colors['Brown'], 
@@ -230,7 +260,7 @@ def poverty_tab_layout():
                         html.H2("Multidimensional Poverty", style=header_style),
                         #html.P(str(lorem.words(30)), style={"padding": "0", "textAlign": "justify"}),
                                 ])
-                        ], style={"height": "100%", 
+                        ], style={"height": "8vh", 
                                   "padding":"6px" ,
                                   "box-shadow": "0 2px 6px rgba(0,0,0,0.1)",
                                   "backgroundColor": brand_colors['Mid green'],
@@ -340,12 +370,13 @@ def stakeholders_tab_layout():
                             style=header_style),
                     #html.P(str(lorem.words(30)), style={"textAlign": "justify", "padding":"12px" })
                 ])
-            ], style={  "margin-bottom": "15px", 
+            ], style={  "height": "8vh", 
+                        "padding":"6px" ,
                         "box-shadow": "0 2px 6px rgba(0,0,0,0.1)",
                         "backgroundColor": brand_colors['Mid green'],
                         "margin-bottom": "15px",
                         "border-radius": "10px"
-                              }),
+                        }),
 
             # Card 2: Filter Dropdown
             dbc.Card([
@@ -483,72 +514,101 @@ def supply_tab_layout():
                         html.H2('Rice Flow Estimations', 
                                 style=header_style),
                     ])
-                ], style={"margin-bottom": "10px", 
+                ], style={"height": "8vh",
+                          "width":"100%",
+                          "padding":"6px" ,
                           "box-shadow": "0 2px 6px rgba(0,0,0,0.1)",
                           "backgroundColor": brand_colors['Mid green'],
-                          "border-radius": "10px"}),
+                          "border-radius": "10px",
+                          'margin':"0px 0px 10px 0px"
+                                  }),
+
 
                 dbc.Card([
                     dbc.CardBody([
-                        html.H4("Total Flow", className="card-title"),
-                        html.H2(id="kpi-total-flow", className="card-text")
+                        html.H3("Total Flow", className="card-title"),
+                        html.H1(id="kpi-total-flow", className="card-text")
                     ])
-                ], style=kpi_card_style),
+                ], style={**kpi_card_style, "width":"90%",
+                            "alignItems": "center"}),
 
                 dbc.Card([
                     dbc.CardBody([
-                        html.H4("Urban Share", className="card-title"),
-                        html.H2(id="kpi-urban-share", className="card-text"),
-                        dcc.Graph(id="urban-donut", style={"height": "100px"}, config={"displayModeBar": False})
+                        html.H3("Urban Share", className="card-title"),
+                        dcc.Graph(id="urban-indicator", style={"height": "100px", 
+                                                                'padding':'4px',
+                                                                "alignItems": "center", 
+                                                                "justifyContent": "center"}, config={"displayModeBar": False})
+                        #html.H2(id="kpi-urban-share", className="card-text"),
+                        #dcc.Graph(id="urban-donut", style={"height": "100px"}, config={"displayModeBar": False})
                     ])
-                ], style=kpi_card_style),
+                ], style={**kpi_card_style, "width":"90%",
+                            "alignItems": "center"}),
+
+                dbc.Card([
+                    dbc.CardBody([
+                        dcc.Markdown('Data Source: General Statistics Office of Vietnam (GSO). 2025. Production of paddy by province. Consulted on: June 2025. Link: (https://www.nso.gov.vn/en/agriculture-forestry-and-fishery/). Estimation method: Trade attractiveness method, including two steps as follows: A) Estimation of Rice Net Supply (Consumption – Production) for every province, based on Consumption (Population * Consumption per person), and Production (Paddy production/Live weight/Raw production * Conversion rate). B) Distribute the rice consumption of Hanoi, considering: Province Production, National Production, and International Import.',
+                                        style={'textAlign': 'center', "padding":"10px", "font-style":'italic', 'font-size':'0.5em', 'color':brand_colors['Brown']}
+                                    )
+                                ])
+                        ], style={"height": "auto",
+                                "width":"100%",
+                                "padding":"6px" ,
+                                "box-shadow": "0 2px 6px rgba(0,0,0,0.1)",
+                                "backgroundColor": brand_colors['White'],
+                                "border-radius": "10px",
+                                'margin-bottom':"10px",
+                                "marginTop": "auto" 
+                                        }),
 
             ], style={
                 "flex": "0 0 20%",  # Changed: Narrow left column for KPI cards
+                "minWidth":"20%",
                 "display": "flex",
                 "flexDirection": "column",
                 "padding": "10px",
                 "margin-left":"20px",
-                "alignItems": "center",
-                "justifyContent": "space-between",
+                "alignItems": "center"
             }),
 
             # Sankey + Slider + Footnote (right)
             html.Div([
                 dbc.Card([
                     dbc.CardBody([
+                        html.Div([
                             dcc.Loading(
                                 type="circle",
                                 children=dcc.Graph(
                                     id="sankey-graph", 
                                     figure=fig_sankey,
-                                    style={"width": "100%", "height":"85%"}  
+                                    style={"width": "100%", "height":"70vh"}  
                                 )
                             ),
+                        ], style={"width": "100%"}),
 
-                            html.Div([dcc.Slider(
-                                id='slider', min=2010, max=2022, value=2022, step=2,
-                                marks={year: str(year) for year in range(2010,2023,2)},
-                                tooltip={"placement": "bottom", "always_visible": True},
-                                updatemode='mouseup'
-                            )], style={"margin-top":"10px"}),
+                        html.Div([dcc.Slider(
+                            id='slider', min=2010, max=2022, value=2022, step=2,
+                            marks={year: str(year) for year in range(2010,2023,2)},
+                            tooltip={"placement": "bottom", "always_visible": True},
+                            updatemode='mouseup'
+                            )
+                        ], style={"margin-top":"10px", 
+                                       "color":brand_colors['Brown'],
+                                       "width": "100%", 
+                                       "height":"10%"}),
 
-                    ])
-                ],style={**card_style, "height":"90%"}),
-
-                #dcc.Markdown(
-                #    'Data Source: General Statistics Office of Vietnam (GSO). 2025. Production of paddy by province. Consulted on: June 2025. Link: (https://www.nso.gov.vn/en/agriculture-forestry-and-fishery/). Estimation method: Trade attractiveness method, including two steps as follows: A) Estimation of Rice Net Supply (Consumption – Production) for every province, based on Consumption (Population * Consumption per person), and Production (Paddy production/Live weight/Raw production * Conversion rate). B) Distribute the rice consumption of Hanoi, considering: Province Production, National Production, and International Import.',
-                #    style={'textAlign': 'center', "padding":"10px", "font-style":'italic', 'font-size':'0.5em'}
-                #)
+                    ],style={"display": "flex", "flexDirection": "column", "height": "100%"})
+                ],style={**card_style, "height": "90vh", "width":"60vw"}),
 
             ], style={
                 "flex": "1 1 60%",  
-                "height": "80%",
+                "height": "calc(100vh - 20px)",
                 "display": "flex",
                 "flexDirection": "column",
                 "padding": "10px",
-                "margin":"10px",
-                "minHeight": 0
+                "margin":"0",
+                "backgroundColor": brand_colors['Light green'],
+                "marginTop": "auto" 
             }),
 
         ], style={
@@ -769,9 +829,18 @@ def update_pie(filter_by, clickData, current_selected):
         new_selected = None if clicked == current_selected else clicked
         pull = [0.2 if name==new_selected else 0 for name in df_count['name']]
 
+    slice_colors = plotting_palette_cat  # or greens_pie_palette
+    text_colors = []
+    for color in slice_colors:
+        # Simple luminance check for hex color
+        rgb = tuple(int(color.lstrip('#')[i:i+2], 16) for i in (0, 2, 4))
+        luminance = 0.299*rgb[0] + 0.587*rgb[1] + 0.114*rgb[2]
+        text_colors.append('white' if luminance < 180 else brand_colors['Brown'])
+
+
     fig = px.pie(df_count, values='count', names='name', hole=0,
-                 color_discrete_sequence=green_pie)
-    fig.update_traces(pull=pull, hoverinfo='percent', textinfo='label', textposition='inside', insidetextorientation='radial')
+                 color_discrete_sequence=slice_colors)
+    fig.update_traces(textfont_color=text_colors, pull=pull, hoverinfo='percent', textinfo='label', textposition='inside', insidetextorientation='radial')
     fig.update_layout(margin=dict(t=0.1, l=0.1, r=0.1, b=0.1), showlegend=False)
 
     return fig, new_selected
@@ -797,8 +866,8 @@ def filter_table(filter_by, selected):
 
 @app.callback(
     [Output("kpi-total-flow", "children"),
-     Output("kpi-urban-share", "children"),
-     Output("urban-donut", "figure"),
+     #Output("kpi-urban-share", "children"),
+     Output("urban-indicator", "figure"),
      Output("sankey-graph", "figure")],
     Input("slider", "value"),
     prevent_initial_call=False)
@@ -819,6 +888,10 @@ def update_sankey(value):
     target_indices = df_sankey_final['target'].apply(lambda x: labels.index(x))
     weights = df_sankey_final['supply']
 
+    node_colors = [brand_colors['Red'] for l in labels]
+    link_colors = ["rgba(209, 231, 168, 0.5)" for link in df_sankey_final['source']]
+
+
     # Calculating KPIs 
     total_flow = flow1.drop_duplicates()["supply"].sum()
     total_flow_text = f"{total_flow:,.0f} tons"
@@ -826,7 +899,7 @@ def update_sankey(value):
     total = flow2.groupby(['source','target']).sum().reset_index()['supply'].sum()
     urban_only = flow2.groupby(['source','target']).sum().reset_index().set_index('target').loc['Hanoi urban'].values[1]
     urban_share = urban_only/total *100
-    urban_share_text = f"{urban_share:.1f}%"
+    #urban_share_text = f"{urban_share:.1f}%"
 
     fig = go.Figure(go.Sankey(
         node=dict(label=labels, color=node_colors, pad=15, thickness=20),
@@ -842,18 +915,34 @@ def update_sankey(value):
         margin=dict(l=10, r=10, t=30, b=10), 
         width=None)
 
-    urban_fig = go.Figure(go.Pie(
-        values=[urban_share, 100-urban_share],
-        hole=0.6,
-        marker=dict(colors=[brand_colors['Dark green'], brand_colors['Light green']]),
-        textinfo="none"
-    ))
+    #urban_fig = go.Figure(go.Pie(
+    #    values=[urban_share, 100-urban_share],
+    #    hole=0.6,
+    #    marker=dict(colors=[brand_colors['Dark green'], brand_colors['Light green']]),
+    #    textinfo="none"
+    #))
+
+    urban_fig = go.Figure(go.Indicator(
+                            mode = "gauge+number",
+                            value = urban_share,
+                            title = {'text': "Urban Share"},
+                            number={
+                                'suffix': '%',  # Adds % after the number
+                                'font': {'color': brand_colors['Brown']}  # Change font color and size
+                            },
+                            gauge={
+                                    'axis': {'range': [0, 100], 'showticklabels': False},
+                                    'bar': {'color': brand_colors['Red']},
+                                    'bgcolor': brand_colors['Light green'],
+                                }
+                        ))
+    
     urban_fig.update_layout(showlegend=False, margin=dict(l=0,r=0,t=0,b=0),
                             paper_bgcolor="rgba(0,0,0,0)",  
                             plot_bgcolor="rgba(0,0,0,0)")
 
 
-    return total_flow_text, urban_share_text, urban_fig, fig
+    return total_flow_text, urban_fig, fig
 
 
 # Linking the tabs to page content loading 
