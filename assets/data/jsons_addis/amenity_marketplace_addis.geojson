@@ -1,0 +1,27 @@
+{
+"type": "FeatureCollection",
+"name": "amenity_marketplace_addis",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:EPSG::3857" } },
+"features": [
+{ "type": "Feature", "properties": { "id": 622357094, "category": "amenity", "label": "marketplace" }, "geometry": { "type": "Point", "coordinates": [ 4312632.767678199335933, 1009336.60109591356013 ] } },
+{ "type": "Feature", "properties": { "id": 622357200, "category": "amenity", "label": "marketplace" }, "geometry": { "type": "Point", "coordinates": [ 4318618.884240015409887, 1008736.492764957598411 ] } },
+{ "type": "Feature", "properties": { "id": 622357223, "category": "amenity", "label": "marketplace" }, "geometry": { "type": "Point", "coordinates": [ 4312212.68131579272449, 1012738.036325398134068 ] } },
+{ "type": "Feature", "properties": { "id": 4242764822, "category": "amenity", "label": "marketplace" }, "geometry": { "type": "Point", "coordinates": [ 4307146.631477332673967, 1013036.580256130313501 ] } },
+{ "type": "Feature", "properties": { "id": 4242764823, "category": "amenity", "label": "marketplace" }, "geometry": { "type": "Point", "coordinates": [ 4308334.989305449649692, 1013143.828450801898725 ] } },
+{ "type": "Feature", "properties": { "id": 4547496903, "category": "amenity", "label": "marketplace" }, "geometry": { "type": "Point", "coordinates": [ 4313043.258300499990582, 1009835.621686984668486 ] } },
+{ "type": "Feature", "properties": { "id": 5032060364, "category": "amenity", "label": "marketplace" }, "geometry": { "type": "Point", "coordinates": [ 4312472.96854916587472, 1009360.463139970554039 ] } },
+{ "type": "Feature", "properties": { "id": 6310821320, "category": "amenity", "label": "marketplace" }, "geometry": { "type": "Point", "coordinates": [ 4322068.652995800599456, 1007490.091061593266204 ] } },
+{ "type": "Feature", "properties": { "id": 7156962205, "category": "amenity", "label": "marketplace" }, "geometry": { "type": "Point", "coordinates": [ 4317167.32260786741972, 1004814.370744062354788 ] } },
+{ "type": "Feature", "properties": { "id": 9132045548, "category": "amenity", "label": "marketplace" }, "geometry": { "type": "Point", "coordinates": [ 4317076.385715838521719, 1006622.449747394421138 ] } },
+{ "type": "Feature", "properties": { "id": 9199393662, "category": "amenity", "label": "marketplace" }, "geometry": { "type": "Point", "coordinates": [ 4317743.556820008903742, 1004781.900801251176745 ] } },
+{ "type": "Feature", "properties": { "id": 43040304, "category": "amenity", "label": "marketplace" }, "geometry": { "type": "Point", "coordinates": [ 4316136.235314411111176, 1012668.306782542844303 ] } },
+{ "type": "Feature", "properties": { "id": 203593660, "category": "amenity", "label": "marketplace" }, "geometry": { "type": "Point", "coordinates": [ 4317148.010715860873461, 1004855.332447803579271 ] } },
+{ "type": "Feature", "properties": { "id": 206800433, "category": "amenity", "label": "marketplace" }, "geometry": { "type": "Point", "coordinates": [ 4314878.65092380810529, 1012860.845482536242343 ] } },
+{ "type": "Feature", "properties": { "id": 548378566, "category": "amenity", "label": "marketplace" }, "geometry": { "type": "Point", "coordinates": [ 4317724.331556499004364, 991150.368496949085966 ] } },
+{ "type": "Feature", "properties": { "id": 648826822, "category": "amenity", "label": "marketplace" }, "geometry": { "type": "Point", "coordinates": [ 4307130.125052908435464, 1013017.580498898867518 ] } },
+{ "type": "Feature", "properties": { "id": 648826823, "category": "amenity", "label": "marketplace" }, "geometry": { "type": "Point", "coordinates": [ 4307163.530338880605996, 1013076.777102264924906 ] } },
+{ "type": "Feature", "properties": { "id": 648826825, "category": "amenity", "label": "marketplace" }, "geometry": { "type": "Point", "coordinates": [ 4307199.834359717555344, 1013056.31564347166568 ] } },
+{ "type": "Feature", "properties": { "id": 718289828, "category": "amenity", "label": "marketplace" }, "geometry": { "type": "Point", "coordinates": [ 4309312.887701667845249, 1001565.054967840551399 ] } },
+{ "type": "Feature", "properties": { "id": 1271438775, "category": "amenity", "label": "marketplace" }, "geometry": { "type": "Point", "coordinates": [ 4327799.958762834779918, 1009148.505636624176987 ] } }
+]
+}

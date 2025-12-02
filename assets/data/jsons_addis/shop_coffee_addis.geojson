@@ -1,0 +1,13 @@
+{
+"type": "FeatureCollection",
+"name": "shop_coffee_addis",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:EPSG::3857" } },
+"features": [
+{ "type": "Feature", "properties": { "id": 7119077096, "category": "shop", "label": "coffee" }, "geometry": { "type": "Point", "coordinates": [ 4315745.127057390287519, 1006258.999413017765619 ] } },
+{ "type": "Feature", "properties": { "id": 9137034639, "category": "shop", "label": "coffee" }, "geometry": { "type": "Point", "coordinates": [ 4317014.993016665801406, 1006552.807060900842771 ] } },
+{ "type": "Feature", "properties": { "id": 9199020641, "category": "shop", "label": "coffee" }, "geometry": { "type": "Point", "coordinates": [ 4314896.204620601609349, 1009779.16144676937256 ] } },
+{ "type": "Feature", "properties": { "id": 10884486705, "category": "shop", "label": "coffee" }, "geometry": { "type": "Point", "coordinates": [ 4321092.38106154371053, 1006365.418218987178989 ] } },
+{ "type": "Feature", "properties": { "id": 12171418595, "category": "shop", "label": "coffee" }, "geometry": { "type": "Point", "coordinates": [ 4315975.981417397968471, 1005822.450783268199302 ] } },
+{ "type": "Feature", "properties": { "id": 12174558886, "category": "shop", "label": "coffee" }, "geometry": { "type": "Point", "coordinates": [ 4317768.280878915451467, 1005542.826783188502304 ] } }
+]
+}

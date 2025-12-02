@@ -1,0 +1,25 @@
+{
+"type": "FeatureCollection",
+"name": "shop_alcohol_addis",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:EPSG::3857" } },
+"features": [
+{ "type": "Feature", "properties": { "id": 1690616975, "category": "shop", "label": "alcohol" }, "geometry": { "type": "Point", "coordinates": [ 4309702.237555270083249, 1009178.404101002495736 ] } },
+{ "type": "Feature", "properties": { "id": 4407991893, "category": "shop", "label": "alcohol" }, "geometry": { "type": "Point", "coordinates": [ 4317771.976686009205878, 1006056.858546521048993 ] } },
+{ "type": "Feature", "properties": { "id": 4741022026, "category": "shop", "label": "alcohol" }, "geometry": { "type": "Point", "coordinates": [ 4320436.097003571689129, 1007467.920781254186295 ] } },
+{ "type": "Feature", "properties": { "id": 4967800851, "category": "shop", "label": "alcohol" }, "geometry": { "type": "Point", "coordinates": [ 4321393.934430154040456, 1008143.697090309229679 ] } },
+{ "type": "Feature", "properties": { "id": 5060315222, "category": "shop", "label": "alcohol" }, "geometry": { "type": "Point", "coordinates": [ 4307388.51759887766093, 1013867.045368361403234 ] } },
+{ "type": "Feature", "properties": { "id": 5245285821, "category": "shop", "label": "alcohol" }, "geometry": { "type": "Point", "coordinates": [ 4317120.323518854565918, 1008862.057044178945944 ] } },
+{ "type": "Feature", "properties": { "id": 5262119621, "category": "shop", "label": "alcohol" }, "geometry": { "type": "Point", "coordinates": [ 4327671.195988190360367, 1008334.85874695610255 ] } },
+{ "type": "Feature", "properties": { "id": 6471705385, "category": "shop", "label": "alcohol" }, "geometry": { "type": "Point", "coordinates": [ 4326259.7761644218117, 1005501.452512126532383 ] } },
+{ "type": "Feature", "properties": { "id": 6994562086, "category": "shop", "label": "alcohol" }, "geometry": { "type": "Point", "coordinates": [ 4309775.842002582736313, 1013808.234756275312975 ] } },
+{ "type": "Feature", "properties": { "id": 7079335542, "category": "shop", "label": "alcohol" }, "geometry": { "type": "Point", "coordinates": [ 4314533.514587647281587, 1010114.170541074709035 ] } },
+{ "type": "Feature", "properties": { "id": 7124208255, "category": "shop", "label": "alcohol" }, "geometry": { "type": "Point", "coordinates": [ 4316569.191851885057986, 1006821.832040826673619 ] } },
+{ "type": "Feature", "properties": { "id": 7136884244, "category": "shop", "label": "alcohol" }, "geometry": { "type": "Point", "coordinates": [ 4317384.362219066359103, 1009150.574568648007698 ] } },
+{ "type": "Feature", "properties": { "id": 7138582457, "category": "shop", "label": "alcohol" }, "geometry": { "type": "Point", "coordinates": [ 4316916.02998935058713, 1006181.603067657677457 ] } },
+{ "type": "Feature", "properties": { "id": 7177762087, "category": "shop", "label": "alcohol" }, "geometry": { "type": "Point", "coordinates": [ 4315581.175711350515485, 1001668.377423822530545 ] } },
+{ "type": "Feature", "properties": { "id": 7179556796, "category": "shop", "label": "alcohol" }, "geometry": { "type": "Point", "coordinates": [ 4317387.813123281113803, 1006736.319571967353113 ] } },
+{ "type": "Feature", "properties": { "id": 8142658017, "category": "shop", "label": "alcohol" }, "geometry": { "type": "Point", "coordinates": [ 4312675.536626563407481, 1000838.792144028120674 ] } },
+{ "type": "Feature", "properties": { "id": 8399163266, "category": "shop", "label": "alcohol" }, "geometry": { "type": "Point", "coordinates": [ 4316982.28735027089715, 1006497.963106399402022 ] } },
+{ "type": "Feature", "properties": { "id": 11459943472, "category": "shop", "label": "alcohol" }, "geometry": { "type": "Point", "coordinates": [ 4317220.845019040629268, 1005262.697527395794168 ] } }
+]
+}

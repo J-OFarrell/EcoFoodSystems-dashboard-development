@@ -1,0 +1,31 @@
+{
+"type": "FeatureCollection",
+"name": "shop_butcher_addis",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:EPSG::3857" } },
+"features": [
+{ "type": "Feature", "properties": { "id": 659241017, "category": "shop", "label": "butcher" }, "geometry": { "type": "Point", "coordinates": [ 4318230.490536637604237, 1005252.170881130266935 ] } },
+{ "type": "Feature", "properties": { "id": 1726969868, "category": "shop", "label": "butcher" }, "geometry": { "type": "Point", "coordinates": [ 4311547.725469487719238, 1002901.652250495040789 ] } },
+{ "type": "Feature", "properties": { "id": 1960101299, "category": "shop", "label": "butcher" }, "geometry": { "type": "Point", "coordinates": [ 4307953.931556514464319, 1012045.308802508632652 ] } },
+{ "type": "Feature", "properties": { "id": 4500492190, "category": "shop", "label": "butcher" }, "geometry": { "type": "Point", "coordinates": [ 4309552.423784560523927, 1001520.735844412469305 ] } },
+{ "type": "Feature", "properties": { "id": 4817515421, "category": "shop", "label": "butcher" }, "geometry": { "type": "Point", "coordinates": [ 4320147.590279283002019, 1005438.664233780582435 ] } },
+{ "type": "Feature", "properties": { "id": 4841527321, "category": "shop", "label": "butcher" }, "geometry": { "type": "Point", "coordinates": [ 4321365.369848815724254, 1008133.981232924968936 ] } },
+{ "type": "Feature", "properties": { "id": 5035241921, "category": "shop", "label": "butcher" }, "geometry": { "type": "Point", "coordinates": [ 4306206.80554436147213, 1005566.201968774781562 ] } },
+{ "type": "Feature", "properties": { "id": 5230077423, "category": "shop", "label": "butcher" }, "geometry": { "type": "Point", "coordinates": [ 4318798.431446716189384, 1007382.925425884663127 ] } },
+{ "type": "Feature", "properties": { "id": 5230098221, "category": "shop", "label": "butcher" }, "geometry": { "type": "Point", "coordinates": [ 4318944.593938127160072, 1007197.426299451617524 ] } },
+{ "type": "Feature", "properties": { "id": 5428870326, "category": "shop", "label": "butcher" }, "geometry": { "type": "Point", "coordinates": [ 4325019.487793850712478, 1007122.147122238064185 ] } },
+{ "type": "Feature", "properties": { "id": 5428871421, "category": "shop", "label": "butcher" }, "geometry": { "type": "Point", "coordinates": [ 4323285.942759574390948, 1007291.021086646127515 ] } },
+{ "type": "Feature", "properties": { "id": 5906830986, "category": "shop", "label": "butcher" }, "geometry": { "type": "Point", "coordinates": [ 4317268.779191776178777, 1007898.727445334894583 ] } },
+{ "type": "Feature", "properties": { "id": 6186718385, "category": "shop", "label": "butcher" }, "geometry": { "type": "Point", "coordinates": [ 4324209.527178837917745, 1011658.296008367906325 ] } },
+{ "type": "Feature", "properties": { "id": 6471705395, "category": "shop", "label": "butcher" }, "geometry": { "type": "Point", "coordinates": [ 4325701.442126398906112, 1004882.984856036142446 ] } },
+{ "type": "Feature", "properties": { "id": 6814354218, "category": "shop", "label": "butcher" }, "geometry": { "type": "Point", "coordinates": [ 4313569.921943391673267, 1003906.011013966985047 ] } },
+{ "type": "Feature", "properties": { "id": 7107656485, "category": "shop", "label": "butcher" }, "geometry": { "type": "Point", "coordinates": [ 4317820.589907638728619, 991130.798939458793029 ] } },
+{ "type": "Feature", "properties": { "id": 7840028194, "category": "shop", "label": "butcher" }, "geometry": { "type": "Point", "coordinates": [ 4315881.682676746509969, 1007391.976109707611613 ] } },
+{ "type": "Feature", "properties": { "id": 8493717528, "category": "shop", "label": "butcher" }, "geometry": { "type": "Point", "coordinates": [ 4315477.470473727211356, 1005329.588003687560558 ] } },
+{ "type": "Feature", "properties": { "id": 8493718319, "category": "shop", "label": "butcher" }, "geometry": { "type": "Point", "coordinates": [ 4307896.546359010972083, 1004098.212197860470042 ] } },
+{ "type": "Feature", "properties": { "id": 8568509928, "category": "shop", "label": "butcher" }, "geometry": { "type": "Point", "coordinates": [ 4325948.114986048080027, 1010682.929230037610978 ] } },
+{ "type": "Feature", "properties": { "id": 8568510021, "category": "shop", "label": "butcher" }, "geometry": { "type": "Point", "coordinates": [ 4317124.353284420445561, 1007227.722854419844225 ] } },
+{ "type": "Feature", "properties": { "id": 8806555919, "category": "shop", "label": "butcher" }, "geometry": { "type": "Point", "coordinates": [ 4315694.498952977359295, 1005977.760709443711676 ] } },
+{ "type": "Feature", "properties": { "id": 10568467709, "category": "shop", "label": "butcher" }, "geometry": { "type": "Point", "coordinates": [ 4318167.450309000909328, 1005130.066491097444668 ] } },
+{ "type": "Feature", "properties": { "id": 704284598, "category": "shop", "label": "butcher" }, "geometry": { "type": "Point", "coordinates": [ 4314804.255759481340647, 1003161.352668482810259 ] } }
+]
+}

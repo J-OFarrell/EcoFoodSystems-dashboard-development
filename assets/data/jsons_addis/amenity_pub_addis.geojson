@@ -1,0 +1,24 @@
+{
+"type": "FeatureCollection",
+"name": "amenity_pub_addis",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:EPSG::3857" } },
+"features": [
+{ "type": "Feature", "properties": { "id": 631861912, "category": "amenity", "label": "pub" }, "geometry": { "type": "Point", "coordinates": [ 4314219.927582082338631, 1007128.312367783277296 ] } },
+{ "type": "Feature", "properties": { "id": 847891285, "category": "amenity", "label": "pub" }, "geometry": { "type": "Point", "coordinates": [ 4316098.321537778712809, 1004787.614878172404133 ] } },
+{ "type": "Feature", "properties": { "id": 1424980934, "category": "amenity", "label": "pub" }, "geometry": { "type": "Point", "coordinates": [ 4318491.03380483854562, 1005104.121891138376668 ] } },
+{ "type": "Feature", "properties": { "id": 4756047422, "category": "amenity", "label": "pub" }, "geometry": { "type": "Point", "coordinates": [ 4315433.243240035139024, 1001191.544708653585985 ] } },
+{ "type": "Feature", "properties": { "id": 5117772721, "category": "amenity", "label": "pub" }, "geometry": { "type": "Point", "coordinates": [ 4317817.639941131696105, 1007187.102032148628496 ] } },
+{ "type": "Feature", "properties": { "id": 6295238889, "category": "amenity", "label": "pub" }, "geometry": { "type": "Point", "coordinates": [ 4315415.565704897046089, 1005566.371027542976663 ] } },
+{ "type": "Feature", "properties": { "id": 6470000489, "category": "amenity", "label": "pub" }, "geometry": { "type": "Point", "coordinates": [ 4325986.375495034269989, 1005437.323038438451476 ] } },
+{ "type": "Feature", "properties": { "id": 6849324606, "category": "amenity", "label": "pub" }, "geometry": { "type": "Point", "coordinates": [ 4316637.753526264801621, 1003751.734548029606231 ] } },
+{ "type": "Feature", "properties": { "id": 6906345485, "category": "amenity", "label": "pub" }, "geometry": { "type": "Point", "coordinates": [ 4327596.03306800685823, 1008603.365746592055075 ] } },
+{ "type": "Feature", "properties": { "id": 7855600834, "category": "amenity", "label": "pub" }, "geometry": { "type": "Point", "coordinates": [ 4316575.392347523011267, 1008335.005274514202029 ] } },
+{ "type": "Feature", "properties": { "id": 8384148317, "category": "amenity", "label": "pub" }, "geometry": { "type": "Point", "coordinates": [ 4317977.350014573894441, 1009235.483444478712045 ] } },
+{ "type": "Feature", "properties": { "id": 8397375517, "category": "amenity", "label": "pub" }, "geometry": { "type": "Point", "coordinates": [ 4326951.548876059241593, 1006623.497938924236223 ] } },
+{ "type": "Feature", "properties": { "id": 8493717519, "category": "amenity", "label": "pub" }, "geometry": { "type": "Point", "coordinates": [ 4313623.767181089147925, 1009847.039988267235458 ] } },
+{ "type": "Feature", "properties": { "id": 8752842717, "category": "amenity", "label": "pub" }, "geometry": { "type": "Point", "coordinates": [ 4318278.703008099459112, 1005829.393507541157305 ] } },
+{ "type": "Feature", "properties": { "id": 11011132607, "category": "amenity", "label": "pub" }, "geometry": { "type": "Point", "coordinates": [ 4312418.922936385497451, 1000038.331633059424348 ] } },
+{ "type": "Feature", "properties": { "id": 11468710169, "category": "amenity", "label": "pub" }, "geometry": { "type": "Point", "coordinates": [ 4311933.102414666675031, 1001026.347223500371911 ] } },
+{ "type": "Feature", "properties": { "id": 71392261, "category": "amenity", "label": "pub" }, "geometry": { "type": "Point", "coordinates": [ 4315939.963995961472392, 1005604.161316052195616 ] } }
+]
+}
