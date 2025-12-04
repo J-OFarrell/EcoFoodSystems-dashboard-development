@@ -123,6 +123,12 @@ variables = df_mpi['Variable'].unique()
 # Loading and Formatting Food Systems Stakeholders Data
 df_sh = pd.read_csv(path+"/hanoi_stakeholders.csv").dropna(how='any').astype(str)
 
+# Pre-calculate fixed column widths
+column_widths = {}
+for col in df_sh.columns:
+    max_len = max(len(str(col)), df_sh[col].astype(str).str.len().max())
+    column_widths[col] = max(max_len * 10, 100)  # minimum 100px per column
+
 # Loading supply flow data for Sankey Diagram
 df_sankey = pd.read_csv(path+'/hanoi_supply.csv')
 
@@ -486,7 +492,7 @@ def stakeholders_tab_layout():
     return html.Div([
 
         html.Div([sidebar], style={
-                                    "width": "15%",
+                                    "minWidth": "15%",
                                     "height": "100%",
                                     "display": "flex",
                                     "vertical-align":'top',
@@ -571,7 +577,7 @@ def stakeholders_tab_layout():
                         "border-radius": "10px"}),
             dcc.Store(id='selected_slice', data=None)
         ], style={
-            "flex": "1 1 35%",
+            "flex": "1 1 30%",
             "height": "100%",
             "padding": "10px",
             "margin": "0",
@@ -590,33 +596,39 @@ def stakeholders_tab_layout():
                         id='sh_table',
                         data=df_sh.to_dict('records'),
                         columns=[{"name": str(i), "id": str(i)} for i in df_sh.columns],
-                        style_cell={
-                            'textAlign': 'left',
-                            'padding': '8px',
-                            'whiteSpace': 'normal',
-                            'height': 'auto',
-                            'fontSize': 'clamp(0.7em, 1vw, 1em)',  # Responsive font size
-                            'maxWidth': '160px',  # Limit column width
-                        },
                         style_header={
                             'fontWeight': 'bold',
                             'backgroundColor': brand_colors['Red'],
                             'color': 'white',
                             'textAlign': 'center',
-                            'fontSize': 'clamp(0.8em, 1vw, 1.1em)'
+                            'fontSize': '14px',
                         },
+                        style_cell_conditional=[
+                            {
+                                'if': {'column_id': str(col)},
+                                'textAlign': 'left',
+                                'padding': '8px',
+                                'whiteSpace': 'nowrap',
+                                'overflow': 'hidden',
+                                'textOverflow': 'ellipsis',
+                                'fontSize': '14px',
+                                'minWidth': f'{column_widths[col]}px',
+                                'width': f'{column_widths[col]}px',
+                                'maxWidth': f'{column_widths[col]}px',
+                            } for col in df_sh.columns
+                        ],
                         style_data_conditional=[
                             {'if': {'row_index': 'odd'}, 'backgroundColor': '#f9f9f9'}
                         ],
                         fixed_rows={'headers': True},
-                        virtualization=True,
+                        virtualization=False,
+                        css=[{"selector": "table", "rule": "table-layout: fixed;"}],
                         style_table={  
                             'overflowY': 'auto',
-                            'overflowX': 'hidden',
+                            'overflowX': 'auto',
                             'height': '100%',
-                            'width': '100%',
-                        }
-                    )
+                            'width': '100%'})
+
                 ],style={"height": "100%", 
                          "display": "flex", 
                          "flexDirection": "column"})
@@ -624,17 +636,14 @@ def stakeholders_tab_layout():
             ], style={"height": "100%", 
                       "box-shadow": "0 2px 6px rgba(0,0,0,0.1)",
                       "backgroundColor": brand_colors['White'],
-                      "border-radius": "10px",
-                      "padding": "10px"
+                      "border-radius": "10px"
                     }),
-
         ], style={
-            "flex": "1 1 50%",
+            "flex": "1 1 45%",
             "backgroundColor": brand_colors['Light green'],
             "display": "flex",
             "flexDirection": "column",
             "height": "70vh",
-            "overflow":'hidden',
             "border-radius": "10px",
             'margin':"10px 2px 10px 10px"
         })
