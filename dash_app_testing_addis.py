@@ -187,6 +187,22 @@ df_sankey = pd.read_csv(path+'/hanoi_supply.csv')
 
 df_policies = pd.read_csv(path+'/addis_policy_database.csv').drop('Unnamed: 0',axis=1)
 
+df_indicators = pd.read_csv(path+'/addis_policy_database_expanded_sdg.csv')
+
+# Create SDG logos as list of numbers for rendering
+def get_sdg_numbers(row):
+    sdg_cols = ['SDG_1', 'SDG_2', 'SDG_3', 'SDG_4', 'SDG_5']
+    sdg_numbers = []
+    for col in sdg_cols:
+        if pd.notna(row[col]) and str(row[col]).strip():
+            # Extract just the number (e.g., "1.3.1" -> "1", "2.1" -> "2")
+            sdg_num = str(row[col]).split('.')[0]
+            if sdg_num.isdigit() and sdg_num not in sdg_numbers:
+                sdg_numbers.append(sdg_num)
+    return ', '.join(sdg_numbers) if sdg_numbers else '--'
+
+df_indicators['SDG Numbers'] = df_indicators.apply(get_sdg_numbers, axis=1)
+
 df_env = pd.read_csv(path+'/addis_lca_pivot.csv')
 df_lca = df_env  # Alias for compatibility
 
@@ -329,7 +345,7 @@ def landing_page_layout():
     background_colours = {
         "stakeholders":white_tab_bg, 
         "supply":white_tab_bg,
-        "sustainability":grey_tab_bg, 
+        "sustainability":white_tab_bg, 
         "poverty":white_tab_bg,
         "labour":grey_tab_bg,
         "resilience":grey_tab_bg, 
@@ -884,7 +900,7 @@ def affordability_tab_layout():
                     dbc.CardBody([
                         html.Div([ 
                             html.H2("Food Environment Analysis", style=header_style),
-                            html.P(lorem.words(80),
+                            html.P("This map shows the distribution of healthy and unhealthy food outlets across Addis Ababa's sub-cities. The obesogenic ratio reveals where unhealthy outlets dominate, indicating areas with limited access to nutritious food. Population exposure metrics highlight which communities face the greatest imbalance, providing evidence to guide equitable food policy interventions. This analysis forms part of a broader assessment integrating socioeconomic and built environment factors.",
                                        style={  "margin": "10px 6px", 
                                                 "fontSize": 'clamp(0.7em, 1em, 1.0em)',
                                                 "textAlign": "center",
@@ -1027,6 +1043,171 @@ def affordability_tab_layout():
                     "height": "100%",
                     "backgroundColor": brand_colors['Light green']
         })
+
+def sustainability_tab_layout():
+    # Select display columns (use SDG Numbers instead of SDG Logos)
+    display_cols = ['Dimensions', 'Components', 'Indicators', 'SDG impact area/target', 'SDG Numbers']
+    df_display = df_indicators[display_cols]
+    
+    return html.Div([
+        html.Div([sidebar], style={
+            "width": "15%",
+            "height": "100%",
+            "display": "flex",
+            "vertical-align": 'top',
+            "flexDirection": "column",
+            "justifyContent": "flex-start"
+        }),
+
+        # Main content area
+        html.Div([
+            # SDG Filter Buttons at top
+            dbc.Card([
+                dbc.CardBody([
+                    html.Div([
+                        html.H5("Filter by SDG Goal:", style={
+                            "marginBottom": "10px",
+                            "fontWeight": "bold",
+                            "color": brand_colors['Brown'],
+                            "fontSize": "clamp(0.9em, 1.1vw, 1.2em)"
+                        }),
+                        html.Div([
+                            html.Button([
+                                html.Img(src=f"/assets/logos/SDG%20logos/SDG%20Web%20Files%20w-%20UN%20Emblem/E%20SDG%20Icons%20Square/E_SDG%20goals_icons-individual-rgb-{str(i).zfill(2)}.png",
+                                        style={"height": "80px", "display": "block"}),
+                            ], 
+                            id=f"sdg-filter-{i}",
+                            n_clicks=0,
+                            style={
+                                "border": "3px solid transparent",
+                                "borderRadius": "8px",
+                                "padding": "5px",
+                                "margin": "5px",
+                                "cursor": "pointer",
+                                "backgroundColor": "transparent",
+                                "transition": "all 0.2s"
+                            })
+                            for i in range(1, 18)
+                        ], style={"display": "grid", "gridTemplateColumns": "repeat(9, 1fr)", "gap": "5px", "justifyItems": "center", "maxWidth": "100%"}),
+                        html.Button("Clear Filter", 
+                                   id="sdg-clear-filter",
+                                   n_clicks=0,
+                                   style={
+                                       "marginTop": "10px",
+                                       "padding": "8px 20px",
+                                       "backgroundColor": brand_colors['Red'],
+                                       "color": "white",
+                                       "border": "none",
+                                       "borderRadius": "5px",
+                                       "cursor": "pointer",
+                                       "fontWeight": "bold"
+                                   }),
+                        html.Div(id="sdg-filter-status", style={
+                            "marginTop": "10px",
+                            "fontSize": "0.9em",
+                            "color": brand_colors['Brown'],
+                            "fontStyle": "italic"
+                        })
+                    ])
+                ])
+            ], style={
+                "marginBottom": "15px",
+                "box-shadow": "0 2px 6px rgba(0,0,0,0.1)",
+                "backgroundColor": brand_colors['White'],
+                "border-radius": "10px",
+                "padding": "10px"
+            }),
+            
+            # Table
+            dbc.Card([
+                dbc.CardHeader(html.H3("Sustainability Metrics & Indicators", style=header_style)),
+                dbc.CardBody([
+                    dash_table.DataTable(
+                        id='indicators_table',
+                        data=df_display.to_dict('records'),
+                        columns=[
+                            {"name": "SDG Goals" if col == "SDG Numbers" else str(col), "id": str(col)} 
+                            for col in display_cols
+                        ],
+                        page_size=14,
+                        page_action='native',
+                        filter_action='native',
+                        sort_action='native',
+                        sort_mode='multi',
+                        style_cell={
+                            'textAlign': 'left',
+                            'padding': '8px',
+                            'whiteSpace': 'nowrap',
+                            'overflow': 'hidden',
+                            'textOverflow': 'ellipsis',
+                            'fontSize': 'clamp(0.7em, 1vw, 1em)',
+                            'minWidth': '120px',
+                            'maxWidth': '250px',
+                        },
+                        style_cell_conditional=[
+                            {
+                                'if': {'column_id': 'SDG Numbers'},
+                                'minWidth': '100px',
+                                'maxWidth': '150px',
+                                'textAlign': 'center',
+                            }
+                        ],
+                        style_header={
+                            'fontWeight': 'bold',
+                            'backgroundColor': brand_colors['Red'],
+                            'color': 'white',
+                            'textAlign': 'center',
+                            'fontSize': 'clamp(0.8em, 1vw, 1.1em)'
+                        },
+                        style_filter={
+                            'backgroundColor': '#f0f0f0',
+                            'fontSize': 'clamp(0.7em, 0.9vw, 0.95em)',
+                            'padding': '5px'
+                        },
+                        style_data_conditional=[
+                            {'if': {'row_index': 'odd'}, 'backgroundColor': '#f9f9f9'}
+                        ],
+                        tooltip_data=[
+                            {
+                                column: {'value': str(row[column]), 'type': 'text'}
+                                for column in display_cols
+                            } for row in df_display.to_dict('records')
+                        ],
+                        tooltip_duration=None,
+                        css=[{
+                            'selector': '.dash-table-tooltip',
+                            'rule': 'background-color: ' + brand_colors['Light green'] + '; color: ' + brand_colors['Black'] + '; border: 2px solid ' + brand_colors['Dark green'] + '; padding: 6px; font-size: 14px; box-shadow: 0 4px 8px ' + brand_colors['Black'] + ';'
+                        }],
+                        style_table={
+                            'overflowX': 'auto',
+                            'width': '100%',
+                        }
+                    )
+                ], style={"height": "100%", "display": "flex", "flexDirection": "column", "overflowY": "auto"})
+            ], style={
+                "height": "auto",
+                "overflowY":"auto",
+                "box-shadow": "0 2px 6px rgba(0,0,0,0.1)",
+                "backgroundColor": brand_colors['White'],
+                "border-radius": "10px",
+                "padding": "10px"
+            }),
+        ], style={
+            "flex": "1 1 85%",
+            "height": "90%",
+            "display": "flex",
+            "flexDirection": "column",
+            "overflow": 'auto',
+            "border-radius": "10px",
+            'margin': "10px 10px 10px 10px"
+        })
+    ], style={
+        "display": "flex",
+        "width": "100%",
+        "height": "100%",
+        "backgroundColor": brand_colors['Light green']
+    })
+
 
 def policies_tab_layout():
     return html.Div([
@@ -1720,6 +1901,104 @@ def update_food_items_grid(selected_group):
     
     return food_cards
 
+# Callback for SDG filter buttons
+@app.callback(
+    [Output('indicators_table', 'data'),
+     Output('sdg-filter-status', 'children'),
+     Output('sdg-filter-1', 'style'),
+     Output('sdg-filter-2', 'style'),
+     Output('sdg-filter-3', 'style'),
+     Output('sdg-filter-4', 'style'),
+     Output('sdg-filter-5', 'style'),
+     Output('sdg-filter-6', 'style'),
+     Output('sdg-filter-7', 'style'),
+     Output('sdg-filter-8', 'style'),
+     Output('sdg-filter-9', 'style'),
+     Output('sdg-filter-10', 'style'),
+     Output('sdg-filter-11', 'style'),
+     Output('sdg-filter-12', 'style'),
+     Output('sdg-filter-13', 'style'),
+     Output('sdg-filter-14', 'style'),
+     Output('sdg-filter-15', 'style'),
+     Output('sdg-filter-16', 'style'),
+     Output('sdg-filter-17', 'style')],
+    [Input('sdg-filter-1', 'n_clicks'),
+     Input('sdg-filter-2', 'n_clicks'),
+     Input('sdg-filter-3', 'n_clicks'),
+     Input('sdg-filter-4', 'n_clicks'),
+     Input('sdg-filter-5', 'n_clicks'),
+     Input('sdg-filter-6', 'n_clicks'),
+     Input('sdg-filter-7', 'n_clicks'),
+     Input('sdg-filter-8', 'n_clicks'),
+     Input('sdg-filter-9', 'n_clicks'),
+     Input('sdg-filter-10', 'n_clicks'),
+     Input('sdg-filter-11', 'n_clicks'),
+     Input('sdg-filter-12', 'n_clicks'),
+     Input('sdg-filter-13', 'n_clicks'),
+     Input('sdg-filter-14', 'n_clicks'),
+     Input('sdg-filter-15', 'n_clicks'),
+     Input('sdg-filter-16', 'n_clicks'),
+     Input('sdg-filter-17', 'n_clicks'),
+     Input('sdg-clear-filter', 'n_clicks')]
+)
+def filter_by_sdg(*args):
+    ctx = dash.callback_context
+    
+    # Default style for buttons
+    default_style = {
+        "border": "3px solid transparent",
+        "borderRadius": "8px",
+        "padding": "5px",
+        "margin": "5px",
+        "cursor": "pointer",
+        "backgroundColor": "transparent",
+        "transition": "all 0.2s"
+    }
+    
+    # Selected style
+    selected_style = {
+        "border": f"3px solid {brand_colors['Red']}",
+        "borderRadius": "8px",
+        "padding": "5px",
+        "margin": "5px",
+        "cursor": "pointer",
+        "backgroundColor": brand_colors['Light green'],
+        "transition": "all 0.2s",
+        "boxShadow": "0 2px 8px rgba(168, 0, 80, 0.3)"
+    }
+    
+    # All buttons default style
+    button_styles = [default_style.copy() for _ in range(17)]
+    
+    # Get all columns including SDG Numbers
+    display_cols = ['Dimensions', 'Components', 'Indicators', 'SDG impact area/target', 'SDG Numbers']
+    
+    if not ctx.triggered:
+        return df_indicators[display_cols].to_dict('records'), "Click an SDG icon to filter indicators", *button_styles
+    
+    button_id = ctx.triggered[0]['prop_id'].split('.')[0]
+    
+    # Clear filter
+    if button_id == 'sdg-clear-filter':
+        return df_indicators[display_cols].to_dict('records'), "Showing all indicators", *button_styles
+    
+    # Extract SDG number from button id
+    if button_id.startswith('sdg-filter-'):
+        sdg_num = button_id.split('-')[-1]
+        
+        # Filter dataframe to rows containing this SDG number
+        filtered_df = df_indicators[df_indicators['SDG Numbers'].str.contains(sdg_num, na=False)]
+        
+        # Update button style for selected SDG
+        sdg_index = int(sdg_num) - 1
+        button_styles[sdg_index] = selected_style
+        
+        status = f"Showing {len(filtered_df)} indicators for SDG {sdg_num}"
+        
+        return filtered_df[display_cols].to_dict('records'), status, *button_styles
+    
+    return df_indicators[display_cols].to_dict('records'), "Click an SDG icon to filter indicators", *button_styles
+
 # Linking the tabs to page content loading 
 @app.callback(
     Output("tab-content", "children"),
@@ -1748,6 +2027,9 @@ def render_tab_content(n1, n2, n3, n4, n5, n6, n7, n8, n9, n10, n11, n12):
         
     elif tab_id == "tab-2-supply":
         return supply_tab_layout()
+    
+    elif tab_id == "tab-3-sustainability":
+        return sustainability_tab_layout()
     
     elif tab_id == "tab-4-poverty":
         return poverty_tab_layout()
