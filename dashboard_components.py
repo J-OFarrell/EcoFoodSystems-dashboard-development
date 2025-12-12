@@ -96,3 +96,4 @@ def create_nutrition_kpi_card(outcome_name, addis_value, national_value, lower_i
             ])
         ])
     ], style=kpi_card_style_2)
+

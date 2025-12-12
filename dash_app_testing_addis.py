@@ -13,6 +13,7 @@ import dash
 from dash import Dash, html, dcc, Output, Input, State, callback, dash_table
 import dash_bootstrap_components as dbc
 import dash_leaflet as dl
+from dash_extensions.javascript import assign
 import random
 from matplotlib.colors import ListedColormap, LinearSegmentedColormap
 import plotly.graph_objects as go
@@ -96,17 +97,17 @@ plotting_palette_cat = [
 ]
 
 tabs = [
-        'Food systems stakeholders',                #Populated
-        'Food flows, supply & value chains',        #Populated
+        'Food Systems Stakeholders',                #Populated
+        'Food Flows, Supply & Value Chains',        #Populated
         'Sustainability Metrics & Indicators',      #Currently empty
         'Multidimensional Poverty',                 #Populated
-        'Resilience to food system shocks',         #In progress
-        'Dietary mapping & affordability',          #Semi-Populated (In development)
-        'Food losses & waste',                      #Currently empty
-        'Food system policies',                     #Currently empty
-        'Health & nutrition',                       #Populated
-        'Environmental footprints of food & diets', #Currently empty 
-        'Behaviour change tool (AI Chatbot & Game)' #Currently empty (In development)
+        'Resilience to Food System Shocks',         #In progress
+        'Dietary Mapping & Affordability',          #Semi-Populated (In development)
+        'Food Losses & Waste',                      #Currently empty
+        'Food System Policies',                     #Currently empty
+        'Health & Nutrition',                       #Populated
+        'Environmental Footprints of Food & Diets', #Currently empty 
+        'Behaviour Change Tool (AI Chatbot & Game)' #Currently empty (In development)
         ]
 
 
@@ -143,12 +144,48 @@ for col in df_sh.columns:
 total_table_width = sum(column_widths.values())
 
 # Loading GeoJSON files for Food Outlets
-outlets_path = "/Users/jemimaofarrell/Documents/Python/EcoFoodSystems/EcoFoodSystems_Dashboard_Development/assets/data/jsons_addis/"
+outlets_path = "/Users/jemimaofarrell/Documents/Python/EcoFoodSystems/EcoFoodSystems_Dashboard_Development/assets/data/jsons_addis_foodoutlets/"
 outlets_geojson_files = sorted(os.listdir(outlets_path))
+
+# Loading and Formatting Food Environment Choropleth Data
+food_env_path = path + "addis_diet_env_mapping.geojson"
+gdf_food_env = gpd.read_file(food_env_path).to_crs('EPSG:4326')
+
+# Define food environment metrics and their labels
+cols_food_env = ['density_healthyout', 'density_unhealthyout', 'density_mixoutlets',
+                 'ratio_obesogenic', 'pct_access_healthy', 'ptc_access_unhealthy']
+
+data_labels_food_env = ['Healthy Outlet Density', 'Unhealthy Outlet Density', 'Mixed Outlet Density',
+                        'Obesogenic Ratio', 'Percent Access to Healthy Food', 'Percent Access to Unhealthy Food']
+
+# Define which metrics are "good" when higher (True) or "bad" when higher (False)
+metric_direction = {
+    'Count_healthy': True,
+    'Count_UnhealthyOutlets': False,
+    'Count_MixOutlets': None,
+    'density_healthyout': True,
+    'density_unhealthyout': False,
+    'density_mixoutlets': None,
+    'ratio_obesogenic': False,
+    'pop_sum': None,
+    'density_pop_healthy': True,
+    'density_pop_unhealthy': False,
+    'total_density_pop': None,
+    'acc_healthyaccess_pop_healthysum': True,
+    'acc_unhealthyaccess_unhealthy_popsum': False,
+    'pct_access_healthy': True,
+    'ptc_access_unhealthy': False
+}
+
+# Color schemes for choropleth
+green_scale = ['#e3f6d5', '#c1d88e', '#a5be91', '#6f946d', '#3a6649']
+red_scale = ['#fee5d9', '#fcbba1', '#fc9272', '#fb6a4a', '#de2d26']
+grey_scale = ['#f7f7f7', '#d9d9d9', '#bdbdbd', '#969696', '#636363']
 
 # Loading supply flow data for Sankey Diagram
 df_sankey = pd.read_csv(path+'/hanoi_supply.csv')
 
+df_policies = pd.read_csv(path+'/addis_policy_database.csv').drop('Unnamed: 0',axis=1)
 
 # -------------------------- Defining Custom Styles ------------------------- #
 
@@ -218,18 +255,18 @@ card_style = {
 sidebar = dbc.Card([
     #html.Img(src="/assets/logos/temp_efs_logo.png", style={"width": "40%", "margin-bottom": "10px", "justifyContent": "center"}),
     dbc.Nav([
-        dbc.NavItem(dbc.NavLink("Food systems stakeholders", id="tab-1-stakeholders", href="#", active="exact"), style=tabs_style),
-        dbc.NavItem(dbc.NavLink("Food flows, supply & value chains", id="tab-2-supply", href="#", active="exact"), style=tabs_style),
-        dbc.NavItem(dbc.NavLink("Sustainability Metrics & Indicators", id="tab-3-sustainability", href="#", active="exact"), style=tabs_style),
-        dbc.NavItem(dbc.NavLink("Multidimensional Poverty", id="tab-4-poverty", href="#", active="exact"), style=tabs_style),
-        dbc.NavItem(dbc.NavLink("Labour, skills & green jobs", id="tab-5-labour", href="#", active="exact"), style=tabs_style),
-        dbc.NavItem(dbc.NavLink("Resilience to food system shocks", id="tab-6-resilience", href="#", active="exact"), style=tabs_style),
-        dbc.NavItem(dbc.NavLink("Dietry mapping & Affordability", id="tab-7-affordability", href="#", active="exact"), style=tabs_style),
-        dbc.NavItem(dbc.NavLink("Food losses & waste", id="tab-8-losses", href="#", active="exact"), style=tabs_style),
-        dbc.NavItem(dbc.NavLink("Food system policies", id="tab-9-policies", href="#", active="exact"), style=tabs_style),
-        dbc.NavItem(dbc.NavLink("Health & Nutrition", id="tab-10-nutrition", href="#", active="exact"), style=tabs_style),
-        dbc.NavItem(dbc.NavLink("Environmental footprints of food & diets", id="tab-11-footprints", href="#", active="exact"), style=tabs_style),
-        dbc.NavItem(dbc.NavLink("Behaviour change tool (AI Chatbot & Game)", id="tab-12-behaviour", href="#", active="exact"), style=tabs_style),
+        dbc.NavItem(dbc.NavLink("Food Systems Stakeholders", id="tab-1-stakeholders", href="#", active="exact"), style=tabs_style),                         # Populated
+        dbc.NavItem(dbc.NavLink("Food Flows, Supply & Value Chains", id="tab-2-supply", href="#", active="exact"), style=tabs_style),                       # Suplemented with Hanoi Data    
+        dbc.NavItem(dbc.NavLink("Sustainability Metrics & Indicators", id="tab-3-sustainability", href="#", active="exact"), style=tabs_style),             # Empty!
+        dbc.NavItem(dbc.NavLink("Multidimensional Poverty", id="tab-4-poverty", href="#", active="exact"), style=tabs_style),                               # Populated
+        dbc.NavItem(dbc.NavLink("Labour, Skills & Green Jobs", id="tab-5-labour", href="#", active="exact"), style=tabs_style),                             # Empty!
+        dbc.NavItem(dbc.NavLink("Resilience to Food System Shocks", id="tab-6-resilience", href="#", active="exact"), style=tabs_style),                    # Empty!
+        dbc.NavItem(dbc.NavLink("Dietary Mapping & Affordability", id="tab-7-affordability", href="#", active="exact"), style=tabs_style),                  # Populated
+        dbc.NavItem(dbc.NavLink("Food Losses & Waste", id="tab-8-losses", href="#", active="exact"), style=tabs_style),                                     # Empty!
+        dbc.NavItem(dbc.NavLink("Food System Policies", id="tab-9-policies", href="#", active="exact"), style=tabs_style),                                  # In progress
+        dbc.NavItem(dbc.NavLink("Health & Nutrition", id="tab-10-nutrition", href="#", active="exact"), style=tabs_style),                                  # Populated
+        dbc.NavItem(dbc.NavLink("Environmental Footprints of Food & Diets", id="tab-11-footprints", href="#", active="exact"), style=tabs_style),           # Empty!
+        dbc.NavItem(dbc.NavLink("Behaviour Change Tool (AI Chatbot & Game)", id="tab-12-behaviour", href="#", active="exact"), style=tabs_style),           # Empty!
     ], 
     vertical="md", 
     pills=True, 
@@ -275,15 +312,31 @@ footer = html.Footer([
 
 def landing_page_layout():
     tab_labels = [
-        "Food systems stakeholders", "Food flows, supply & value chains", "Sustainability Metrics / Indicators", "Multidimensional Poverty",
-        "Labour, skills & green jobs", "Resilience to food system shocks", "Dietry mapping & Affordability", "Food losses & waste",
-        "Food system policies", "Health & Nutrition", "Environmental footprints of food & diets", "Behaviour change tool (AI Chatbot & Game)"
+        "Food Systems Stakeholders", "Food Flows, Supply & Value Chains", "Sustainability Metrics / Indicators", "Multidimensional Poverty",
+        "Labour, skills & green jobs", "Resilience to Food System Shocks", "Dietary Mapping & Affordability", "Food Losses & Waste",
+        "Food System Policies", "Health & Nutrition", "Environmental Footprints of Food & Diets", "Behaviour Change Tool (AI Chatbot & Game)"
     ]
 
     tab_ids = [
         "stakeholders", "supply", "sustainability", "poverty",
         "labour", "resilience", "affordability", "losses",
         "policies", "nutrition", "footprints", "behaviour"]
+
+    white_tab_bg, grey_tab_bg = "rgba(255, 255, 255, 0.7)", "rgba(173, 181, 189, 0.7)"
+    background_colours = {
+        "stakeholders":white_tab_bg, 
+        "supply":white_tab_bg,
+        "sustainability":grey_tab_bg, 
+        "poverty":white_tab_bg,
+        "labour":grey_tab_bg,
+        "resilience":grey_tab_bg, 
+        "affordability":white_tab_bg, 
+        "losses":grey_tab_bg,
+        "policies":white_tab_bg, 
+        "nutrition":white_tab_bg, 
+        "footprints":grey_tab_bg, 
+        "behaviour":grey_tab_bg
+    }
     
     # Create grid items
     grid_items = []
@@ -298,7 +351,7 @@ def landing_page_layout():
                                 "fontWeight": "bold",
                                 "fontSize": "clamp(1.25em, 1.3em, 2.25em)",
                                 "color": brand_colors['Brown'],
-                                "backgroundColor": "rgba(255, 255, 255, 0.7)",
+                                "backgroundColor": background_colours[tab_id],
                                 "borderRadius": "10px",
                                 "boxShadow": "0 4px 8px rgba(0,0,0,0.08)",
                                 "border": f"2px solid {brand_colors['White']}",
@@ -346,14 +399,6 @@ def landing_page_layout():
                     "margin-bottom": "30px",
                 }),
 
-            #html.H3("Exploring Food Systems in Hanoi, Vietnam", style={
-            #    "color": brand_colors['Dark green'],
-            #    "fontWeight": "bold",
-            #    "fontSize": "1.25em",
-            #    "textAlign": "center",
-            #    "marginBottom": "20px"
-            #})
-
             html.P("EcoFoodSystems takes a food systems research approach to enable transitions towards diets that are more sustainable, healthier and affordable for consumers in city regions",
                 style={
                     "color": brand_colors['Brown'],
@@ -377,7 +422,7 @@ def landing_page_layout():
                                         "height":"auto",
                                         "display": "block",
                                         "marginTop": "auto",
-                                        "backgroundImage": "url('/assets/photos/sample_header.png')",  
+                                        "backgroundImage": "url('/assets/photos/addis_header.png')",  
                                         "backgroundSize": "cover",        # Image covers the whole area
                                         "backgroundPosition": "center",   # Center the image
                                         "backgroundRepeat": "no-repeat"   # Don't repeat the image
@@ -524,6 +569,8 @@ def stakeholders_tab_layout():
                             else {"name": str(i), "id": str(i)} 
                             for i in df_sh.columns
                         ],
+                        page_size=11,
+                        page_action='native',
                         style_cell={
                             'textAlign': 'left',
                             'padding': '8px',
@@ -555,20 +602,18 @@ def stakeholders_tab_layout():
                             'selector': '.dash-table-tooltip',
                             'rule': 'background-color: ' +brand_colors['Light green']+ '; color: '+brand_colors['Black']+'; border: 2px solid ' + brand_colors['Dark green'] + '; padding: 6px; font-size: 14px; box-shadow: 0 4px 8px '+brand_colors['Black']+';'
                         }],
-                        fixed_rows={'headers': True},
-                        virtualization=True,
                         style_table={  
-                            'overflowY': 'auto',
                             'overflowX': 'auto',
-                            'height': '100%',
                             'width': '100%',
                         }
                     )
-                ],style={"height": "100%", 
+                ],style={"height": "auto",
+                         "overflowY":"auto",
                          "display": "flex", 
                          "flexDirection": "column"})
 
-            ], style={"height": "70vh", 
+            ], style={"height": "auto",
+                      "overflowY":"auto",
                       "box-shadow": "0 2px 6px rgba(0,0,0,0.1)",
                       "backgroundColor": brand_colors['White'],
                       "border-radius": "10px",
@@ -591,7 +636,6 @@ def stakeholders_tab_layout():
                 "height": "100%", 
                 "backgroundColor": brand_colors['Light green']
               })
-
 
 def supply_tab_layout():
     return html.Div([
@@ -724,7 +768,6 @@ def supply_tab_layout():
                     "height": "100%",
                     "backgroundColor": brand_colors['Light green']
         })
-
 
 def poverty_tab_layout():
     return html.Div([
@@ -880,7 +923,7 @@ def affordability_tab_layout():
                 dbc.Card([
                     dbc.CardBody([
                         html.Div([
-                                html.P(["Select food outlet layers to display on the map using the dropdown above."],                                    
+                                html.P(["Select food outlet layers to display on the map."],                                    
                                        style={   "margin": "6px", 
                                                 'fontSize': 'clamp(0.7em, 1em, 1.0em)',
                                                 "textAlign": "center",
@@ -888,15 +931,52 @@ def affordability_tab_layout():
                                                 "fontStyle": "italic"
                                                 }),
                                 dcc.Dropdown(
-                                    id="layer-select",
+                                    id="outlets-layer-select",
                                     options=[{"label": f.split('_')[1] if len(f.split('_')) < 4 else f"{f.split('_')[1]} {f.split('_')[2]}", 
                                             "value": f} for f in outlets_geojson_files],
                                     multi=True,
-                                    placeholder="Select outlet layers to display")
+                                    placeholder="Select outlet layers to display",
+                                    style={'zIndex': '2000'})
                                 ],
                                 style={
                                     'margin': '2px 0px',
-                                    'zIndex': '1000',
+                                    'justifyContent': 'end',
+                                    'alignItems': 'center',
+                                    'textAlign': 'center'
+                    })],style={
+                                "display": "flex",
+                                "flexDirection": "column",
+                                "height": "100%"             
+                            })
+                ], style={"height": "auto", 
+                            "padding":"6px" ,
+                            "box-shadow": "0 2px 6px rgba(0,0,0,0.1)",
+                            "backgroundColor": brand_colors['White'],
+                            "border-radius": "10px",
+                            "zIndex": "2000",
+                            "position": "relative"}),
+
+                dbc.Card([
+                    dbc.CardBody([
+                        html.Div([
+                                html.P(["Select a food environment metric to display as a choropleth layer."],                                    
+                                       style={   "margin": "6px", 
+                                                'fontSize': 'clamp(0.7em, 1em, 1.0em)',
+                                                "textAlign": "center",
+                                                "whiteSpace": "normal",
+                                                "fontStyle": "italic"
+                                                }),
+                                dcc.Dropdown(
+                                    id="choropleth-select",
+                                    options=[{"label": label, "value": col} 
+                                            for label, col in zip(data_labels_food_env, cols_food_env)],
+                                    multi=False,
+                                    value='ratio_obesogenic',  # Set default to Obesogenic Ratio
+                                    placeholder="Select metric to display",
+                                    style={'zIndex': '1900'})
+                                ],
+                                style={
+                                    'margin': '2px 0px',
                                     'justifyContent': 'end',
                                     'alignItems': 'center',
                                     'textAlign': 'center'
@@ -929,14 +1009,15 @@ def affordability_tab_layout():
 
                 # Right panel: map, full height
                 html.Div([
-                    dl.Map(center=[9.1, 38.7], zoom=10, children=[
-                            dl.TileLayer(
-                                    url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
-                                    attribution='&copy; OpenStreetMap contributors &copy; CARTO'
-                                ),
-                            dl.LayerGroup(id="geojson-layers")
-                    ], style={'width': '100%', 'height': '100%'})
-
+                    dcc.Graph(
+                        id='affordability-map',
+                        figure=go.Figure().update_layout(
+                            mapbox=dict(style="carto-positron", center={"lat": 9.1, "lon": 38.7}, zoom=10),
+                            margin=dict(l=0, r=0, t=0, b=0),
+                            paper_bgcolor=brand_colors['White']
+                        ),
+                        style={"height": "100%", "width": "100%", "padding": "0", "margin": "0"}
+                    )
                 ], style={
                 "flex": "1",
                 "height": "100%",
@@ -959,6 +1040,101 @@ def affordability_tab_layout():
                     "height": "100%",
                     "backgroundColor": brand_colors['Light green']
         })
+
+
+def policies_tab_layout():
+    return html.Div([
+        html.Div([sidebar], style={
+            "width": "15%",
+            "height": "100%",
+            "display": "flex",
+            "vertical-align": 'top',
+            "flexDirection": "column",
+            "justifyContent": "flex-start"
+        }),
+
+        # Main content area
+        html.Div([
+            dbc.Card([
+                dbc.CardHeader(html.H3("Food System Policies Database", style=header_style)),
+                dbc.CardBody([
+                    dash_table.DataTable(
+                        id='policies_table',
+                        data=df_policies.to_dict('records'),
+                        columns=[
+                            {"name": str(col), "id": str(col)}
+                            for col in df_policies.columns
+                        ],
+                        page_size=14,
+                        page_action='native',
+                        filter_action='native',
+                        sort_action='native',
+                        sort_mode='multi',
+                        style_cell={
+                            'textAlign': 'left',
+                            'padding': '8px',
+                            'whiteSpace': 'nowrap',
+                            'overflow': 'hidden',
+                            'textOverflow': 'ellipsis',
+                            'fontSize': 'clamp(0.7em, 1vw, 1em)',
+                            'minWidth': '120px',
+                            'maxWidth': '250px',
+                        },
+                        style_header={
+                            'fontWeight': 'bold',
+                            'backgroundColor': brand_colors['Red'],
+                            'color': 'white',
+                            'textAlign': 'center',
+                            'fontSize': 'clamp(0.8em, 1vw, 1.1em)'
+                        },
+                        style_filter={
+                            'backgroundColor': '#f0f0f0',
+                            'fontSize': 'clamp(0.7em, 0.9vw, 0.95em)',
+                            'padding': '5px'
+                        },
+                        style_data_conditional=[
+                            {'if': {'row_index': 'odd'}, 'backgroundColor': '#f9f9f9'}
+                        ],
+                        tooltip_data=[
+                            {
+                                column: {'value': str(row[column]), 'type': 'text'}
+                                for column in df_policies.columns
+                            } for row in df_policies.to_dict('records')
+                        ],
+                        tooltip_duration=None,
+                        css=[{
+                            'selector': '.dash-table-tooltip',
+                            'rule': 'background-color: ' + brand_colors['Light green'] + '; color: ' + brand_colors['Black'] + '; border: 2px solid ' + brand_colors['Dark green'] + '; padding: 6px; font-size: 14px; box-shadow: 0 4px 8px ' + brand_colors['Black'] + ';'
+                        }],
+                        style_table={
+                            'overflowX': 'auto',
+                            'width': '100%',
+                        }
+                    )
+                ], style={"height": "100%", "display": "flex", "flexDirection": "column"})
+            ], style={
+                "height": "auto",
+                "overflowY":"auto",
+                "box-shadow": "0 2px 6px rgba(0,0,0,0.1)",
+                "backgroundColor": brand_colors['White'],
+                "border-radius": "10px",
+                "padding": "10px"
+            }),
+        ], style={
+            "flex": "1 1 85%",
+            "height": "90%",
+            "display": "flex",
+            "flexDirection": "column",
+            "overflow": 'hidden',
+            "border-radius": "10px",
+            'margin': "10px 10px 10px 10px"
+        })
+    ], style={
+        "display": "flex",
+        "width": "100%",
+        "height": "100%",
+        "backgroundColor": brand_colors['Light green']
+    }) 
 
 def health_nutrition_tab_layout():
     tile_width, lg = 12, 4  # Tile width in columns, large screen size, height in pixels
@@ -1028,7 +1204,7 @@ def health_nutrition_tab_layout():
             
                     ]),
                 ], style={  "overflowY": "auto",
-                            "width": "100%", 
+                            "width": "auto", 
                             "padding": "10px",
                             "backgroundColor": brand_colors['Light green']})
     
@@ -1147,6 +1323,7 @@ def update_map_on_bar_click(clickData, selected_variable):
     return fig
 
 
+
 @app.callback(
     Output('map_foodoutlets', 'figure'),
     Input('variable-dropdown', 'value')
@@ -1250,32 +1427,93 @@ def filter_table(filter_by, selected):
     
 
 @app.callback(
-    Output("geojson-layers", "children"),
-    Input("layer-select", "value")
+    Output('affordability-map', 'figure'),
+    [Input("choropleth-select", "value"),
+     Input("outlets-layer-select", "value")],
+    [State('affordability-map', 'relayoutData')]
 )
-def update_layers(selected):
-    if not selected:
-        return []
+def update_affordability_map(selected_metric, selected_outlets, relayout_data):
+    # Preserve current zoom and center if available
+    if relayout_data and 'mapbox.center' in relayout_data:
+        center = relayout_data['mapbox.center']
+        zoom = relayout_data.get('mapbox.zoom', 11)
+    else:
+        center = {"lat": 9.0192, "lon":  38.752}
+        zoom = 11
+    
+    fig = go.Figure()
+    
+    # Add choropleth layer if metric selected
+    if selected_metric:
+        gdf = gdf_food_env.copy()
+        
+        if selected_metric in gdf.columns:
+            gdf[selected_metric] = pd.to_numeric(gdf[selected_metric], errors='coerce')
+            
+            # Get human-readable label for the metric
+            metric_label = data_labels_food_env[cols_food_env.index(selected_metric)] if selected_metric in cols_food_env else selected_metric
+            
+            # Choose color scale based on metric direction
+            direction = metric_direction.get(selected_metric, None)
+            if direction is True:
+                colorscale = [[0, green_scale[0]], [0.25, green_scale[1]], [0.5, green_scale[2]], 
+                             [0.75, green_scale[3]], [1, green_scale[4]]]
+            elif direction is False:
+                colorscale = [[0, red_scale[0]], [0.25, red_scale[1]], [0.5, red_scale[2]], 
+                             [0.75, red_scale[3]], [1, red_scale[4]]]
+            else:
+                colorscale = [[0, grey_scale[0]], [0.25, grey_scale[1]], [0.5, grey_scale[2]], 
+                             [0.75, grey_scale[3]], [1, grey_scale[4]]]
+            
+            geojson_data = json.loads(gdf.to_json())
+            
+            fig.add_trace(go.Choroplethmapbox(
+                geojson=geojson_data,
+                locations=gdf.index,
+                z=gdf[selected_metric],
+                colorscale=colorscale,
+                marker=dict(opacity=0.7, line=dict(color='#222', width=1)),
+                hovertemplate='<b>' + metric_label + '</b>: %{z:.2f}<extra></extra>',
+                text=gdf.get('Dist_Name', gdf.index),
+                showscale=False
+            ))
+    
+    # Add outlet markers if selected
+    if selected_outlets:
+        # Dark/vivid blue color palette for outlet markers (stands out against light red/green choropleth)
+        blue_palette = ["#e00065","#fa5a0f","#ffda0a","#00a0d1","#6a17de"]
+        
+        for i, filename in enumerate(selected_outlets):
+            outlet_gdf = gpd.read_file(outlets_path + filename).to_crs('EPSG:4326')
+            
+            # Cycle through blue palette colors
+            marker_color = blue_palette[i % len(blue_palette)]
+            
+            fig.add_trace(go.Scattermapbox(
+                lat=outlet_gdf.geometry.y,
+                lon=outlet_gdf.geometry.x,
+                mode='markers',
+                marker=dict(size=6, color=marker_color, opacity=0.8),
+                name=filename.split('_')[1] if len(filename.split('_')) < 4 else f"{filename.split('_')[1]} {filename.split('_')[2]}",
+                hoverinfo='skip'
+            ))
+    
+    # Update layout
+    fig.update_layout(
+        mapbox=dict(
+            style="carto-positron",
+            center=center,
+            zoom=zoom
+        ),
+        margin=dict(l=0, r=0, t=0, b=0),
+        paper_bgcolor=brand_colors['White'],
+        showlegend=True if selected_outlets else False,
+        legend=dict(x=0.01, y=0.99, bgcolor='rgba(255,255,255,0.8)'),
+        uirevision='constant'  # Preserve zoom/pan state
+    )
+    
+    return fig
 
-    layers = []
-
-    for i, filename in enumerate(selected):
-        f = gpd.read_file(outlets_path + filename).to_crs('EPSG:4326')
-        g = json.loads(f.to_json())
-
-        layers.append(
-            dl.GeoJSON(
-                data=g,
-                zoomToBounds=True,
-                cluster=True,
-                zoomToBoundsOnClick=True,
-                superClusterOptions=dict(radius=150),
-                id=filename.split('_')[1] if len(filename.split('_')) < 4 else f"{filename.split('_')[1]} {filename.split('_')[2]}",
-                options=dict(style=dict(weight=2, opacity=0.5, fillOpacity=0.2),
-            )
-        ))
-
-    return layers
 
 @app.callback(
     [Output("kpi-total-flow", "children"),
@@ -1368,6 +1606,9 @@ def render_tab_content(n1, n2, n3, n4, n5, n6, n7, n8, n9, n10, n11, n12):
     tab_id = ctx.triggered[0]['prop_id'].split('.')[0]
     if tab_id == "tab-1-stakeholders":
         return stakeholders_tab_layout()
+        
+    elif tab_id == "tab-2-supply":
+        return supply_tab_layout()
     
     elif tab_id == "tab-4-poverty":
         return poverty_tab_layout()
@@ -1375,9 +1616,9 @@ def render_tab_content(n1, n2, n3, n4, n5, n6, n7, n8, n9, n10, n11, n12):
     elif tab_id == "tab-7-affordability":
         return affordability_tab_layout()
     
-    elif tab_id == "tab-2-supply":
-        return supply_tab_layout()
-    
+    elif tab_id == "tab-9-policies":
+        return policies_tab_layout()
+
     elif tab_id == "tab-10-nutrition":
         return health_nutrition_tab_layout()
 
