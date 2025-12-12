@@ -187,6 +187,9 @@ df_sankey = pd.read_csv(path+'/hanoi_supply.csv')
 
 df_policies = pd.read_csv(path+'/addis_policy_database.csv').drop('Unnamed: 0',axis=1)
 
+df_env = pd.read_csv(path+'/addis_lca_pivot.csv')
+df_lca = df_env  # Alias for compatibility
+
 # -------------------------- Defining Custom Styles ------------------------- #
 
 tabs_style = {
@@ -334,7 +337,7 @@ def landing_page_layout():
         "losses":grey_tab_bg,
         "policies":white_tab_bg, 
         "nutrition":white_tab_bg, 
-        "footprints":grey_tab_bg, 
+        "footprints":white_tab_bg, 
         "behaviour":grey_tab_bg
     }
     
@@ -440,22 +443,6 @@ def landing_page_layout():
         "boxSizing": "border-box",
         'overflowY':'auto'
     })
-
-
-#------------------------- App Layout ----------------------- #
-
-app.layout = html.Div([
-
-                    html.Div(id="tab-content", children=landing_page_layout(), style={"width": "100%",
-                                                                                            "height": "100%"})
-
-                    # Parent container for full page
-                    ], style={
-                        "display": "flex",
-                        "flexDirection": "column",
-                        "height": "100vh",
-                        "width": "100vw"
-            })
 
 
 # ------------------------- Defining tab layouts ------------------------- #
@@ -1041,7 +1028,6 @@ def affordability_tab_layout():
                     "backgroundColor": brand_colors['Light green']
         })
 
-
 def policies_tab_layout():
     return html.Div([
         html.Div([sidebar], style={
@@ -1204,7 +1190,7 @@ def health_nutrition_tab_layout():
             
                     ]),
                 ], style={  "overflowY": "auto",
-                            "width": "auto", 
+                            "flex": "1 1 85%",
                             "padding": "10px",
                             "backgroundColor": brand_colors['Light green']})
     
@@ -1214,6 +1200,86 @@ def health_nutrition_tab_layout():
                     "height": "100%",
                     "backgroundColor": brand_colors['Light green']
         })
+
+def footprints_tab_layout():
+    return html.Div([
+        html.Div([sidebar], style={
+            "width": "15%",
+            "height": "100%",
+            "display": "flex",
+            "vertical-align": 'top',
+            "flexDirection": "column",
+            "justifyContent": "flex-start"
+        }),
+
+        # Main content area
+        html.Div([
+            
+            # Dropdown card to select food group
+            dbc.Card([
+                dbc.CardBody([
+                    html.H5("Select Food Group:", style={
+                        "fontSize": "clamp(0.9em, 1.1vw, 1.2em)",
+                        "marginBottom": "10px",
+                        "color": brand_colors['Brown']
+                    }),
+                    dcc.Dropdown(
+                        id='food-group-select',
+                        options=[
+                            {'label': group.split('-')[1] if '-' in group else group, 'value': group}
+                            for group in sorted(df_lca['Food Group'].dropna().unique())
+                        ],
+                        value=sorted(df_lca['Food Group'].dropna().unique())[0],
+                        clearable=False,
+                        style={"fontSize": "clamp(0.8em, 1vw, 1.1em)"}
+                    )
+                ])
+            ], style={
+                "marginBottom": "20px",
+                "box-shadow": "0 2px 6px rgba(0,0,0,0.1)",
+                "backgroundColor": brand_colors['White'],
+                "border-radius": "10px",
+                "padding": "10px"
+            }),
+            
+            # Container for food item cards (populated by callback)
+            html.Div(id='food-items-container', style={
+                "display": "grid",
+                "gridTemplateColumns": "repeat(auto-fill, minmax(300px, 1fr))",
+                "gap": "15px",
+                "width": "100%"
+            }),
+
+        ], style={
+            "flex": "1 1 85%",
+            "overflowY":'auto',
+            "padding": "20px",
+            "display": "flex",
+            "flexDirection": "column"
+        })
+        
+    ], style={
+        "display": "flex",
+        "width": "100%",
+        "height": "100%",
+        "backgroundColor": brand_colors['Light green']
+    })
+
+
+#------------------------- App Layout ----------------------- #
+
+app.layout = html.Div([
+
+                    html.Div(id="tab-content", children=landing_page_layout(), style={"width": "100%",
+                                                                                            "height": "100%"})
+
+                    # Parent container for full page
+                    ], style={
+                        "display": "flex",
+                        "flexDirection": "column",
+                        "height": "100vh",
+                        "width": "100vw"
+            })
 
 # ------------------------- Callbacks ------------------------- #
 
@@ -1581,6 +1647,79 @@ def update_sankey(value):
 
     return total_flow_text, urban_fig, fig
 
+# Populate food items grid based on selected food group
+@app.callback(
+    Output('food-items-container', 'children'),
+    [Input('food-group-select', 'value')]
+)
+def update_food_items_grid(selected_group):
+    # Filter items by selected group
+    filtered_df = df_lca[df_lca['Food Group'] == selected_group].sort_values('Item Cd')
+    
+    # Create a card for each food item
+    food_cards = []
+    for _, row in filtered_df.iterrows():
+        # Create 2x2 grid of mini KPI cards
+        mini_kpis = html.Div([
+            # Row 1: GHG and Water
+            html.Div([
+                # GHG mini card
+                html.Div([
+                    html.Div("GHG", style={"fontSize": "0.7em", "color": brand_colors['Brown'], "marginBottom": "2px"}),
+                    html.Div(f"{row['Total GHG Emissions']:.4f}", style={"fontSize": "1em", "fontWeight": "bold", "color": brand_colors['Red']}),
+                    html.Div("kg CO₂-eq", style={"fontSize": "0.6em", "color": brand_colors['Brown']})
+                ], style={"flex": "1", "textAlign": "center", "padding": "8px", "backgroundColor": "#f9f9f9", "borderRadius": "5px", "margin": "3px"}),
+                
+                # Water mini card
+                html.Div([
+                    html.Div("Water", style={"fontSize": "0.7em", "color": brand_colors['Brown'], "marginBottom": "2px"}),
+                    html.Div(f"{row['Freshwater Comsumption (l)']:.2f}", style={"fontSize": "1em", "fontWeight": "bold", "color": brand_colors['Red']}),
+                    html.Div("liters", style={"fontSize": "0.6em", "color": brand_colors['Brown']})
+                ], style={"flex": "1", "textAlign": "center", "padding": "8px", "backgroundColor": "#f9f9f9", "borderRadius": "5px", "margin": "3px"})
+            ], style={"display": "flex", "marginBottom": "5px"}),
+            
+            # Row 2: Acidification and Eutrophication
+            html.Div([
+                # Acidification mini card
+                html.Div([
+                    html.Div("Acidification", style={"fontSize": "0.7em", "color": brand_colors['Brown'], "marginBottom": "2px"}),
+                    html.Div(f"{row['Acidification (kg SO2eq)']:.6f}", style={"fontSize": "1em", "fontWeight": "bold", "color": brand_colors['Red']}),
+                    html.Div("kg SO₂-eq", style={"fontSize": "0.6em", "color": brand_colors['Brown']})
+                ], style={"flex": "1", "textAlign": "center", "padding": "8px", "backgroundColor": "#f9f9f9", "borderRadius": "5px", "margin": "3px"}),
+                
+                # Eutrophication mini card
+                html.Div([
+                    html.Div("Eutrophication", style={"fontSize": "0.7em", "color": brand_colors['Brown'], "marginBottom": "2px"}),
+                    html.Div(f"{row['Eutrophication (kg PO43-eq)']:.6f}", style={"fontSize": "1em", "fontWeight": "bold", "color": brand_colors['Red']}),
+                    html.Div("kg PO₄³⁻-eq", style={"fontSize": "0.6em", "color": brand_colors['Brown']})
+                ], style={"flex": "1", "textAlign": "center", "padding": "8px", "backgroundColor": "#f9f9f9", "borderRadius": "5px", "margin": "3px"})
+            ], style={"display": "flex"})
+        ])
+        
+        # Main card for this food item
+        food_card = dbc.Card([
+            dbc.CardBody([
+                html.H5(row['Item Cd'], style={
+                    "color": brand_colors['Brown'],
+                    "fontWeight": "bold",
+                    "marginBottom": "10px",
+                    "textAlign": "center",
+                    "fontSize": "clamp(0.9em, 1em, 1.1em)"
+                }),
+                mini_kpis
+            ])
+        ], style={
+            "backgroundColor": brand_colors['White'],
+            "borderRadius": "10px",
+            "boxShadow": "0 2px 6px rgba(0,0,0,0.1)",
+            "padding": "10px",
+            "height": "100%"
+        })
+        
+        food_cards.append(food_card)
+    
+    return food_cards
+
 # Linking the tabs to page content loading 
 @app.callback(
     Output("tab-content", "children"),
@@ -1621,6 +1760,9 @@ def render_tab_content(n1, n2, n3, n4, n5, n6, n7, n8, n9, n10, n11, n12):
 
     elif tab_id == "tab-10-nutrition":
         return health_nutrition_tab_layout()
+    
+    elif tab_id == "tab-11-footprints":
+        return footprints_tab_layout()
 
     else:
         return landing_page_layout()
