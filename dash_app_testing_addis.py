@@ -530,11 +530,11 @@ def stakeholders_tab_layout():
                             'rule': 'position: fixed !important; background-color: ' + brand_colors['Light green'] + '; color: ' + brand_colors['Black'] + '; border: 2px solid ' + brand_colors['Dark green'] + '; padding: 6px; font-size: 14px; box-shadow: 0 4px 8px ' + brand_colors['Black'] + ';'
                         }],
                         style_table={
-                            'overflowX': 'auto',
-                            'width': '100%',
-                            'height': '100%',
-                            'overflowY': 'auto'
-                        }
+                            'overflowX': 'scroll',
+                            'overflowY': 'auto',
+                            'height': '100%'
+                        },
+                        style_as_list_view=True
                     )
                 ], style={"height": "100%", "display": "flex", "flexDirection": "column"})
             ], style={"height": "90%", "padding": "10px", "box-shadow": "0 2px 6px rgba(0,0,0,0.1)", "backgroundColor": brand_colors['White'], "border-radius": "10px"}),
@@ -936,20 +936,20 @@ def affordability_tab_layout():
                         style={"height": "100%", "width": "100%", "padding": "0", "margin": "0"}
                     )
                 ], style={
-                "flex": "1",
-                "height": "100%",
-                "padding": "0",
-                "margin": "0",
-                "backgroundColor": brand_colors['White'],
-                "border-radius": "0",
-                "display": "flex",
-                "flexDirection": "column",
-                "alignItems": "stretch",
-                "justifyContent": "center",
-                "box-sizing": "border-box",
-                "zIndex": 1000,
-                "position": "relative",
-            })
+                    "flex": "1",
+                    "height": "100%",
+                    "padding": "0",
+                    "margin": "0",
+                    "backgroundColor": brand_colors['White'],
+                    "border-radius": "0",
+                    "display": "flex",
+                    "flexDirection": "column",
+                    "alignItems": "stretch",
+                    "justifyContent": "center",
+                    "box-sizing": "border-box",
+                    "zIndex": 1000,
+                    "position": "relative",
+                })
 
         ], style={
                     "display": "flex", 
@@ -1630,20 +1630,21 @@ def update_affordability_map(selected_metric, selected_outlets, relayout_data):
     
     # Add outlet markers if selected
     if selected_outlets:
-        # Dark/vivid blue color palette for outlet markers (stands out against light red/green choropleth)
-        blue_palette = [
-                    "#1a3a3a",  
-                    "#4a2c2a",  
-                    "#2d4263",  
-                    "#3d1f1f",  
-                    "#2c4a2c",  
-                ]
+        # Diverse color palette for outlet markers - high contrast against light backgrounds and each other
+        marker_palette = [
+            "#ff7f0e",  # Vibrant orange
+            "#9467bd",  # Purple
+            "#8c564b",  # Brown
+            "#e377c2",  # Pink
+            "#e8e826",  # Olive
+            "#17becf"   # Cyan
+        ]
         
         for i, filename in enumerate(selected_outlets):
-            outlet_gdf = gpd.read_file(outlets_path + filename).to_crs('EPSG:4326')
+            outlet_gdf = gpd.read_file(os.path.join(outlets_path, filename)).to_crs('EPSG:4326')
             
-            # Cycle through blue palette colors
-            marker_color = blue_palette[i % len(blue_palette)]
+            # Cycle through diverse color palette
+            marker_color = marker_palette[i % len(marker_palette)]
             
             fig.add_trace(go.Scattermapbox(
                 lat=outlet_gdf.geometry.y,
@@ -2010,5 +2011,6 @@ server = app.server
 if __name__ == '__main__':
     # For production, Render will set PORT environment variable
     port = int(os.environ.get('PORT', 8051))
-    debug = os.environ.get('DEBUG', 'False').lower() == 'true'
+    # Debug True by default for local dev, False in production (when PORT is set by Render)
+    debug = os.environ.get('PORT') is None
     app.run(debug=debug, host='0.0.0.0', port=port)
