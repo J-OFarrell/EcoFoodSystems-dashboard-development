@@ -1,0 +1,17 @@
+{
+"type": "FeatureCollection",
+"name": "shop_wine_hanoi",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:EPSG::3857" } },
+"features": [
+{ "type": "Feature", "properties": { "id": 4453205990, "category": "shop", "label": "wine" }, "geometry": { "type": "Point", "coordinates": [ 11779267.131552139297128, 2395994.609071766957641 ] } },
+{ "type": "Feature", "properties": { "id": 5385096021, "category": "shop", "label": "wine" }, "geometry": { "type": "Point", "coordinates": [ 11783674.604151116684079, 2394102.540156605187804 ] } },
+{ "type": "Feature", "properties": { "id": 5753234222, "category": "shop", "label": "wine" }, "geometry": { "type": "Point", "coordinates": [ 11784098.564431801438332, 2395016.575711218174547 ] } },
+{ "type": "Feature", "properties": { "id": 9942330802, "category": "shop", "label": "wine" }, "geometry": { "type": "Point", "coordinates": [ 11779814.088738203048706, 2393424.855174232739955 ] } },
+{ "type": "Feature", "properties": { "id": 10175388418, "category": "shop", "label": "wine" }, "geometry": { "type": "Point", "coordinates": [ 11780103.630733756348491, 2396075.889661023393273 ] } },
+{ "type": "Feature", "properties": { "id": 10692718106, "category": "shop", "label": "wine" }, "geometry": { "type": "Point", "coordinates": [ 11781067.290169706568122, 2396208.241256182547659 ] } },
+{ "type": "Feature", "properties": { "id": 11505968811, "category": "shop", "label": "wine" }, "geometry": { "type": "Point", "coordinates": [ 11783227.923562359064817, 2393517.297765052411705 ] } },
+{ "type": "Feature", "properties": { "id": 11615961402, "category": "shop", "label": "wine" }, "geometry": { "type": "Point", "coordinates": [ 11783167.254439877346158, 2393801.914728645700961 ] } },
+{ "type": "Feature", "properties": { "id": 12098955401, "category": "shop", "label": "wine" }, "geometry": { "type": "Point", "coordinates": [ 11783283.249349284917116, 2393749.813515996094793 ] } },
+{ "type": "Feature", "properties": { "id": 1231374577, "category": "shop", "label": "wine" }, "geometry": { "type": "Point", "coordinates": [ 11778560.129582175984979, 2394205.803946902044117 ] } }
+]
+}

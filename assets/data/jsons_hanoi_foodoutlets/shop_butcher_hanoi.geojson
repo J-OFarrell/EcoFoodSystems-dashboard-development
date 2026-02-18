@@ -1,0 +1,14 @@
+{
+"type": "FeatureCollection",
+"name": "shop_butcher_hanoi",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:EPSG::3857" } },
+"features": [
+{ "type": "Feature", "properties": { "id": 4378846896, "category": "shop", "label": "butcher" }, "geometry": { "type": "Point", "coordinates": [ 11781399.066780066117644, 2393658.657630092930049 ] } },
+{ "type": "Feature", "properties": { "id": 4432075090, "category": "shop", "label": "butcher" }, "geometry": { "type": "Point", "coordinates": [ 11784018.347606737166643, 2391402.352490451652557 ] } },
+{ "type": "Feature", "properties": { "id": 6221120385, "category": "shop", "label": "butcher" }, "geometry": { "type": "Point", "coordinates": [ 11778414.780475033447146, 2394639.669286367949098 ] } },
+{ "type": "Feature", "properties": { "id": 8363335532, "category": "shop", "label": "butcher" }, "geometry": { "type": "Point", "coordinates": [ 11774951.686776200309396, 2400571.887893875129521 ] } },
+{ "type": "Feature", "properties": { "id": 10857545234, "category": "shop", "label": "butcher" }, "geometry": { "type": "Point", "coordinates": [ 11778753.82624814286828, 2397584.078802577685565 ] } },
+{ "type": "Feature", "properties": { "id": 11590640344, "category": "shop", "label": "butcher" }, "geometry": { "type": "Point", "coordinates": [ 11775844.257585329934955, 2397289.739937779959291 ] } },
+{ "type": "Feature", "properties": { "id": 13264888450, "category": "shop", "label": "butcher" }, "geometry": { "type": "Point", "coordinates": [ 11777102.924803830683231, 2392628.630966887809336 ] } }
+]
+}
