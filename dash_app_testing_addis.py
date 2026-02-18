@@ -145,7 +145,7 @@ for col in df_sh.columns:
 total_table_width = sum(column_widths.values())
 
 # Loading GeoJSON files for Food Outlets
-outlets_path = "/Users/jemimaofarrell/Documents/Python/EcoFoodSystems/EcoFoodSystems_Dashboard_Development/assets/data/jsons_addis_foodoutlets/"
+outlets_path = os.path.join(homepath, "assets", "data", "jsons_addis_foodoutlets")
 outlets_geojson_files = sorted(os.listdir(outlets_path))
 
 # Loading and Formatting Food Environment Choropleth Data
