@@ -128,11 +128,12 @@ variables = df_mpi['Variable'].unique()
 
 # Loading and Formatting Food Systems Stakeholders Data
 df_sh = pd.read_csv(path+"/addis_stakeholders_cleaned.csv").dropna(how='any').astype(str)
+df_sh.rename(columns={'Area of Activity (Food Systems Value Chain)': 'Area of Activity'}, inplace=True)
 
 # Format Website column as clickable markdown links
 if 'Website' in df_sh.columns:
     df_sh['Website'] = df_sh['Website'].apply(
-        lambda x: f'[🔗]({x})' if x and x.startswith('http') else '--'
+        lambda x: f'[Link Available]({x})' if x and x.startswith('http') else '--'
     )
 
 # Pre-calculate fixed column widths (6px per character, min 80px, max 200px)
@@ -462,127 +463,46 @@ def landing_page_layout():
 
 
 # ------------------------- Defining tab layouts ------------------------- #
-
 def stakeholders_tab_layout():
+    # Render the stakeholders database as a full-page interactive table (like policies tab)
     return html.Div([
-
         html.Div([sidebar], style={
-                                    "width": "15%",
-                                    "height": "100%",
-                                    "display": "flex",
-                                    "vertical-align":'top',
-                                    "flexDirection": "column",
-                                    "justifyContent": "flex-start",
-                                    }), # End of sidebar div
-
-        # Left Panel
-        html.Div([
-
-            # Card 2: Filter Dropdown
-            dbc.Card([
-                dbc.CardBody([
-                    html.Div([
-                    html.P("Filter Database by:", 
-                            style={     "margin": "0 12px 0 0", 
-                                        'fontSize': 'clamp(0.8em, 1em, 1.1em)',
-                                        "whiteSpace": "nowrap"
-                                        }),
-                                        
-                    dcc.Dropdown(
-                        id='pie-filter-dropdown',
-                        options=[
-                            {'label': 'Primary Sector', 'value': 'Sector'},
-                            {'label': 'Area of Activity', 'value': 'Area'},
-                            {'label': 'Scale of Activity', 'value': 'Scale'}
-                        ],
-                        value='Sector',
-                        clearable=False,
-                        style={"margin-bottom": "0", 
-                                'fontSize': 'clamp(0.8em, 1em, 1.1em)',
-                                "minWidth": "180px"}
-                    )
-                    ], style={  "display":'flex',
-                                "flexDirection":'row',
-                                "alignItems": "center",
-                                'width':'100%'})
-                ])
-            ], style={  "height": "auto", 
-                        "padding":"2px" ,
-                        "box-shadow": "0 2px 6px rgba(0,0,0,0.1)",
-                        'margin-bottom': '15px',
-                        "backgroundColor": brand_colors['White'],
-                        "border-radius": "10px"
-                        }),
-
-            # Card 3: Pie Chart
-            dbc.Card([
-                dbc.CardBody([
-                    html.Div([html.P("Select a slice of the pie chart to filter the database.", 
-                                    style={     "margin": "0 6px", 
-                                                'fontSize': 'clamp(0.7em, 1em, 1.0em)',
-                                                "textAlign": "center",
-                                                "whiteSpace": "normal",
-                                                "fontStyle": "italic"
-                                                })
-                              ], style={"width":"100%",
-                                        "marginBottom":"6px"}),
-                    dcc.Graph(id='piechart', 
-                              style={
-                                "flex": "1 1 auto",
-                                "height":"90%",
-                                'padding': '4px',
-                                'margin': '0',
-                                #"border-radius": "8px",
-                                #"box-shadow": "0 2px 8px rgba(0,0,0,0.15)",
-                                })
-                ],style={
-                        "display": "flex",
-                        "flexDirection": "column",
-                        "height": "100%"             
-                        })
-            ], style={  "height": "60%", 
-                        "padding":"6px" ,
-                        "box-shadow": "0 2px 6px rgba(0,0,0,0.1)",
-                        "backgroundColor": brand_colors['White'],
-                        "border-radius": "10px"}),
-            dcc.Store(id='selected_slice', data=None)
-        ], style={
-            #"flex": "1 1 30%",
-            "maxWidth": "30%",
+            "width": "15%",
             "height": "100%",
-            "padding": "10px",
-            "margin": "0",
-            "border-radius": "10px",
-            #"backgroundColor": brand_colors['Light green'],
             "display": "flex",
-            "flexDirection": "column"
+            "vertical-align": 'top',
+            "flexDirection": "column",
+            "justifyContent": "flex-start",
         }),
 
-        # Right Panel: Table 
+        # Main content: full-page DataTable for stakeholders
         html.Div([
             dbc.Card([
-                #dbc.CardHeader("Stakeholder Database"),
+                #dbc.CardHeader(html.H3("Food Systems Stakeholders", style=header_style)),
                 dbc.CardBody([
                     dash_table.DataTable(
                         id='sh_table',
                         data=df_sh.to_dict('records'),
                         columns=[
-                            {"name": str(i), "id": str(i), "presentation": "markdown"} 
-                            if i == "Website" 
-                            else {"name": str(i), "id": str(i)} 
+                            {"name": str(i), "id": str(i), "presentation": "markdown"} if i == "Website" else {"name": str(i), "id": str(i)}
                             for i in df_sh.columns
                         ],
-                        page_size=11,
+                        page_size=13,
                         page_action='native',
+                        filter_action='native',
+                        sort_action='native',
+                        sort_mode='multi',
                         style_cell={
                             'textAlign': 'left',
-                            'padding': '8px',
+                            'padding': '2px 6px',                     
                             'whiteSpace': 'nowrap',
                             'overflow': 'hidden',
                             'textOverflow': 'ellipsis',
-                            'fontSize': 'clamp(0.7em, 1vw, 1em)',
+                            'fontSize': 'clamp(0.64em, 0.85vw, 0.9em)',
+                            'lineHeight': '1.1',                       
                             'minWidth': '120px',
-                            'maxWidth': '250px',
+                            'maxWidth': '320px',
+                            'height': '36px'                          
                         },
                         style_header={
                             'fontWeight': 'bold',
@@ -594,51 +514,45 @@ def stakeholders_tab_layout():
                         style_data_conditional=[
                             {'if': {'row_index': 'odd'}, 'backgroundColor': '#f9f9f9'}
                         ],
+                        # Provide hover tooltips for long text columns (e.g. description)
                         tooltip_data=[
                             {
-                                column: {'value': str(row[column]), 'type': 'markdown'}
-                                for column in df_sh.columns
+                                col: {
+                                    'value': str(row[col]) if (col.lower() == 'description' or len(str(row[col])) > 120) else '',
+                                    'type': 'text'
+                                }
+                                for col in df_sh.columns
                             } for row in df_sh.to_dict('records')
                         ],
-                        tooltip_duration=None,
+                        tooltip_duration=4000,
                         css=[{
                             'selector': '.dash-table-tooltip',
-                            'rule': 'background-color: ' +brand_colors['Light green']+ '; color: '+brand_colors['Black']+'; border: 2px solid ' + brand_colors['Dark green'] + '; padding: 6px; font-size: 14px; box-shadow: 0 4px 8px '+brand_colors['Black']+';'
+                            'rule': 'position: fixed !important; background-color: ' + brand_colors['Light green'] + '; color: ' + brand_colors['Black'] + '; border: 2px solid ' + brand_colors['Dark green'] + '; padding: 6px; font-size: 14px; box-shadow: 0 4px 8px ' + brand_colors['Black'] + ';'
                         }],
-                        style_table={  
+                        style_table={
                             'overflowX': 'auto',
                             'width': '100%',
+                            'height': '100%',
+                            'overflowY': 'auto'
                         }
                     )
-                ],style={"height": "auto",
-                         "overflowY":"auto",
-                         "display": "flex", 
-                         "flexDirection": "column"})
-
-            ], style={"height": "auto",
-                      "overflowY":"auto",
-                      "box-shadow": "0 2px 6px rgba(0,0,0,0.1)",
-                      "backgroundColor": brand_colors['White'],
-                      "border-radius": "10px",
-                      "padding": "10px"
-                    }),
+                ], style={"height": "100%", "display": "flex", "flexDirection": "column"})
+            ], style={"height": "90%", "padding": "10px", "box-shadow": "0 2px 6px rgba(0,0,0,0.1)", "backgroundColor": brand_colors['White'], "border-radius": "10px"}),
         ], style={
-            "flex": "1 1 50%",
-            #"backgroundColor": brand_colors['Light green'],
-            #"width": "50%",
-            "height": "90%",
+            "flex": "1 1 85%",
+            "height": "100%",
             "display": "flex",
-            "flexDirection": "column",
-            "overflow":'hidden',
+            "overflow": "auto",
             "border-radius": "10px",
-            'margin':"10px 2px 10px 10px"
+            "margin": "10px 10px 10px 10px"
         })
 
-    ], style={  "display": "flex", 
-                "width": "100%", 
-                "height": "100%", 
-                "backgroundColor": brand_colors['Light green']
-              })
+    ], style={
+        "display": "flex",
+        "width": "100%",
+        "height": "100%",
+        "backgroundColor": brand_colors['Light green']
+    })
 
 def supply_tab_layout():
     return html.Div([
@@ -653,7 +567,7 @@ def supply_tab_layout():
 
             # Left Panel
             html.Div([
-    
+
                 dbc.Card([
                     dbc.CardBody([
                         html.H5("Total Flow", className="card-title", style={
@@ -2090,6 +2004,11 @@ def render_tab_content(n1, n2, n3, n4, n5, n6, n7, n8, n9, n10, n11, n12):
     else:
         return landing_page_layout()
 
+# Expose the Flask server for production deployment
+server = app.server
 
 if __name__ == '__main__':
-    app.run(debug=True, port=8051)
+    # For production, Render will set PORT environment variable
+    port = int(os.environ.get('PORT', 8051))
+    debug = os.environ.get('DEBUG', 'False').lower() == 'true'
+    app.run(debug=debug, host='0.0.0.0', port=port)
