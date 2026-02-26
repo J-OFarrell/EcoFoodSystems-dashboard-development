@@ -10,8 +10,38 @@ from config import brand_colors, tabs_style
 # ========================== Sidebar ==========================
 
 sidebar = dbc.Card([
-    #html.Img(src="/assets/logos/temp_efs_logo.png", style={"width": "40%", "margin-bottom": "10px", "justifyContent": "center"}),
     dbc.Nav([
+        dbc.NavItem(
+            dbc.NavLink([
+                html.Img(
+                    src="/assets/logos/home_button.svg",
+                    alt="Home",
+                    style={
+                        "height": "28px",
+                        "width": "28px",
+                        "verticalAlign": "middle",
+                        "marginRight": "8px",
+                        "marginBottom": "3px"
+                    }
+                ),
+                html.Span("Home", style={
+                    "verticalAlign": "middle",
+                    "fontWeight": "bold",
+                    "fontSize": "1.08em"
+                })
+            ], id="tab-home", style={
+                "display": "flex",
+                "alignItems": "center",
+                "justifyContent": "center",
+                "backgroundColor": brand_colors['Light green'],
+                "color": brand_colors['White'],
+                "borderRadius": "8px",
+                "boxShadow": "0 2px 8px rgba(0,0,0,0.15)",
+                "letterSpacing": "0.5px",
+                "padding": "6px 4px",
+            }, href="#", active="exact"),
+            style={"marginBottom": "8px", "textAlign": "center", 'width': '90%'}
+        ),
         dbc.NavItem(dbc.NavLink("Food Systems Stakeholders", id="tab-1-stakeholders", href="#", active="exact"), style=tabs_style),
         dbc.NavItem(dbc.NavLink("Food Flows, Supply & Value Chains", id="tab-2-supply", href="#", active="exact"), style=tabs_style),
         dbc.NavItem(dbc.NavLink("Sustainability Metrics & Indicators", id="tab-3-sustainability", href="#", active="exact"), style=tabs_style),
@@ -59,9 +89,6 @@ def city_selector(selected_city='addis', visible=True):
     Set visible=False to hide it on tab pages.
     """
     return html.Div([
-        # Store the selected city (invisible data storage)
-        dcc.Store(id='selected-city', data=selected_city),
-        
         # Dropdown selector
         html.Div([
             html.Label("City:", style={

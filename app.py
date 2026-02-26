@@ -398,10 +398,10 @@ def landing_page_layout(background_image=None, tab_backgrounds=None, selected_ci
         ], style={"marginBottom": "0"}),
     ], style={"width": "100%", "margin": "0 auto", "padding": "0 4px"})
 
-    return html.Div([
-        # Store selected city
-        dcc.Store(id='selected-city', data='addis'),
-        
+    # Put sidebar and main landing content side-by-side so the Home tab id exists
+    main_content = html.Div([
+        # Hidden home button so `tab-home` exists for callbacks but sidebar is not shown on landing page
+        html.Button(id='tab-home', n_clicks=0, style={'display': 'none'}),
         # Header with Title and City Selector
         html.Div([
             # Title centered
@@ -463,12 +463,15 @@ def landing_page_layout(background_image=None, tab_backgrounds=None, selected_ci
     ], style={
         "backgroundColor": brand_colors['Light green'],
         "height": "100vh",
-        "width": "100vw",
+        "width": "100%",
         "padding": "0",
         "margin": "0",
         "boxSizing": "border-box",
         'overflowY':'auto'
     })
+
+    # Return only the main landing content (no sidebar visible on homepage)
+    return main_content
 
 
 # ------------------------- Tab Layouts ------------------------- #
@@ -481,15 +484,16 @@ def landing_page_layout(background_image=None, tab_backgrounds=None, selected_ci
 #------------------------- App Layout ----------------------- #
 
 app.layout = html.Div([
-                    html.Div(id="tab-content", children=landing_page_layout(), style={"width": "100%",
-                                                                                       "height": "100%"})
-                    # Parent container for full page
-                ], style={
-                        "display": "flex",
-                        "flexDirection": "column",
-                        "height": "100vh",
-                        "width": "100vw"
-            })
+    dcc.Store(id='selected-city', data='addis'),
+    html.Div(id="tab-content", children=landing_page_layout(), style={"width": "100%",
+                                                                       "height": "100%"})
+    # Parent container for full page
+], style={
+    "display": "flex",
+    "flexDirection": "column",
+    "height": "100vh",
+    "width": "100vw"
+})
 
 # ------------------------- Callbacks ------------------------- #
 
@@ -1093,6 +1097,7 @@ def filter_by_sdg(*args):
 @app.callback(
     Output("tab-content", "children"),
     [
+        Input("tab-home", "n_clicks"),
         Input("tab-1-stakeholders", "n_clicks"),
         Input("tab-2-supply", "n_clicks"),
         Input("tab-3-sustainability", "n_clicks"),
@@ -1109,7 +1114,7 @@ def filter_by_sdg(*args):
     ],
     [State("selected-city", "data")]
 )
-def render_tab_content(n1, n2, n3, n4, n5, n6, n7, n8, n9, n10, n11, n12, city_value, selected_city):
+def render_tab_content(n_home, n1, n2, n3, n4, n5, n6, n7, n8, n9, n10, n11, n12, city_value, selected_city):
     ctx = dash.callback_context
     if not ctx.triggered:
         return landing_page_layout()
@@ -1146,6 +1151,12 @@ def render_tab_content(n1, n2, n3, n4, n5, n6, n7, n8, n9, n10, n11, n12, city_v
             return hanoi_affordability_tab_layout()
         elif tab_id == "tab-10-nutrition":
             return hanoi_health_nutrition_tab_layout()
+        elif tab_id == "tab-home":
+            return landing_page_layout(
+                background_image=hanoi_config.BACKGROUND_IMAGE,
+                tab_backgrounds=hanoi_config.TAB_BACKGROUNDS,
+                selected_city='hanoi'
+            )
         else:
             return landing_page_layout(
                 background_image=hanoi_config.BACKGROUND_IMAGE,
@@ -1177,6 +1188,9 @@ def render_tab_content(n1, n2, n3, n4, n5, n6, n7, n8, n9, n10, n11, n12, city_v
     
     elif tab_id == "tab-11-footprints":
         return footprints_tab_layout()
+    
+    elif tab_id == "tab-home":
+        return landing_page_layout()
 
     else:
         return landing_page_layout()
