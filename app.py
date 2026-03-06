@@ -274,8 +274,8 @@ df_affordability_hanoi = pd.read_csv(path+'/hanoi_affordability_cleaned.csv')
 df_diet_hanoi = pd.read_csv(path+'/hanoi_health_nutrition_cleaned.csv')
 df_diet_2_hanoi = pd.read_csv(path+'hanoi_health_nutrition_cleaned_2.csv')
 
-drought_geojson_path = "/Users/jemimaofarrell/Documents/Python/EcoFoodSystems/Climate_Indicators_Vietnam/data/vietnam_severe_drought_pct_2000_2024.geojson"
-gdf_drought = gpd.read_file(drought_geojson_path).to_crs("EPSG:4326")
+#drought_geojson_path = "/Users/jemimaofarrell/Documents/Python/EcoFoodSystems/Climate_Indicators_Vietnam/data/vietnam_severe_drought_pct_2000_2024.geojson"
+gdf_drought = gpd.read_file(path+'/vietnam_severe_drought_pct_2000_2024.geojson').to_crs("EPSG:4326")
 gdf_drought['geometry'] = gdf_drought['geometry'].buffer(0)
 gdf_drought = gdf_drought[gdf_drought['geometry'].is_valid & ~gdf_drought['geometry'].is_empty]
 gdf_drought['geometry'] = gdf_drought['geometry'].simplify(tolerance=0.01, preserve_topology=True)
