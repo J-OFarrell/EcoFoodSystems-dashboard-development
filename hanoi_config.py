@@ -15,10 +15,10 @@ TAB_BACKGROUNDS = {
     "sustainability": grey_tab_bg, 
     "poverty": white_tab_bg,
     "labour": grey_tab_bg,
-    "resilience": grey_tab_bg, 
+    "resilience": white_tab_bg, 
     "affordability": white_tab_bg, 
     "losses": grey_tab_bg,
-    "policies": grey_tab_bg, 
+    "policies": white_tab_bg, 
     "nutrition": white_tab_bg, 
     "footprints": grey_tab_bg, 
     "behaviour": grey_tab_bg

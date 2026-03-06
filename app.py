@@ -3,9 +3,9 @@ import numpy as np
 import xarray as xr
 import rioxarray as rxr
 import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
 import pandas as pd
 import geopandas as gpd
-import matplotlib.colors as colors
 import seaborn as sns
 import plotly.express as px
 import json
@@ -34,7 +34,8 @@ from addis_layouts import (
 from hanoi_layouts import (
     hanoi_stakeholders_tab_layout, hanoi_supply_tab_layout,
     hanoi_poverty_tab_layout, hanoi_affordability_tab_layout,
-    hanoi_health_nutrition_tab_layout
+    hanoi_health_nutrition_tab_layout, hanoi_policies_tab_layout, 
+    hanoi_resilience_tab_layout
 )
 
 app = Dash(__name__, suppress_callback_exceptions=True, external_stylesheets=[dbc.themes.BOOTSTRAP])
@@ -199,7 +200,17 @@ grey_scale = ['#f7f7f7', '#d9d9d9', '#bdbdbd', '#969696', '#636363']
 # Loading supply flow data for Sankey Diagram
 df_sankey = pd.read_csv(path+'/hanoi_supply.csv')
 
-df_policies = pd.read_csv(path+'/addis_policy_database.csv').drop('Unnamed: 0',axis=1)
+df_policies_addis = pd.read_csv(path+'/addis_policy_database.csv').drop('Unnamed: 0',axis=1)
+# Ensure link columns render as markdown links in the DataTable
+if 'Document Link' in df_policies_addis.columns:
+    df_policies_addis['Document Link'] = df_policies_addis['Document Link'].apply(
+        lambda x: f'[Link Available]({x})' if x and str(x).startswith('http') else '--'
+    )
+
+if 'Available website' in df_policies_addis.columns:
+    df_policies_addis['Available website'] = df_policies_addis['Available website'].apply(
+        lambda x: f'[Link Available]({x})' if x and str(x).startswith('http') else '--'
+    )
 
 df_indicators = pd.read_csv(path+'/addis_policy_database_expanded_sdg.csv')
 
@@ -240,6 +251,18 @@ if 'Website' in df_sh_hanoi.columns:
         lambda x: f'[Link Available]({x})' if x and x.startswith('http') else '--'
     )
 
+# Hanoi policy database
+df_policies_hanoi = pd.read_csv(path+'/hanoi_policy_database_cleaned.csv')#.drop('Unnamed: 0',axis=1)
+
+if 'Document Link' in df_policies_hanoi.columns:
+    df_policies_hanoi['Document Link'] = df_policies_hanoi['Document Link'].apply(
+        lambda x: f'[Link Available]({x})' if x and str(x).startswith('http') else '--'
+    )
+
+    df_policies_hanoi['Available website'] = df_policies_hanoi['Available website'].apply(
+        lambda x: f'[Link Available]({x})' if x and str(x).startswith('http') else '--'
+    )
+
 # Loading GeoJSON files for Food Outlets
 outlets_path_hanoi = os.path.join(homepath, "assets", "data", "jsons_hanoi_foodoutlets")
 outlets_geojson_files_hanoi = sorted(os.listdir(outlets_path_hanoi))
@@ -250,6 +273,33 @@ df_affordability_hanoi = pd.read_csv(path+'/hanoi_affordability_cleaned.csv')
 # Hanoi dietary data
 df_diet_hanoi = pd.read_csv(path+'/hanoi_health_nutrition_cleaned.csv')
 df_diet_2_hanoi = pd.read_csv(path+'hanoi_health_nutrition_cleaned_2.csv')
+
+drought_geojson_path = "/Users/jemimaofarrell/Documents/Python/EcoFoodSystems/Climate_Indicators_Vietnam/data/vietnam_severe_drought_pct_2000_2024.geojson"
+gdf_drought = gpd.read_file(drought_geojson_path).to_crs("EPSG:4326")
+gdf_drought['geometry'] = gdf_drought['geometry'].buffer(0)
+gdf_drought = gdf_drought[gdf_drought['geometry'].is_valid & ~gdf_drought['geometry'].is_empty]
+gdf_drought['geometry'] = gdf_drought['geometry'].simplify(tolerance=0.01, preserve_topology=True)
+
+date_cols_drought = gdf_drought.columns[5:-1].values
+dates = date_cols_drought.tolist()
+
+for c in date_cols_drought:
+    gdf_drought[c] = pd.to_numeric(gdf_drought[c], errors='coerce')
+
+all_drought_vals = gdf_drought[date_cols_drought].values.flatten()
+drought_vmin = float(np.nanmin(all_drought_vals))
+drought_vmax = float(np.nanmax(all_drought_vals))
+
+_cmap_full = plt.get_cmap('RdYlBu_r')
+_cmap = mcolors.LinearSegmentedColormap.from_list(
+    'RdYlBu_r_clipped',
+    _cmap_full(np.linspace(0.25, 1.0, 256))  # start 25% in = light blue
+)
+
+drought_colorscale = [[round(i/9, 2), mcolors.to_hex(_cmap(i/9))] for i in range(10)]
+
+drought_geojson_base = json.loads(gdf_drought[['geometry']].to_json())
+
 
 # -------------------------- Defining Custom Styles ------------------------- #
 
@@ -485,6 +535,8 @@ def landing_page_layout(background_image=None, tab_backgrounds=None, selected_ci
 
 app.layout = html.Div([
     dcc.Store(id='selected-city', data='addis'),
+    dcc.Store(id='sh-table-page-size-store', data=13),
+    dcc.Interval(id='resize-interval', interval=1000, n_intervals=0),
     html.Div(id="tab-content", children=landing_page_layout(), style={"width": "100%",
                                                                        "height": "100%"})
     # Parent container for full page
@@ -496,6 +548,25 @@ app.layout = html.Div([
 })
 
 # ------------------------- Callbacks ------------------------- #
+
+# Clientside callback to compute page size based on window height
+app.clientside_callback(
+    """
+    function(n) {
+        // Estimate available height for table rows (px)
+        var h = window.innerHeight || 800;
+        // Reserve space for headers, padding, other UI (approx)
+        var reserved = 260; // tweak if needed
+        var rowHeight = 44; // approximate row height including padding
+        var avail = h - reserved;
+        var pageSize = Math.max(5, Math.floor(avail / rowHeight));
+        return pageSize;
+    }
+    """,
+    Output('sh-table-page-size-store', 'data'),
+    Input('resize-interval', 'n_intervals')
+)
+
 
 # Callback to store selected city
 @app.callback(
@@ -574,22 +645,20 @@ def update_map_on_bar_click(clickData, selected_variable):
             MPI_display.loc[MPI_display['Dist_Name'] == selected_dist, 'opacity'] = 1
             MPI_display.loc[MPI_display['Dist_Name'] == selected_dist, 'line_width'] = 2
 
-
     fig = px.choropleth_mapbox(
         MPI,
         geojson=geojson,
         locations="Dist_Name",
         featureidkey="properties.Dist_Name",
         color='MPI',
-        color_continuous_scale="Reds",
+        color_continuous_scale="YlOrRd",
         opacity=0.7,
-        range_color=(0, 50),
+        #range_color=(0, 50),
         labels={'MPI':'MPI','Dist_Name':'District Name'},
         mapbox_style="carto-positron",
         zoom=zoom,
         center=center
     )
-
     
     fig.update_layout(coloraxis_colorbar=None)
     fig.update_coloraxes(showscale=False)
@@ -629,9 +698,9 @@ def add_outlets_map(selected_variable):
         locations="Dist_Name",
         featureidkey="properties.Dist_Name",
         color='MPI',
-        color_continuous_scale="Reds",
+        color_continuous_scale="YlOrRd",
         opacity=0.7,
-        range_color=(0, 50),
+        #range_color=(0, 50),
         labels={'MPI':'MPI','Dist_Name':'District Name'},
         mapbox_style="carto-positron",
         zoom=zoom,
@@ -1147,8 +1216,12 @@ def render_tab_content(n_home, n1, n2, n3, n4, n5, n6, n7, n8, n9, n10, n11, n12
             return hanoi_supply_tab_layout()
         elif tab_id == "tab-4-poverty":
             return hanoi_poverty_tab_layout()
+        elif tab_id == "tab-6-resilience":
+            return hanoi_resilience_tab_layout()
         elif tab_id == "tab-7-affordability":
             return hanoi_affordability_tab_layout()
+        elif tab_id == "tab-9-policies":
+            return hanoi_policies_tab_layout()
         elif tab_id == "tab-10-nutrition":
             return hanoi_health_nutrition_tab_layout()
         elif tab_id == "tab-home":
@@ -1262,9 +1335,9 @@ def update_map_on_bar_click_hanoi(clickData, selected_variable):
         locations="Dist_Name",
         featureidkey="properties.Dist_Name",
         color='Normalized',
-        color_continuous_scale="Reds",
+        color_continuous_scale="YlOrRd",
         opacity=0.7,
-        range_color=(0, 1),
+        #range_color=(0, 1),
         labels={'Normalized':'MPI','Dist_Name':'District Name'},
         mapbox_style="carto-positron",
         zoom=zoom,
@@ -1615,6 +1688,38 @@ def update_diet_dumbbell_hanoi(year_start):
     )
 
     return fig
+
+# ── Drought Indicator callback ────────────────────────────────────────────────────────
+@app.callback(
+    Output("drought-choro-map", "figure"),
+    Output("drought-slider-label", "children"),
+    Input("drought-date-slider", "value")
+)
+def update_drought_map(slider_idx):
+    col = date_cols_drought[slider_idx]
+    label = dates[slider_idx]
+
+    z_vals = pd.to_numeric(gdf_drought[col], errors='coerce')
+
+    fig = go.Figure(go.Choroplethmapbox(
+        geojson=drought_geojson_base,
+        locations=gdf_drought.index,
+        z=z_vals,
+        colorscale=drought_colorscale,
+        zmin=drought_vmin,
+        zmax=drought_vmax,
+        marker=dict(opacity=0.7, line=dict(color='black', width=0.5)),
+        hovertemplate='<b>Severe Drought %</b>: %{z:.1f}<extra></extra>',
+        showscale=True
+    ))
+
+    fig.update_layout(
+        mapbox=dict(style="carto-positron", center={"lat": 16.0, "lon": 106.0}, zoom=5),
+        margin=dict(l=0, r=0, t=0, b=0),
+        uirevision='constant'
+    )
+
+    return fig, f"Date: {label}"
 
 
 # Expose the Flask server for production deployment

@@ -49,15 +49,15 @@ def stakeholders_tab_layout():
                         sort_mode='multi',
                         style_cell={
                             'textAlign': 'left',
-                            'padding': '2px 6px',                     
+                            'padding': '2px 6px',
                             'whiteSpace': 'nowrap',
                             'overflow': 'hidden',
                             'textOverflow': 'ellipsis',
                             'fontSize': 'clamp(0.64em, 0.85vw, 0.9em)',
-                            'lineHeight': '1.1',                       
-                            'minWidth': '120px',
-                            'maxWidth': '320px',
-                            'height': '36px'                          
+                            'lineHeight': '1.1',
+                            'minWidth': '200px',
+                            'width': '200px',
+                            'height': '36px'
                         },
                         style_header={
                             'fontWeight': 'bold',
@@ -84,13 +84,15 @@ def stakeholders_tab_layout():
                             'rule': 'position: fixed !important; background-color: ' + brand_colors['Light green'] + '; color: ' + brand_colors['Black'] + '; border: 2px solid ' + brand_colors['Dark green'] + '; padding: 6px; font-size: 14px; box-shadow: 0 4px 8px ' + brand_colors['Black'] + ';'
                         }],
                         style_table={
-                            'overflowX': 'scroll',
+                            'overflowX': 'auto',
                             'overflowY': 'auto',
-                            'height': '100%'
+                            'height': '100%',
+                            'whiteSpace': 'nowrap'
                         },
                         style_as_list_view=True
                     )
-                ], style={"height": "100%", "display": "flex", "flexDirection": "column"})
+                ], style={"height": "100%", "display": "flex", "flexDirection": "column",
+                          'overflowX': 'auto',})
             ], style={"height": "90%", "padding": "10px", "box-shadow": "0 2px 6px rgba(0,0,0,0.1)", "backgroundColor": brand_colors['White'], "border-radius": "10px"}),
         ], style={
             "flex": "1 1 85%",
@@ -656,8 +658,10 @@ def sustainability_tab_layout():
                         ],
                         tooltip_data=[
                             {
-                                column: {'value': str(row[column]), 'type': 'text'}
-                                for column in display_cols
+                                col: {
+                                    'value': str(row[col]) if (col.lower() in ['abstract', 'title', 'keywords'] or len(str(row[col])) > 20) else '',
+                                    'type': 'text'
+                                } for col in display_cols
                             } for row in df_display.to_dict('records')
                         ],
                         tooltip_duration=None,
@@ -668,9 +672,13 @@ def sustainability_tab_layout():
                         style_table={
                             'overflowX': 'auto',
                             'width': '100%',
+                            'display': 'block',
+                            #'minWidth': 'max-content'
                         }
+                    ,
+                        style_as_list_view=True
                     )
-                ], style={"height": "100%", "display": "flex", "flexDirection": "column", "overflowY": "auto"})
+                ], style={"height": "100%", "display": "flex", "flexDirection": "column", "overflowY": "auto", "overflowX": "auto"})
             ], style={
                 "height": "auto",
                 "overflowY":"auto",
@@ -699,7 +707,7 @@ def sustainability_tab_layout():
 def policies_tab_layout():
     """Addis Ababa policies tab layout"""
     import app as main
-    df_policies = main.df_policies
+    df_policies = main.df_policies_addis
     
     return html.Div([
         city_selector(selected_city='addis', visible=False),  # Hidden but present for callback
@@ -722,7 +730,7 @@ def policies_tab_layout():
                         id='policies_table',
                         data=df_policies.to_dict('records'),
                         columns=[
-                            {"name": str(col), "id": str(col)}
+                            {"name": str(col), "id": str(col), "presentation": "markdown"} if any(k in str(col).lower() for k in ['link', 'website', 'url']) else {"name": str(col), "id": str(col)}
                             for col in df_policies.columns
                         ],
                         page_size=14,
@@ -755,10 +763,27 @@ def policies_tab_layout():
                         style_data_conditional=[
                             {'if': {'row_index': 'odd'}, 'backgroundColor': '#f9f9f9'}
                         ],
+                        tooltip_data=[
+                            {
+                                col: {
+                                    'value': str(row[col]) if (col.lower() == 'description' or len(str(row[col])) > 120) else '',
+                                    'type': 'text'
+                                }
+                                for col in df_policies.columns
+                            } for row in df_policies.to_dict('records')
+                        ],
+                        tooltip_duration=4000,
+                        css=[{
+                            'selector': '.dash-table-tooltip',
+                            'rule': 'position: fixed !important; background-color: ' + brand_colors['Light green'] + '; color: ' + brand_colors['Black'] + '; border: 2px solid ' + brand_colors['Dark green'] + '; padding: 6px; font-size: 14px; box-shadow: 0 4px 8px ' + brand_colors['Black'] + ';'
+                        }],
                         style_table={
                             'overflowX': 'auto',
                             'width': '100%',
+                            'display': 'block'
                         }
+                    ,
+                        style_as_list_view=True
                     )
                 ], style={"height": "100%", "display": "flex", "flexDirection": "column"})
             ], style={
@@ -774,7 +799,7 @@ def policies_tab_layout():
             "height": "90%",
             "display": "flex",
             "flexDirection": "column",
-            "overflow": 'hidden',
+            "overflow": 'auto',
             "border-radius": "10px",
             'margin': "10px 10px 10px 10px"
         })
