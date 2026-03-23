@@ -1,0 +1,26 @@
+{
+"type": "FeatureCollection",
+"name": "shop_pastry_hanoi",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:EPSG::3857" } },
+"features": [
+{ "type": "Feature", "properties": { "id": 8347898793, "category": "shop", "label": "pastry" }, "geometry": { "type": "Point", "coordinates": [ 11775157.405195185914636, 2401867.67492369376123 ] } },
+{ "type": "Feature", "properties": { "id": 8447602008, "category": "shop", "label": "pastry" }, "geometry": { "type": "Point", "coordinates": [ 11775305.471249889582396, 2399673.694625845178962 ] } },
+{ "type": "Feature", "properties": { "id": 10298717233, "category": "shop", "label": "pastry" }, "geometry": { "type": "Point", "coordinates": [ 11783457.408692630007863, 2394925.961925772018731 ] } },
+{ "type": "Feature", "properties": { "id": 10846733396, "category": "shop", "label": "pastry" }, "geometry": { "type": "Point", "coordinates": [ 11778366.812906449660659, 2397679.644263213034719 ] } },
+{ "type": "Feature", "properties": { "id": 11190957377, "category": "shop", "label": "pastry" }, "geometry": { "type": "Point", "coordinates": [ 11775911.717196751385927, 2398557.911589705385268 ] } },
+{ "type": "Feature", "properties": { "id": 11212544444, "category": "shop", "label": "pastry" }, "geometry": { "type": "Point", "coordinates": [ 11781345.867195416241884, 2392878.771579661872238 ] } },
+{ "type": "Feature", "properties": { "id": 11298122468, "category": "shop", "label": "pastry" }, "geometry": { "type": "Point", "coordinates": [ 11781228.191361697390676, 2393813.565673024393618 ] } },
+{ "type": "Feature", "properties": { "id": 11462471456, "category": "shop", "label": "pastry" }, "geometry": { "type": "Point", "coordinates": [ 11783157.458324687555432, 2393314.132192568387836 ] } },
+{ "type": "Feature", "properties": { "id": 11476192646, "category": "shop", "label": "pastry" }, "geometry": { "type": "Point", "coordinates": [ 11783136.229697793722153, 2393331.828743469901383 ] } },
+{ "type": "Feature", "properties": { "id": 11510383973, "category": "shop", "label": "pastry" }, "geometry": { "type": "Point", "coordinates": [ 11783137.276101006194949, 2393669.616822959389538 ] } },
+{ "type": "Feature", "properties": { "id": 11613547707, "category": "shop", "label": "pastry" }, "geometry": { "type": "Point", "coordinates": [ 11783167.421419113874435, 2393709.279855984728783 ] } },
+{ "type": "Feature", "properties": { "id": 12540668603, "category": "shop", "label": "pastry" }, "geometry": { "type": "Point", "coordinates": [ 11776596.610363855957985, 2417990.698231388814747 ] } },
+{ "type": "Feature", "properties": { "id": 892577394, "category": "shop", "label": "pastry" }, "geometry": { "type": "Point", "coordinates": [ 11779267.826260764151812, 2392258.176764805801213 ] } },
+{ "type": "Feature", "properties": { "id": 897864776, "category": "shop", "label": "pastry" }, "geometry": { "type": "Point", "coordinates": [ 11774504.887566631659865, 2400913.758525833487511 ] } },
+{ "type": "Feature", "properties": { "id": 933968156, "category": "shop", "label": "pastry" }, "geometry": { "type": "Point", "coordinates": [ 11774956.541827604174614, 2400729.809243288822472 ] } },
+{ "type": "Feature", "properties": { "id": 933968170, "category": "shop", "label": "pastry" }, "geometry": { "type": "Point", "coordinates": [ 11774841.390289748087525, 2400735.751286150421947 ] } },
+{ "type": "Feature", "properties": { "id": 933968174, "category": "shop", "label": "pastry" }, "geometry": { "type": "Point", "coordinates": [ 11774823.843597834929824, 2400735.020097427535802 ] } },
+{ "type": "Feature", "properties": { "id": 934948238, "category": "shop", "label": "pastry" }, "geometry": { "type": "Point", "coordinates": [ 11774450.803636958822608, 2401821.180687552783638 ] } },
+{ "type": "Feature", "properties": { "id": 1211287034, "category": "shop", "label": "pastry" }, "geometry": { "type": "Point", "coordinates": [ 11782555.970291027799249, 2392288.924511219840497 ] } }
+]
+}

@@ -1,0 +1,22 @@
+{
+"type": "FeatureCollection",
+"name": "shop_seafood_hanoi",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:EPSG::3857" } },
+"features": [
+{ "type": "Feature", "properties": { "id": 2545040274, "category": "shop", "label": "seafood" }, "geometry": { "type": "Point", "coordinates": [ 11775214.523225910961628, 2396196.207083735615015 ] } },
+{ "type": "Feature", "properties": { "id": 3800422319, "category": "shop", "label": "seafood" }, "geometry": { "type": "Point", "coordinates": [ 11776590.921937875449657, 2394384.554777798708528 ] } },
+{ "type": "Feature", "properties": { "id": 5518906330, "category": "shop", "label": "seafood" }, "geometry": { "type": "Point", "coordinates": [ 11779777.442361833527684, 2390004.888409873470664 ] } },
+{ "type": "Feature", "properties": { "id": 6638887025, "category": "shop", "label": "seafood" }, "geometry": { "type": "Point", "coordinates": [ 11782396.322438338771462, 2396928.684404756408185 ] } },
+{ "type": "Feature", "properties": { "id": 10213943613, "category": "shop", "label": "seafood" }, "geometry": { "type": "Point", "coordinates": [ 11774596.867031244561076, 2401517.657305211760104 ] } },
+{ "type": "Feature", "properties": { "id": 10219133299, "category": "shop", "label": "seafood" }, "geometry": { "type": "Point", "coordinates": [ 11774553.897707797586918, 2401590.33746937988326 ] } },
+{ "type": "Feature", "properties": { "id": 11219294715, "category": "shop", "label": "seafood" }, "geometry": { "type": "Point", "coordinates": [ 11775578.404377417638898, 2397724.063531569670886 ] } },
+{ "type": "Feature", "properties": { "id": 11301620122, "category": "shop", "label": "seafood" }, "geometry": { "type": "Point", "coordinates": [ 11781396.862654147669673, 2393647.102188126184046 ] } },
+{ "type": "Feature", "properties": { "id": 11472430160, "category": "shop", "label": "seafood" }, "geometry": { "type": "Point", "coordinates": [ 11783231.919932078570127, 2393478.970760554540902 ] } },
+{ "type": "Feature", "properties": { "id": 11472430161, "category": "shop", "label": "seafood" }, "geometry": { "type": "Point", "coordinates": [ 11783236.194600526243448, 2393481.069561401382089 ] } },
+{ "type": "Feature", "properties": { "id": 11556689535, "category": "shop", "label": "seafood" }, "geometry": { "type": "Point", "coordinates": [ 11776079.264162342995405, 2396943.975233876146376 ] } },
+{ "type": "Feature", "properties": { "id": 11633344442, "category": "shop", "label": "seafood" }, "geometry": { "type": "Point", "coordinates": [ 11785215.610994117334485, 2397262.318495927844197 ] } },
+{ "type": "Feature", "properties": { "id": 933680056, "category": "shop", "label": "seafood" }, "geometry": { "type": "Point", "coordinates": [ 11774966.987468784675002, 2400730.788455263245851 ] } },
+{ "type": "Feature", "properties": { "id": 933968158, "category": "shop", "label": "seafood" }, "geometry": { "type": "Point", "coordinates": [ 11774945.867467110976577, 2400728.742796254344285 ] } },
+{ "type": "Feature", "properties": { "id": 1121625790, "category": "shop", "label": "seafood" }, "geometry": { "type": "Point", "coordinates": [ 11774489.587026985362172, 2401507.198874230496585 ] } }
+]
+}

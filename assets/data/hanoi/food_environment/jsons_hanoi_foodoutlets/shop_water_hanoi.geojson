@@ -1,0 +1,9 @@
+{
+"type": "FeatureCollection",
+"name": "shop_water_hanoi",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:EPSG::3857" } },
+"features": [
+{ "type": "Feature", "properties": { "id": 8357405566, "category": "shop", "label": "water" }, "geometry": { "type": "Point", "coordinates": [ 11774610.514800814911723, 2401816.862406997010112 ] } },
+{ "type": "Feature", "properties": { "id": 11228777737, "category": "shop", "label": "water" }, "geometry": { "type": "Point", "coordinates": [ 11781783.252606691792607, 2397161.757668037433177 ] } }
+]
+}

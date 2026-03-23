@@ -12,11 +12,13 @@ import json
 import dash
 from dash import Dash, html, dcc, Output, Input, State, callback, dash_table
 import dash_bootstrap_components as dbc
+import dash_auth  
 import dash_leaflet as dl
 from dash_extensions.javascript import assign
 import random
 from matplotlib.colors import ListedColormap, LinearSegmentedColormap
 import plotly.graph_objects as go
+import plotly.colors as pc
 from lorem_text import lorem
 
 import warnings
@@ -39,6 +41,14 @@ from hanoi_layouts import (
 )
 
 app = Dash(__name__, suppress_callback_exceptions=True, external_stylesheets=[dbc.themes.BOOTSTRAP])
+
+VALID_USERNAME = os.environ.get('DASH_USERNAME', 'ecofoodsystems')
+VALID_PASSWORD = os.environ.get('DASH_PASSWORD', 'data4decisions!')
+
+auth = dash_auth.BasicAuth(
+    app,
+    {VALID_USERNAME: VALID_PASSWORD}
+)
 
 #colors = {
 #  'eco_green': '#AFC912',
@@ -110,6 +120,15 @@ plotting_palette_cat = [
     "#d33030",
 ]
 
+_cmap_full = plt.get_cmap('RdYlBu_r')
+_cmap = mcolors.LinearSegmentedColormap.from_list(
+    'RdYlGn_r_clipped',
+    _cmap_full(np.linspace(0.25, 1.0, 256))
+)
+
+drought_colorscale = [[round(i/9, 2), mcolors.to_hex(_cmap(i/9))] for i in range(10)]
+
+
 tabs = [
         'Food Systems Stakeholders',                #Populated
         'Food Flows, Supply & Value Chains',        #Populated
@@ -128,20 +147,38 @@ tabs = [
 # -------------------------- Loading and Formatting All Data ------------------------- #
 
 homepath = os.getcwd()
+data_root = os.path.join(homepath, "assets", "data")
+
+addis_root = os.path.join(data_root, "addis")
+addis_mpi_dir = os.path.join(addis_root, "mpi")
+addis_stakeholders_dir = os.path.join(addis_root, "stakeholders")
+addis_food_env_dir = os.path.join(addis_root, "food_environment")
+addis_policy_dir = os.path.join(addis_root, "policy")
+addis_environment_dir = os.path.join(addis_root, "environment")
+
+hanoi_root = os.path.join(data_root, "hanoi")
+hanoi_mpi_dir = os.path.join(hanoi_root, "mpi")
+hanoi_stakeholders_dir = os.path.join(hanoi_root, "stakeholders")
+hanoi_policy_dir = os.path.join(hanoi_root, "policy")
+hanoi_supply_dir = os.path.join(hanoi_root, "supply_chain")
+hanoi_affordability_dir = os.path.join(hanoi_root, "affordability")
+hanoi_nutrition_dir = os.path.join(hanoi_root, "nutrition")
+hanoi_food_env_dir = os.path.join(hanoi_root, "food_environment")
+hanoi_resilience_dir = os.path.join(hanoi_root, "resilience")
+hanoi_climate_dir = os.path.join(hanoi_resilience_dir, "precomputed_hanoi_climate_vars")
 
 # Loading and Formatting MPI Data
-path = homepath + "/assets/data/"
-MPI = gpd.read_file(path+"/addis_adm3_mpi.geojson")#.set_index('Dist_Name')
+MPI = gpd.read_file(os.path.join(addis_mpi_dir, "addis_adm3_mpi.geojson"))#.set_index('Dist_Name')
 MPI['MPI'] = MPI['MPI'].astype(float)
 MPI['Dist_Name'] = MPI['Dist_Name'].astype(str)
 geojson = json.loads(MPI.to_json())
 
 # Loading and Formatting MPI CSV Data=
-df_mpi = pd.read_csv(path+"addis_mpi_long.csv")
+df_mpi = pd.read_csv(os.path.join(addis_mpi_dir, "addis_mpi_long.csv"))
 variables = df_mpi['Variable'].unique()
 
 # Loading and Formatting Food Systems Stakeholders Data
-df_sh = pd.read_csv(path+"/addis_stakeholders_cleaned.csv").dropna(how='any').astype(str)
+df_sh = pd.read_csv(os.path.join(addis_stakeholders_dir, "addis_stakeholders_cleaned.csv")).dropna(how='any').astype(str)
 df_sh.rename(columns={'Area of Activity (Food Systems Value Chain)': 'Area of Activity'}, inplace=True)
 
 # Format Website column as clickable markdown links
@@ -159,11 +196,13 @@ for col in df_sh.columns:
 total_table_width = sum(column_widths.values())
 
 # Loading GeoJSON files for Food Outlets
-outlets_path = os.path.join(homepath, "assets", "data", "jsons_addis_foodoutlets")
+outlets_path = os.path.join(addis_food_env_dir, "jsons_addis_foodoutlets")
 outlets_geojson_files_addis = sorted(os.listdir(outlets_path))
 
-# Loading and Formatting Food Environment Choropleth Data
-food_env_path = path + "addis_diet_env_mapping.geojson"
+# Loading GeoJSON files for Isochrones (30-minute accessibility polygons)
+isochrones_path = os.path.join(addis_food_env_dir, "isochrones_addis")
+isochrones_geojson_files_addis = sorted(os.listdir(isochrones_path)) if os.path.exists(isochrones_path) else []
+food_env_path = os.path.join(addis_food_env_dir, "addis_diet_env_mapping.geojson")
 gdf_food_env = gpd.read_file(food_env_path).to_crs('EPSG:4326')
 
 # Define food environment metrics and their labels
@@ -192,15 +231,26 @@ metric_direction = {
     'ptc_access_unhealthy': False
 }
 
+REGION_COLOURS = {
+    "Red River Delta":    "#e63946",
+    "Northeast":          "#457b9d",
+    "Northwest":          "#2a9d8f",
+    "North Central Coast":"#e9c46a",
+    "South Central Coast":"#f4a261",
+    "Central Highlands":  "#264653",
+    "Southeast":          "#a8dadc",
+    "Mekong Delta":       "#06d6a0",
+}
+
 # Color schemes for choropleth
 green_scale = ['#e3f6d5', '#c1d88e', '#a5be91', '#6f946d', '#3a6649']
 red_scale = ['#fee5d9', '#fcbba1', '#fc9272', '#fb6a4a', '#de2d26']
 grey_scale = ['#f7f7f7', '#d9d9d9', '#bdbdbd', '#969696', '#636363']
 
 # Loading supply flow data for Sankey Diagram
-df_sankey = pd.read_csv(path+'/hanoi_supply.csv')
+df_sankey = pd.read_csv(os.path.join(hanoi_supply_dir, 'hanoi_supply.csv'))
 
-df_policies_addis = pd.read_csv(path+'/addis_policy_database.csv').drop('Unnamed: 0',axis=1)
+df_policies_addis = pd.read_csv(os.path.join(addis_policy_dir, 'addis_policy_database.csv')).drop('Unnamed: 0',axis=1)
 # Ensure link columns render as markdown links in the DataTable
 if 'Document Link' in df_policies_addis.columns:
     df_policies_addis['Document Link'] = df_policies_addis['Document Link'].apply(
@@ -212,7 +262,7 @@ if 'Available website' in df_policies_addis.columns:
         lambda x: f'[Link Available]({x})' if x and str(x).startswith('http') else '--'
     )
 
-df_indicators = pd.read_csv(path+'/addis_policy_database_expanded_sdg.csv')
+df_indicators = pd.read_csv(os.path.join(addis_policy_dir, 'addis_policy_database_expanded_sdg.csv'))
 
 # Create SDG logos as list of numbers for rendering
 def get_sdg_numbers(row):
@@ -228,23 +278,23 @@ def get_sdg_numbers(row):
 
 df_indicators['SDG Numbers'] = df_indicators.apply(get_sdg_numbers, axis=1)
 
-df_env = pd.read_csv(path+'/addis_lca_pivot.csv')
+df_env = pd.read_csv(os.path.join(addis_environment_dir, 'addis_lca_pivot.csv'))
 df_lca = df_env  # Alias for compatibility
 
 # -------------------------- Loading Hanoi Data ------------------------- #
 
 # Hanoi MPI Data
-MPI_hanoi = gpd.read_file(path+"Hanoi_districts_MPI.geojson")
+MPI_hanoi = gpd.read_file(os.path.join(hanoi_mpi_dir, "Hanoi_districts_MPI.geojson"))
 MPI_hanoi['Normalized'] = MPI_hanoi['Normalized'].astype(float)
 MPI_hanoi['Dist_Name'] = MPI_hanoi['Dist_Name'].astype(str)
 geojson_hanoi = json.loads(MPI_hanoi.to_json())
 
 # Hanoi MPI CSV Data
-df_mpi_hanoi = pd.read_csv(path+"Hanoi_districts_MPI_long.csv")
+df_mpi_hanoi = pd.read_csv(os.path.join(hanoi_mpi_dir, "Hanoi_districts_MPI_long.csv"))
 variables_hanoi = df_mpi_hanoi['Variable'].unique()
 
 # Hanoi Stakeholders Data
-df_sh_hanoi = pd.read_csv(path+"/hanoi_stakeholders.csv").dropna(how='any').astype(str)
+df_sh_hanoi = pd.read_csv(os.path.join(hanoi_stakeholders_dir, "hanoi_stakeholders.csv")).dropna(how='any').astype(str)
 
 if 'Website' in df_sh_hanoi.columns:
     df_sh_hanoi['Website'] = df_sh_hanoi['Website'].apply(
@@ -252,7 +302,7 @@ if 'Website' in df_sh_hanoi.columns:
     )
 
 # Hanoi policy database
-df_policies_hanoi = pd.read_csv(path+'/hanoi_policy_database_cleaned.csv')#.drop('Unnamed: 0',axis=1)
+df_policies_hanoi = pd.read_csv(os.path.join(hanoi_policy_dir, 'hanoi_policy_database_cleaned.csv'))#.drop('Unnamed: 0',axis=1)
 
 if 'Document Link' in df_policies_hanoi.columns:
     df_policies_hanoi['Document Link'] = df_policies_hanoi['Document Link'].apply(
@@ -264,42 +314,87 @@ if 'Document Link' in df_policies_hanoi.columns:
     )
 
 # Loading GeoJSON files for Food Outlets
-outlets_path_hanoi = os.path.join(homepath, "assets", "data", "jsons_hanoi_foodoutlets")
+outlets_path_hanoi = os.path.join(hanoi_food_env_dir, "jsons_hanoi_foodoutlets")
 outlets_geojson_files_hanoi = sorted(os.listdir(outlets_path_hanoi))
 
+# Loading GeoJSON files for Isochrones (30-minute accessibility polygons)
+isochrones_path_hanoi = os.path.join(hanoi_food_env_dir, "isochrones_hanoi")
+isochrones_geojson_files_hanoi = sorted(os.listdir(isochrones_path_hanoi)) if os.path.exists(isochrones_path_hanoi) else []
+
 # Hanoi affordability data
-df_affordability_hanoi = pd.read_csv(path+'/hanoi_affordability_cleaned.csv')
+df_affordability_hanoi = pd.read_csv(os.path.join(hanoi_affordability_dir, 'hanoi_affordability_cleaned.csv'))
 
 # Hanoi dietary data
-df_diet_hanoi = pd.read_csv(path+'/hanoi_health_nutrition_cleaned.csv')
-df_diet_2_hanoi = pd.read_csv(path+'hanoi_health_nutrition_cleaned_2.csv')
+df_diet_hanoi = pd.read_csv(os.path.join(hanoi_nutrition_dir, 'hanoi_health_nutrition_cleaned.csv'))
+df_diet_2_hanoi = pd.read_csv(os.path.join(hanoi_nutrition_dir, 'hanoi_health_nutrition_cleaned_2.csv'))
 
-#drought_geojson_path = "/Users/jemimaofarrell/Documents/Python/EcoFoodSystems/Climate_Indicators_Vietnam/data/vietnam_severe_drought_pct_2000_2024.geojson"
-gdf_drought = gpd.read_file(path+'/vietnam_severe_drought_pct_2000_2024.geojson').to_crs("EPSG:4326")
-gdf_drought['geometry'] = gdf_drought['geometry'].buffer(0)
-gdf_drought = gdf_drought[gdf_drought['geometry'].is_valid & ~gdf_drought['geometry'].is_empty]
-gdf_drought['geometry'] = gdf_drought['geometry'].simplify(tolerance=0.01, preserve_topology=True)
 
-date_cols_drought = gdf_drought.columns[5:-1].values
-dates = date_cols_drought.tolist()
 
-for c in date_cols_drought:
-    gdf_drought[c] = pd.to_numeric(gdf_drought[c], errors='coerce')
+# ── District climate indicators ───────────────────────────────────────────────
+_climate_csv  = os.path.join(hanoi_climate_dir, "vietnam_climate_resilience_quarterly.csv")
+_districts_path = os.path.join(hanoi_climate_dir, "resilience_districts_base.geojson")
 
-all_drought_vals = gdf_drought[date_cols_drought].values.flatten()
-drought_vmin = float(np.nanmin(all_drought_vals))
-drought_vmax = float(np.nanmax(all_drought_vals))
+district_climate_df = pd.read_csv(_climate_csv).reset_index()
+district_climate_df["quarter"] = district_climate_df["quarter"].astype(str)
 
-_cmap_full = plt.get_cmap('RdYlBu_r')
-_cmap = mcolors.LinearSegmentedColormap.from_list(
-    'RdYlBu_r_clipped',
-    _cmap_full(np.linspace(0.25, 1.0, 256))  # start 25% in = light blue
-)
+_resilience_gdf      = gpd.read_file(_districts_path).to_crs("EPSG:4326")
 
-drought_colorscale = [[round(i/9, 2), mcolors.to_hex(_cmap(i/9))] for i in range(10)]
+# Prefer shapeID for district joins when available; shapeName can be ambiguous.
+if ("shapeID" in _resilience_gdf.columns) and ("shapeID" in district_climate_df.columns):
+    DISTRICT_JOIN_KEY = "shapeID"
+    DISTRICT_FEATUREIDKEY = "properties.shapeID"
 
-drought_geojson_base = json.loads(gdf_drought[['geometry']].to_json())
+    districts_unique = (
+        _resilience_gdf[["shapeID", "shapeName", "geometry"]]
+        .dissolve(by="shapeID", as_index=False)
+        .reset_index(drop=True)
+    )
+else:
+    DISTRICT_JOIN_KEY = "shapeName"
+    DISTRICT_FEATUREIDKEY = "properties.shapeName"
+    districts_unique = (
+        _resilience_gdf[["shapeName", "geometry"]]
+        .dissolve(by="shapeName", as_index=False)
+        .reset_index(drop=True)
+    )
 
+resilience_base_geojson = json.loads(districts_unique.to_json())
+
+regions_gdf = gpd.read_file(
+    os.path.join(hanoi_climate_dir, "vnm_regions.geojson")
+).to_crs("EPSG:4326").reset_index(drop=True)
+
+# Stable id for choropleth matching
+regions_gdf["__rid"] = regions_gdf.index.astype(str)
+
+# Robust label column for hover + selection matching
+for _c in ["region", "Region", "REGION", "name", "NAME_1", "shapeName"]:
+    if _c in regions_gdf.columns:
+        REGION_LABEL_COL = _c
+        break
+else:
+    REGION_LABEL_COL = "__rid"
+
+regions_geojson = json.loads(regions_gdf.to_json())
+
+# All quarters available (shared across all three indicators)
+all_quarters = sorted(district_climate_df["quarter"].unique())
+
+district_indicator_cfg = {
+    "grace_trend":        {"col": "grace_trend",        "label": "Terrestrial Water Storage Anomaly (mm)", "colorscale": "RdYlBu",   "diverging": True},
+    "vci_severe_pct":     {"col": "vci_severe_pct",     "label": "Cropland Area Under Severe Drought (%)",  "colorscale": "RdYlGn_r", "diverging": False},
+    "drought_resistance": {"col": "drought_resistance", "label": "Vegetation Drought Resistance (SPEI6)",   "colorscale": "RdYlGn",   "diverging": False},
+    "flood_resistance":   {"col": "flood_resistance",   "label": "Vegetation Flood Resistance (SPEI6)",     "colorscale": "RdYlBu",   "diverging": False},
+    "spei3_class_median":  {"col": "spei3_class_median",  "label": "SPEI-3 Median Quarter Class",  "colorscale": "RdBu",   "diverging": True},
+    "spei3_peak_abs":      {"col": "spei3_peak_abs",      "label": "SPEI-3 Peak Absolute Class",   "colorscale": "YlOrRd", "diverging": False},
+    "spei6_class_median":  {"col": "spei6_class_median",  "label": "SPEI-6 Median Quarter Class",  "colorscale": "RdBu",   "diverging": True},
+    "spei6_peak_abs":      {"col": "spei6_peak_abs",      "label": "SPEI-6 Peak Absolute Class",   "colorscale": "YlOrRd", "diverging": False},
+    "spei12_class_median": {"col": "spei12_class_median", "label": "SPEI-12 Median Quarter Class", "colorscale": "RdBu",   "diverging": True},
+    "spei12_peak_abs":     {"col": "spei12_peak_abs",     "label": "SPEI-12 Peak Absolute Class",  "colorscale": "YlOrRd", "diverging": False},
+}
+
+region_quarterly = pd.read_csv(os.path.join(hanoi_climate_dir, "regional_quarterly_climate.csv"))
+slopes_df = pd.read_csv(os.path.join(hanoi_climate_dir, "regional_indicator_slopes.csv"))
 
 # -------------------------- Defining Custom Styles ------------------------- #
 
@@ -529,11 +624,140 @@ def landing_page_layout(background_image=None, tab_backgrounds=None, selected_ci
 # - addis_layouts.py: All Addis Ababa tab layouts
 # - hanoi_layouts.py: All Hà Nội tab layouts
 
+# ------------------------- Other App Functions ------------------------- #
 
+def make_region_kpi_card(region_name, quarter_value, all_values, all_quarters, slope, indicator_label, cfg=None):
+    border_default = brand_colors["Dark green"]   # #939f5c
+    border_color = border_default
+    border_width = "2px"
+
+    # Derive value badge colour from the choropleth colorscale
+    badge_bg = "#f0f0f0"
+    badge_fg = brand_colors["Black"]
+    if cfg is not None and quarter_value is not None and not np.isnan(quarter_value):
+        valid_vals = [v for v in all_values if v is not None and not np.isnan(v)]
+        if valid_vals:
+            if cfg["diverging"]:
+                lim = max(abs(min(valid_vals)), abs(max(valid_vals)))
+                vmin, vmax = -lim, lim
+            else:
+                vmin, vmax = min(valid_vals), max(valid_vals)
+            t = (quarter_value - vmin) / (vmax - vmin) if vmax != vmin else 0.5
+            t = max(0.0, min(1.0, t))
+            sampled = pc.sample_colorscale(cfg["colorscale"], [t])[0]
+            # sampled is 'rgb(r,g,b)' — convert to hex and pick text contrast
+            rgb = pc.unlabel_rgb(sampled)
+            badge_bg = "#{:02x}{:02x}{:02x}".format(int(rgb[0]), int(rgb[1]), int(rgb[2]))
+            luminance = (0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2]) / 255
+            badge_fg = "#ffffff" if luminance < 0.5 else brand_colors["Black"]
+
+    # Polyfit overlay
+    x_idx = np.arange(len(all_values))
+    valid = [(i, v) for i, v in zip(x_idx, all_values) if v is not None and not np.isnan(v)]
+    if len(valid) >= 2:
+        xi, yi = zip(*valid)
+        coeffs = np.polyfit(xi, yi, 1)
+        trend_y = np.polyval(coeffs, x_idx).tolist()
+    else:
+        trend_y = [None] * len(all_values)
+
+    sparkline = go.Figure()
+
+    # Raw series
+    sparkline.add_trace(go.Scatter(
+        x=all_quarters, y=all_values,
+        mode="lines",
+        line=dict(color=brand_colors['Mid green'], width=1.5),
+        hovertemplate="%{x}: %{y:.3f}<extra></extra>",
+        name=indicator_label,
+    ))
+
+    # Polyfit trend
+    sparkline.add_trace(go.Scatter(
+        x=all_quarters, y=trend_y,
+        mode="lines",
+        line=dict(color=brand_colors['Brown'], width=1, dash="dot"),
+        hoverinfo="skip",
+        name="Trend",
+    ))
+
+    sparkline.update_layout(
+        height=80,
+        margin=dict(l=0, r=0, t=0, b=0),
+        showlegend=False,
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        xaxis=dict(visible=False),
+        yaxis=dict(visible=False),
+    )
+
+    val_str = f"{quarter_value:.3f}" if quarter_value is not None and not np.isnan(quarter_value) else "N/A"
+
+    card = dbc.Card(
+        [
+            dbc.CardBody([
+                html.Div(
+                    region_name,
+                    style={
+                        "fontWeight": "bold",
+                        "fontSize": "12px",
+                        "color": border_default,
+                        "whiteSpace": "nowrap",
+                        "overflow": "hidden",
+                        "textOverflow": "ellipsis",
+                        "minHeight": "18px",
+                    },
+                ),
+                html.Div(
+                    val_str,
+                    style={
+                        "fontSize": "20px",
+                        "fontWeight": "bold",
+                        "lineHeight": "1.2",
+                        "minHeight": "30px",
+                        "backgroundColor": badge_bg,
+                        "color": badge_fg,
+                        "borderRadius": "6px",
+                        "padding": "2px 8px",
+                        "display": "inline-block",
+                    },
+                ),
+                dcc.Graph(
+                    figure=sparkline,
+                    config={"displayModeBar": False},
+                    style={"height": "80px", "width": "100%"},
+                ),
+            ], style={
+                "padding": "6px",
+                "height": "100%",
+                "display": "flex",
+                "flexDirection": "column",
+                "justifyContent": "space-between",
+            }),
+        ],
+        style={
+            "backgroundColor": "#ffffff",
+            "border": f"{border_width} solid {border_color}",
+            "borderRadius": "8px",
+            "margin": "3px",
+            "height": "150px",
+            "width": "100%",
+            "boxShadow": "none",
+        },
+    )
+
+    return card
 
 #------------------------- App Layout ----------------------- #
 
 app.layout = html.Div([
+    dcc.Loading(
+        id="global-page-loader",
+        type="circle",
+        fullscreen=True,
+        color="#A51E22",  # optional: brand red
+        children=html.Div(id="page-content")
+    ),
     dcc.Store(id='selected-city', data='addis'),
     dcc.Store(id='sh-table-page-size-store', data=13),
     dcc.Interval(id='resize-interval', interval=1000, n_intervals=0),
@@ -785,11 +1009,31 @@ def filter_table(filter_by, selected):
 
 @app.callback(
     Output('affordability-map', 'figure'),
-    [Input("choropleth-select", "value"),
-     Input("outlets-layer-select", "value")],
+    [Input("food-outlets-and-isochrones", "value"),
+     Input("choropleth-select", "value")],
     [State('affordability-map', 'relayoutData')]
 )
-def update_affordability_map(selected_metric, selected_outlets, relayout_data):
+def update_affordability_map(selected_outlets, selected_metric, relayout_data):
+    # Handle "Select All" option
+    if selected_outlets and "SELECT_ALL" in selected_outlets:
+        # If Select All is selected, show all outlets
+        selected_outlets = outlets_geojson_files_addis.copy()
+    elif not selected_outlets:
+        selected_outlets = []
+    else:
+        # Remove SELECT_ALL from the list if other items are selected
+        selected_outlets = [item for item in selected_outlets if item != "SELECT_ALL"]
+    
+    # Automatically derive matching isochrones from selected outlets
+    selected_isochrones = []
+    if selected_outlets:
+        for outlet_file in selected_outlets:
+            # Convert outlet filename to isochrone filename
+            # e.g., "amenity_cafe_addis.geojson" -> "amenity_cafe_addis_isochrone30min.geojson"
+            iso_file = outlet_file.replace('.geojson', '_isochrone30min.geojson')
+            if iso_file in isochrones_geojson_files_addis:
+                selected_isochrones.append(iso_file)
+    
     # Preserve current zoom and center if available
     if relayout_data and 'mapbox.center' in relayout_data:
         center = relayout_data['mapbox.center']
@@ -835,32 +1079,63 @@ def update_affordability_map(selected_metric, selected_outlets, relayout_data):
                 showscale=False
             ))
     
-    # Add outlet markers if selected
-    if selected_outlets:
-        # Diverse color palette for outlet markers - high contrast against light backgrounds and each other
-        marker_palette = [
-            "#ff7f0e",  # Vibrant orange
-            "#9467bd",  # Purple
-            "#8c564b",  # Brown
-            "#e377c2",  # Pink
-            "#e8e826",  # Olive
-            "#17becf"   # Cyan
+    # Add isochrone polygons if selected (these render first, so they appear behind outlets)
+    if selected_isochrones:
+        isochrone_palette = [
+            "rgba(255, 127, 14, 0.3)",   # Orange with transparency
+            "rgba(148, 103, 189, 0.3)",  # Purple
+            "rgba(140, 86, 75, 0.3)",    # Brown
+            "rgba(227, 119, 194, 0.3)",  # Pink
+            "rgba(232, 232, 38, 0.3)",   # Olive
+            "rgba(23, 190, 207, 0.3)"    # Cyan
         ]
         
+        for i, filename in enumerate(selected_isochrones):
+            try:
+                isochrone_gdf = gpd.read_file(os.path.join(isochrones_path, filename)).to_crs('EPSG:4326')
+                
+                # Convert geometry to geojson
+                geojson_data = json.loads(isochrone_gdf.to_json())
+                
+                # Cycle through color palette
+                iso_color = isochrone_palette[i % len(isochrone_palette)]
+                
+                fig.add_trace(go.Choroplethmapbox(
+                    geojson=geojson_data,
+                    locations=list(range(len(isochrone_gdf))),
+                    z=[1] * len(isochrone_gdf),  # Dummy values
+                    colorscale=[[0, iso_color], [1, iso_color]],
+                    marker=dict(opacity=0.5, line=dict(width=0)),
+                    hovertemplate='<b>' + filename.replace('_addis_isochrone30min.geojson', '').replace('_', ' ').title() + ' Isochrone</b><extra></extra>',
+                    showscale=False,
+                    name=filename.replace('_addis_isochrone30min.geojson', '').replace('_', ' ').title() + ' (Isochrone)'
+                ))
+            except Exception as e:
+                print(f"Error loading isochrone {filename}: {e}")
+
+    # Add outlet markers if selected
+    if selected_outlets:
+        # Generate Spectral color palette dynamically based on number of outlets
+        num_outlets = len(selected_outlets)
+        marker_palette = pc.sample_colorscale("Spectral", [n / max(num_outlets - 1, 1) for n in range(num_outlets)])
+        
         for i, filename in enumerate(selected_outlets):
-            outlet_gdf = gpd.read_file(os.path.join(outlets_path, filename)).to_crs('EPSG:4326')
-            
-            # Cycle through diverse color palette
-            marker_color = marker_palette[i % len(marker_palette)]
-            
-            fig.add_trace(go.Scattermapbox(
-                lat=outlet_gdf.geometry.y,
-                lon=outlet_gdf.geometry.x,
-                mode='markers',
-                marker=dict(size=6, color=marker_color, opacity=0.8),
-                name=filename.split('_')[1] if len(filename.split('_')) < 4 else f"{filename.split('_')[1]} {filename.split('_')[2]}",
-                hoverinfo='skip'
-            ))
+            try:
+                outlet_gdf = gpd.read_file(os.path.join(outlets_path, filename)).to_crs('EPSG:4326')
+                
+                # Use color from Spectral palette
+                marker_color = marker_palette[i]
+                
+                fig.add_trace(go.Scattermapbox(
+                    lat=outlet_gdf.geometry.y,
+                    lon=outlet_gdf.geometry.x,
+                    mode='markers',
+                    marker=dict(size=6, color=marker_color, opacity=0.8),
+                    name=filename.split('_')[1] if len(filename.split('_')) < 4 else f"{filename.split('_')[1]} {filename.split('_')[2]}",
+                    hoverinfo='skip'
+                ))
+            except Exception as e:
+                print(f"Error loading outlet {filename}: {e}")
     
     # Update layout
     fig.update_layout(
@@ -871,7 +1146,7 @@ def update_affordability_map(selected_metric, selected_outlets, relayout_data):
         ),
         margin=dict(l=0, r=0, t=0, b=0),
         paper_bgcolor=brand_colors['White'],
-        showlegend=True if selected_outlets else False,
+        showlegend=True if (selected_outlets or selected_isochrones) else False,
         legend=dict(x=0.01, y=0.99, bgcolor='rgba(255,255,255,0.8)'),
         uirevision='constant'  # Preserve zoom/pan state
     )
@@ -1217,7 +1492,7 @@ def render_tab_content(n_home, n1, n2, n3, n4, n5, n6, n7, n8, n9, n10, n11, n12
         elif tab_id == "tab-4-poverty":
             return hanoi_poverty_tab_layout()
         elif tab_id == "tab-6-resilience":
-            return hanoi_resilience_tab_layout()
+            return hanoi_resilience_tab_layout(all_quarters)
         elif tab_id == "tab-7-affordability":
             return hanoi_affordability_tab_layout()
         elif tab_id == "tab-9-policies":
@@ -1292,7 +1567,8 @@ def update_bar_hanoi(selected_variable):
     )
     fig.update_layout(yaxis={'categoryorder':'total ascending'},
                       height=25 * len(sorted_df),
-                      margin=dict(l=0.15, r=0.1, t=0.15, b=0.3),
+                                            margin=dict(l=10, r=10, t=10, b=72),
+                                            xaxis_title_standoff=18,
                       hoverlabel=dict(
                         bgcolor="white",
                         font_color="black",
@@ -1311,7 +1587,7 @@ def update_map_on_bar_click_hanoi(clickData, selected_variable):
         "lat": MPI_hanoi.geometry.centroid.y.mean(),
         "lon": MPI_hanoi.geometry.centroid.x.mean()
     }
-    zoom = 7.75
+    zoom = 8.4
 
     MPI_display = MPI_hanoi.copy()
     MPI_display['opacity'] = 0.7
@@ -1360,13 +1636,32 @@ def update_map_on_bar_click_hanoi(clickData, selected_variable):
     )
     return fig
 
-# Hanoi affordability map with outlet layers
+# Hanoi affordability map with outlet layers and isochrones
 @app.callback(
     Output('affordability-map-hanoi', 'figure'),
-     Input("outlets-layer-select-hanoi", "value"),
+    [Input("food-outlets-and-isochrones-hanoi", "value")],
     [State('affordability-map-hanoi', 'relayoutData')]
 )
 def update_affordability_map_hanoi(selected_outlets, relayout_data):
+    # Handle "Select All" option
+    if selected_outlets and "SELECT_ALL" in selected_outlets:
+        # If Select All is selected, show all outlets
+        selected_outlets = outlets_geojson_files_hanoi.copy()
+    elif not selected_outlets:
+        selected_outlets = []
+    else:
+        # Remove SELECT_ALL from the list if other items are selected
+        selected_outlets = [item for item in selected_outlets if item != "SELECT_ALL"]
+    
+    # Automatically derive matching isochrones from selected outlets
+    selected_isochrones = []
+    if selected_outlets:
+        for outlet_file in selected_outlets:
+            # Convert outlet filename to isochrone filename
+            # e.g., "amenity_cafe_hanoi.geojson" -> "amenity_cafe_hanoi_isochrone30min.geojson"
+            iso_file = outlet_file.replace('.geojson', '_isochrone30min.geojson')
+            if iso_file in isochrones_geojson_files_hanoi:
+                selected_isochrones.append(iso_file)
     # Calculate center from Hanoi districts
     hanoi_center = {
         "lat": MPI_hanoi.geometry.centroid.y.mean(),
@@ -1399,32 +1694,63 @@ def update_affordability_map_hanoi(selected_outlets, relayout_data):
         name="Districts"
     ))
 
-    # Add outlet markers if selected
-    if selected_outlets:
-        # Diverse color palette for outlet markers - high contrast against light backgrounds and each other
-        marker_palette = [
-            "#ff7f0e",  # Vibrant orange
-            "#9467bd",  # Purple
-            "#8c564b",  # Brown
-            "#e377c2",  # Pink
-            "#e8e826",  # Olive
-            "#17becf"   # Cyan
+    # Add isochrone polygons if selected (these render first, so they appear behind outlets)
+    if selected_isochrones:
+        isochrone_palette = [
+            "rgba(255, 127, 14, 0.3)",   # Orange with transparency
+            "rgba(148, 103, 189, 0.3)",  # Purple
+            "rgba(140, 86, 75, 0.3)",    # Brown
+            "rgba(227, 119, 194, 0.3)",  # Pink
+            "rgba(232, 232, 38, 0.3)",   # Olive
+            "rgba(23, 190, 207, 0.3)"    # Cyan
         ]
         
+        for i, filename in enumerate(selected_isochrones):
+            try:
+                isochrone_gdf = gpd.read_file(os.path.join(isochrones_path_hanoi, filename)).to_crs('EPSG:4326')
+                
+                # Convert geometry to geojson
+                geojson_data = json.loads(isochrone_gdf.to_json())
+                
+                # Cycle through color palette
+                iso_color = isochrone_palette[i % len(isochrone_palette)]
+                
+                fig.add_trace(go.Choroplethmapbox(
+                    geojson=geojson_data,
+                    locations=list(range(len(isochrone_gdf))),
+                    z=[1] * len(isochrone_gdf),  # Dummy values
+                    colorscale=[[0, iso_color], [1, iso_color]],
+                    marker=dict(opacity=0.5, line=dict(width=0)),
+                    hovertemplate='<b>' + filename.replace('_hanoi_isochrone30min.geojson', '').replace('_', ' ').title() + ' Isochrone</b><extra></extra>',
+                    showscale=False,
+                    name=filename.replace('_hanoi_isochrone30min.geojson', '').replace('_', ' ').title() + ' (Isochrone)'
+                ))
+            except Exception as e:
+                print(f"Error loading isochrone {filename}: {e}")
+
+    # Add outlet markers if selected
+    if selected_outlets:
+        # Generate Spectral color palette dynamically based on number of outlets
+        num_outlets = len(selected_outlets)
+        marker_palette = pc.sample_colorscale("Spectral", [n / max(num_outlets - 1, 1) for n in range(num_outlets)])
+        
         for i, filename in enumerate(selected_outlets):
-            outlet_gdf = gpd.read_file(os.path.join(outlets_path_hanoi, filename)).to_crs('EPSG:4326')
-            
-            # Cycle through diverse color palette
-            marker_color = marker_palette[i % len(marker_palette)]
-            
-            fig.add_trace(go.Scattermapbox(
-                lat=outlet_gdf.geometry.y,
-                lon=outlet_gdf.geometry.x,
-                mode='markers',
-                marker=dict(size=6, color=marker_color, opacity=0.8),
-                name=filename.split('_')[1] if len(filename.split('_')) < 4 else f"{filename.split('_')[1]} {filename.split('_')[2]}",
-                hoverinfo='skip'
-            ))
+            try:
+                outlet_gdf = gpd.read_file(os.path.join(outlets_path_hanoi, filename)).to_crs('EPSG:4326')
+                
+                # Use color from Spectral palette
+                marker_color = marker_palette[i]
+                
+                fig.add_trace(go.Scattermapbox(
+                    lat=outlet_gdf.geometry.y,
+                    lon=outlet_gdf.geometry.x,
+                    mode='markers',
+                    marker=dict(size=6, color=marker_color, opacity=0.8),
+                    name=filename.split('_')[1] if len(filename.split('_')) < 4 else f"{filename.split('_')[1]} {filename.split('_')[2]}",
+                    hoverinfo='skip'
+                ))
+            except Exception as e:
+                print(f"Error loading outlet {filename}: {e}")
     
     # Update layout
     fig.update_layout(
@@ -1435,7 +1761,7 @@ def update_affordability_map_hanoi(selected_outlets, relayout_data):
         ),
         margin=dict(l=0, r=0, t=0, b=0),
         paper_bgcolor=brand_colors['White'],
-        showlegend=True if selected_outlets else False,
+        showlegend=True if (selected_outlets or selected_isochrones) else False,
         legend=dict(x=0.01, y=0.99, bgcolor='rgba(255,255,255,0.8)'),
         uirevision='constant'  # Preserve zoom/pan state
     )
@@ -1690,44 +2016,127 @@ def update_diet_dumbbell_hanoi(year_start):
     return fig
 
 # ── Drought Indicator callback ────────────────────────────────────────────────────────
+
 @app.callback(
-    Output("drought-choro-map", "figure"),
+    Output("drought-map-container", "children"),
     Output("drought-slider-label", "children"),
-    Input("drought-date-slider", "value")
+    Output("region-kpi-cards", "children"),
+    Input("drought-date-slider", "value"),
+    Input("climate-indicator-select", "value"),
 )
-def update_drought_map(slider_idx):
-    col = date_cols_drought[slider_idx]
-    label = dates[slider_idx]
+def update_drought_map(slider_idx, indicator):
+    triggered = [t["prop_id"] for t in dash.callback_context.triggered]
+    print(f"[DEBUG] triggered={triggered}, slider_idx={slider_idx}, indicator={indicator!r}")
 
-    z_vals = pd.to_numeric(gdf_drought[col], errors='coerce')
-
-    fig = go.Figure(go.Choroplethmapbox(
-        geojson=drought_geojson_base,
-        locations=gdf_drought.index,
-        z=z_vals,
-        colorscale=drought_colorscale,
-        zmin=drought_vmin,
-        zmax=drought_vmax,
-        marker=dict(opacity=0.7, line=dict(color='black', width=0.5)),
-        hovertemplate='<b>Severe Drought %</b>: %{z:.1f}<extra></extra>',
-        showscale=True
-    ))
-
-    fig.update_layout(
+    _map_layout = dict(
         mapbox=dict(style="carto-positron", center={"lat": 16.0, "lon": 106.0}, zoom=5),
         margin=dict(l=0, r=0, t=0, b=0),
-        uirevision='constant'
+        showlegend=False,
+        coloraxis_showscale=False,
     )
 
-    return fig, f"Date: {label}"
+    quarter = all_quarters[slider_idx]
+    cfg = district_indicator_cfg.get(indicator)
+    print(f"[DEBUG] quarter={quarter}, cfg={cfg}")
 
+    if cfg is None:
+        empty_fig = go.Figure().update_layout(**_map_layout)
+        return dcc.Graph(figure=empty_fig, config={"displayModeBar": False, "scrollZoom": True}, style={"height": "100%", "width": "100%"}), quarter, dbc.Row([])
+
+    col = cfg["col"]
+    keep_cols = [DISTRICT_JOIN_KEY, col]
+    if ("shapeName" in district_climate_df.columns) and ("shapeName" != DISTRICT_JOIN_KEY):
+        keep_cols.append("shapeName")
+
+    df = (
+        district_climate_df[district_climate_df["quarter"] == quarter][keep_cols]
+        .dropna(subset=[col])
+    )
+    plot_gdf = districts_unique.merge(df, on=DISTRICT_JOIN_KEY, how="left")
+    overlay = plot_gdf[plot_gdf[col].notna()].copy()
+    print(f"[DEBUG] col={col!r}, df rows={len(df)}, overlay rows={len(overlay)}")
+
+    # 1) District indicator fill
+    fig = go.Figure()
+    if not overlay.empty:
+        zvals = overlay[col].to_numpy(dtype=float)
+        if cfg["diverging"]:
+            lim = np.nanmax(np.abs(zvals))
+            zmin, zmax = -lim, lim
+        else:
+            zmin, zmax = np.nanmin(zvals), np.nanmax(zvals)
+
+        fig.add_trace(go.Choroplethmapbox(
+            geojson=resilience_base_geojson,
+            featureidkey=DISTRICT_FEATUREIDKEY,
+            locations=overlay[DISTRICT_JOIN_KEY],
+            z=overlay[col],
+            colorscale=cfg["colorscale"],
+            zmin=zmin, zmax=zmax,
+            marker=dict(opacity=0.78, line=dict(color="black", width=0.4)),
+            showscale=False,
+            customdata=np.array(overlay.get("shapeName", overlay[DISTRICT_JOIN_KEY])).reshape(-1, 1),
+            hovertemplate=f"<b>%{{customdata[0]}}</b><br>{cfg['label']}: %{{z:.2f}}<extra></extra>",
+        ))
+
+    # 2) Region boundaries — Scattermapbox lines (avoids choropleth layer interference)
+    _lons, _lats = [], []
+    for _, _row in regions_gdf.iterrows():
+        _geom = _row.geometry
+        _polys = list(_geom.geoms) if _geom.geom_type == "MultiPolygon" else [_geom]
+        for _poly in _polys:
+            _xs, _ys = _poly.exterior.coords.xy
+            _lons.extend(list(_xs) + [None])
+            _lats.extend(list(_ys) + [None])
+    fig.add_trace(go.Scattermapbox(
+        lon=_lons, lat=_lats,
+        mode="lines",
+        line=dict(color="#4a4a4a", width=1.2),
+        hoverinfo="skip",
+        showlegend=False,
+    ))
+
+    # Cards
+    cards = []
+    if col in region_quarterly.columns:
+        for region in sorted(region_quarterly["region"].unique()):
+            sub = region_quarterly[region_quarterly["region"] == region].sort_values("quarter")
+            all_vals = sub[col].tolist()
+            all_qtrs = sub["quarter"].tolist()
+            q_row = sub[sub["quarter"] == quarter]
+            q_val = float(q_row[col].iloc[0]) if not q_row.empty else None
+            slope_row = slopes_df[(slopes_df["region"] == region) & (slopes_df["indicator"] == col)]
+            slope = float(slope_row["slope"].iloc[0]) if not slope_row.empty else 0.0
+
+            cards.append(
+                dbc.Col(
+                    make_region_kpi_card(region, q_val, all_vals, all_qtrs, slope, col, cfg=cfg),
+                    md=3,
+                    style={"display": "flex"},
+                )
+            )
+
+    fig.update_layout(**_map_layout)
+    print(f"[DEBUG] Returning figure: traces={len(fig.data)}, colorscale={cfg['colorscale']}, col={col!r}")
+    return dcc.Graph(figure=fig, config={"displayModeBar": False, "scrollZoom": True}, style={"height": "100%", "width": "100%"}), quarter, dbc.Row(cards)
+
+
+@app.callback(
+    Output("climate-indicator-description", "children"),
+    Input("climate-indicator-select", "value"),
+    State("climate-indicator-descriptions", "data"),
+    prevent_initial_call=False
+)
+def update_climate_indicator_description(indicator, descriptions):
+    if not indicator or not descriptions:
+        return ""
+    return descriptions.get(indicator, "No description available for this indicator.")
 
 # Expose the Flask server for production deployment
 server = app.server
+app.server.secret_key = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')  # ← move ABOVE app.run()
 
 if __name__ == '__main__':
-    # For production, Render will set PORT environment variable
     port = int(os.environ.get('PORT', 8051))
-    # Debug True by default for local dev, False in production (when PORT is set by Render)
     debug = os.environ.get('PORT') is None
     app.run(debug=debug, host='0.0.0.0', port=port)

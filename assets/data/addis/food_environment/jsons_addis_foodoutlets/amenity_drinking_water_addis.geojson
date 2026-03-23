@@ -1,0 +1,12 @@
+{
+"type": "FeatureCollection",
+"name": "amenity_drinking_water_addis",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:EPSG::3857" } },
+"features": [
+{ "type": "Feature", "properties": { "id": 4681739604, "category": "amenity", "label": "drinking_water" }, "geometry": { "type": "Point", "coordinates": [ 4309030.769518754445016, 1002258.757481443812139 ] } },
+{ "type": "Feature", "properties": { "id": 6665462785, "category": "amenity", "label": "drinking_water" }, "geometry": { "type": "Point", "coordinates": [ 4321235.504530856385827, 987835.115579640027136 ] } },
+{ "type": "Feature", "properties": { "id": 10800986807, "category": "amenity", "label": "drinking_water" }, "geometry": { "type": "Point", "coordinates": [ 4311567.762977831065655, 1001343.839371691341512 ] } },
+{ "type": "Feature", "properties": { "id": 11508014152, "category": "amenity", "label": "drinking_water" }, "geometry": { "type": "Point", "coordinates": [ 4318874.863409095443785, 1004141.467168522882275 ] } },
+{ "type": "Feature", "properties": { "id": 11508014157, "category": "amenity", "label": "drinking_water" }, "geometry": { "type": "Point", "coordinates": [ 4318688.169491085223854, 1004091.664224271546118 ] } }
+]
+}

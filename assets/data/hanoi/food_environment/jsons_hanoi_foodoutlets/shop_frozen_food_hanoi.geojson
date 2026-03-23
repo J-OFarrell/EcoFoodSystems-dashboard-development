@@ -1,0 +1,10 @@
+{
+"type": "FeatureCollection",
+"name": "shop_frozen_food_hanoi",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:EPSG::3857" } },
+"features": [
+{ "type": "Feature", "properties": { "id": 8360592557, "category": "shop", "label": "frozen_food" }, "geometry": { "type": "Point", "coordinates": [ 11773367.888720937073231, 2399665.141418098006397 ] } },
+{ "type": "Feature", "properties": { "id": 8907534099, "category": "shop", "label": "frozen_food" }, "geometry": { "type": "Point", "coordinates": [ 11779066.211003206670284, 2390318.27872472256422 ] } },
+{ "type": "Feature", "properties": { "id": 8984048767, "category": "shop", "label": "frozen_food" }, "geometry": { "type": "Point", "coordinates": [ 11779921.901665035635233, 2391698.060536567121744 ] } }
+]
+}

@@ -1,11 +1,14 @@
 """
 Hà Nội dashboard tab layouts
 """
+import json
 
+import numpy as np
 from dash import html, dcc, dash_table
 import dash_bootstrap_components as dbc
 import plotly.graph_objects as go
 import plotly.express as px
+import json
 
 from config import brand_colors, header_style, kpi_card_style_2, card_style
 from shared_components import sidebar, city_selector
@@ -40,7 +43,7 @@ def hanoi_stakeholders_tab_layout():
                             {"name": str(i), "id": str(i), "presentation": "markdown"} if i == "Website" else {"name": str(i), "id": str(i)}
                             for i in df_sh_hanoi.columns
                         ],
-                        page_size=10,
+                        page_size=14,
                         page_action='native',
                         filter_action='native',
                         sort_action='native',
@@ -77,10 +80,28 @@ def hanoi_stakeholders_tab_layout():
                             } for row in df_sh_hanoi.to_dict('records')
                         ],
                         tooltip_duration=4000,
-                        css=[{
-                            'selector': '.dash-table-tooltip',
-                            'rule': 'position: fixed !important; background-color: ' + brand_colors['Light green'] + '; color: ' + brand_colors['Black'] + '; border: 2px solid ' + brand_colors['Dark green'] + '; padding: 6px; font-size: 14px; box-shadow: 0 4px 8px ' + brand_colors['Black'] + ';'
-                        }],
+                        css=[
+                            {
+                                'selector': '.dash-table-tooltip',
+                                'rule': 'position: fixed !important; background-color: ' + brand_colors['Light green'] + '; color: ' + brand_colors['Black'] + '; border: 2px solid ' + brand_colors['Dark green'] + '; padding: 6px; font-size: 14px; box-shadow: 0 4px 8px ' + brand_colors['Black'] + ';'
+                            },
+                            {
+                                'selector': '.dash-table-container .dash-spreadsheet-container',
+                                'rule': 'overflow-x: scroll !important; scrollbar-width: auto;'
+                            },
+                            {
+                                'selector': '.dash-table-container .dash-spreadsheet-container::-webkit-scrollbar',
+                                'rule': 'height: 14px; width: 14px; -webkit-appearance: none;'
+                            },
+                            {
+                                'selector': '.dash-table-container .dash-spreadsheet-container::-webkit-scrollbar-track',
+                                'rule': 'background: #f0f0f0; border-radius: 8px;'
+                            },
+                            {
+                                'selector': '.dash-table-container .dash-spreadsheet-container::-webkit-scrollbar-thumb',
+                                'rule': 'background: ' + brand_colors['Dark green'] + '; border-radius: 8px; border: 2px solid #f0f0f0;'
+                            }
+                        ],
                         style_table={
                             'overflowX': 'scroll',
                             'width': '100%',
@@ -90,13 +111,14 @@ def hanoi_stakeholders_tab_layout():
                     ,
                         style_as_list_view=True
                     )
-                ], style={"height": "100%", "display": "flex", "flexDirection": "column"})
-            ], style={"height": "90%", "padding": "10px", "box-shadow": "0 2px 6px rgba(0,0,0,0.1)", "backgroundColor": brand_colors['White'], "border-radius": "10px"}),
+                ], style={"flex": "1", "display": "flex", "flexDirection": "column", "minHeight": "0"})
+            ], style={"height": "100%", "padding": "10px", "box-shadow": "0 2px 6px rgba(0,0,0,0.1)", "backgroundColor": brand_colors['White'], "border-radius": "10px", "display": "flex", "flexDirection": "column"}),
         ], style={
             "flex": "1 1 85%",
-            "height": "100%",
+            "height": "96vh",
             "display": "flex",
-            "overflow": "auto",
+            "flexDirection": "column",
+            "overflow": "hidden",
             "border-radius": "10px",
             "margin": "10px 10px 10px 10px"
         })
@@ -104,7 +126,7 @@ def hanoi_stakeholders_tab_layout():
     ], style={
         "display": "flex",
         "width": "100%",
-        "height": "100%",
+        "height": "100vh",
         "backgroundColor": brand_colors['Light green']
     })
 
@@ -175,7 +197,7 @@ def hanoi_supply_tab_layout():
             ], style={**kpi_card_style_2}),
 
         ], style={
-            "width":"80%",
+            "flex": "0 0 20%",
             "height": "100%",
             "display": "flex",
             "flexDirection": "column",
@@ -295,34 +317,38 @@ def hanoi_poverty_tab_layout():
                             style={"margin-bottom": "20px"}
                         ),
 
-                        dcc.Graph(id='bar-plot-hanoi',
-                                style={
-                                "flex": "1 1 auto",
-                                "height":"98%",
+                        dcc.Graph(
+                            id='bar-plot-hanoi',
+                            config={"displayModeBar": False, "responsive": True},
+                            style={
+                                "height": "auto",
+                                "width": "100%",
                                 'padding': '4px',
                                 'margin': '8px',
                                 "border-radius": "8px",
                                 "box-shadow": "0 2px 8px rgba(0,0,0,0.15)",
-                                })
-                    ],style={
-                        "display": "flex",
-                        "flexDirection": "column",
-                        "height": "100%"             
+                            }
+                        )
+                    ], style={
+                        "display": "block",
+                        "height": "auto",
                     })
-                ], style={"height": "100%", 
-                            "padding":"6px" ,
-                            "box-shadow": "0 2px 6px rgba(0,0,0,0.1)",
-                            "backgroundColor": brand_colors['White'],
-                            "border-radius": "10px"}),
+                ], style={
+                    "height": "auto",
+                    "width": "100%",
+                    "padding": "6px",
+                    "box-shadow": "0 2px 6px rgba(0,0,0,0.1)",
+                    "backgroundColor": brand_colors['White'],
+                    "border-radius": "10px",
+                    "overflow": "hidden"
+                }),
 
             ], style={
-                "height": "100%",
+                "height": "auto",
                 "backgroundColor": brand_colors['Light green'],
                 "border-radius": "0",
                 "margin": "0",
-                "display": "flex",
-                "flexDirection": "column",
-                "justifyContent": "flex-start",
+                "display": "block",
                 "box-sizing": "border-box",
                 "zIndex": 2,
                 "position": "relative",
@@ -331,8 +357,10 @@ def hanoi_poverty_tab_layout():
             "overflowY": "auto",
             "display": "flex",
             "flexDirection": "column",
-            "width": "min(40%)",
+            "flex": "0 0 40%",
+            "minWidth": "40%",
             "height": "100%",
+            "minHeight": 0,
             "padding": "10px",
             "backgroundColor": brand_colors['Light green']
         }),
@@ -341,6 +369,7 @@ def hanoi_poverty_tab_layout():
         html.Div([
             dcc.Graph(
                 id='map-hanoi',
+                config={"displayModeBar": False, "scrollZoom": True, "responsive": True},
                 style={"height": "100%",
                        "width": "100%",
                        "padding": "0",
@@ -638,6 +667,7 @@ def hanoi_affordability_tab_layout():
     """Hanoi affordability tab layout"""
     import app as main
     outlets_geojson_files_hanoi = main.outlets_geojson_files_hanoi
+    isochrones_geojson_files_hanoi = main.isochrones_geojson_files_hanoi
     
     return html.Div([
         city_selector(selected_city='hanoi', visible=False),  # Hidden but present for callback
@@ -683,7 +713,7 @@ def hanoi_affordability_tab_layout():
                 dbc.Card([
                     dbc.CardBody([
                         html.Div([
-                                html.P(["Select food outlet layers to display on the map."],                                    
+                                html.P(["Select food outlets (walkability zones display automatically)."],                                    
                                        style={   "margin": "6px", 
                                                 'fontSize': 'clamp(0.7em, 1em, 1.0em)',
                                                 "textAlign": "center",
@@ -691,9 +721,13 @@ def hanoi_affordability_tab_layout():
                                                 "fontStyle": "italic"
                                                 }),
                                 dcc.Dropdown(
-                                    id="outlets-layer-select-hanoi",
-                                    options=[{"label": f.split('_')[1] if len(f.split('_')) < 4 else f"{f.split('_')[1]} {f.split('_')[2]}", 
-                                            "value": f} for f in outlets_geojson_files_hanoi],
+                                    id="food-outlets-and-isochrones-hanoi",
+                                    options=[
+                                        {"label": "Select All", "value": "SELECT_ALL"}
+                                    ] + [{
+                                        "label": f.split('_')[1] if len(f.split('_')) < 4 else f"{f.split('_')[1]} {f.split('_')[2]}", 
+                                        "value": f
+                                    } for f in outlets_geojson_files_hanoi],
                                     value=None,  # Default selection
                                     multi=True,
                                     placeholder="Select outlet layers to display",
@@ -714,7 +748,7 @@ def hanoi_affordability_tab_layout():
                             "box-shadow": "0 2px 6px rgba(0,0,0,0.1)",
                             "backgroundColor": brand_colors['White'],
                             "border-radius": "10px",
-                            "zIndex": "2000",
+                            "zIndex": "3000",
                             "position": "relative"}),
                 
             ], style={
@@ -735,14 +769,39 @@ def hanoi_affordability_tab_layout():
 
                 # Right panel: map, full height
                 html.Div([
-                    dcc.Graph(
-                        id='affordability-map-hanoi',
-                        figure=go.Figure().update_layout(
-                            mapbox=dict(style="carto-positron", center={"lat": 21.0, "lon": 105.85}, zoom=9),
-                            margin=dict(l=0, r=0, t=0, b=0),
-                            paper_bgcolor=brand_colors['White']
+                    dcc.Loading(
+                        id="loading-affordability-map-hanoi",
+                        parent_style={
+                            "height": "100%",
+                            "width": "100%",
+                            "position": "relative"
+                        },
+                        style={"height": "100%", "width": "100%"},
+                        custom_spinner=html.Div(
+                            dbc.Spinner(color="danger", type="border"),
+                            style={
+                                "position": "absolute",
+                                "inset": "0",
+                                "display": "flex",
+                                "alignItems": "center",
+                                "justifyContent": "center",
+                                "zIndex": 1000,
+                                "pointerEvents": "none",
+                            }
                         ),
-                        style={"height": "100%", "width": "100%", "padding": "0", "margin": "0"}
+                        children=html.Div(
+                            dcc.Graph(
+                                id='affordability-map-hanoi',
+                                figure=go.Figure().update_layout(
+                                    mapbox=dict(style="carto-positron", center={"lat": 21.0, "lon": 105.85}, zoom=9),
+                                    margin=dict(l=0, r=0, t=0, b=0),
+                                    paper_bgcolor=brand_colors['White']
+                                ),
+                                config={"displayModeBar": False, "scrollZoom": True, "responsive": True},
+                                style={"height": "100%", "width": "100%", "padding": "0", "margin": "0"}
+                            ),
+                            style={"height": "100%", "width": "100%"}
+                        )
                     )
                 ], style={
                     "flex": "1",
@@ -796,20 +855,22 @@ def hanoi_policies_tab_layout():
                             {"name": str(col), "id": str(col), "presentation": "markdown"} if any(k in str(col).lower() for k in ['link', 'website', 'url']) else {"name": str(col), "id": str(col)}
                             for col in df_policies.columns
                         ],
-                        page_size=10,
+                        page_size=14,
                         page_action='native',
                         filter_action='native',
                         sort_action='native',
                         sort_mode='multi',
                         style_cell={
                             'textAlign': 'left',
-                            'padding': '8px',
+                            'padding': '2px 6px',
                             'whiteSpace': 'nowrap',
                             'overflow': 'hidden',
                             'textOverflow': 'ellipsis',
-                            'fontSize': 'clamp(0.7em, 1vw, 1em)',
+                            'fontSize': 'clamp(0.64em, 0.85vw, 0.9em)',
+                            'lineHeight': '1.1',
                             'minWidth': '120px',
                             'maxWidth': '250px',
+                            'height': '36px'
                         },
                         style_header={
                             'fontWeight': 'bold',
@@ -820,8 +881,8 @@ def hanoi_policies_tab_layout():
                         },
                         style_filter={
                             'backgroundColor': '#f0f0f0',
-                            'fontSize': 'clamp(0.7em, 0.9vw, 0.95em)',
-                            'padding': '5px'
+                            'fontSize': 'clamp(0.64em, 0.85vw, 0.9em)',
+                            'padding': '2px 6px'
                         },
                         style_data_conditional=[
                             {'if': {'row_index': 'odd'}, 'backgroundColor': '#f9f9f9'}
@@ -836,80 +897,111 @@ def hanoi_policies_tab_layout():
                             } for row in df_policies.to_dict('records')
                         ],
                         tooltip_duration=4000,
-                        css=[{
-                            'selector': '.dash-table-tooltip',
-                            'rule': 'position: fixed !important; background-color: ' + brand_colors['Light green'] + '; color: ' + brand_colors['Black'] + '; border: 2px solid ' + brand_colors['Dark green'] + '; padding: 6px; font-size: 14px; box-shadow: 0 4px 8px ' + brand_colors['Black'] + ';'
-                        }],
+                        css=[
+                            {
+                                'selector': '.dash-table-tooltip',
+                                'rule': 'position: fixed !important; background-color: ' + brand_colors['Light green'] + '; color: ' + brand_colors['Black'] + '; border: 2px solid ' + brand_colors['Dark green'] + '; padding: 6px; font-size: 14px; box-shadow: 0 4px 8px ' + brand_colors['Black'] + ';'
+                            },
+                            {
+                                'selector': '.dash-table-container .dash-spreadsheet-container',
+                                'rule': 'overflow-x: scroll !important; scrollbar-width: auto;'
+                            },
+                            {
+                                'selector': '.dash-table-container .dash-spreadsheet-container::-webkit-scrollbar',
+                                'rule': 'height: 14px; width: 14px; -webkit-appearance: none;'
+                            },
+                            {
+                                'selector': '.dash-table-container .dash-spreadsheet-container::-webkit-scrollbar-track',
+                                'rule': 'background: #f0f0f0; border-radius: 8px;'
+                            },
+                            {
+                                'selector': '.dash-table-container .dash-spreadsheet-container::-webkit-scrollbar-thumb',
+                                'rule': 'background: ' + brand_colors['Dark green'] + '; border-radius: 8px; border: 2px solid #f0f0f0;'
+                            }
+                        ],
                         style_table={
-                            'overflowX': 'auto',
+                            'overflowX': 'scroll',
                             'width': '100%',
-                            'display': 'block',
-                            'minWidth': 'max-content',
+                            'height': '100%',
+                            'overflowY': 'auto'
                         }
                     ,
                         style_as_list_view=True
                     )
-                ], style={"height": "100%", "display": "flex", "flexDirection": "column"})
-            ], style={
-                "height": "auto",
-                "overflowY":"auto",
-                "box-shadow": "0 2px 6px rgba(0,0,0,0.1)",
-                "backgroundColor": brand_colors['White'],
-                "border-radius": "10px",
-                "padding": "10px"
-            }),
+                ], style={"flex": "1", "display": "flex", "flexDirection": "column", "minHeight": "0"})
+            ], style={"height": "100%", "padding": "10px", "box-shadow": "0 2px 6px rgba(0,0,0,0.1)", "backgroundColor": brand_colors['White'], "border-radius": "10px", "display": "flex", "flexDirection": "column"}),
         ], style={
             "flex": "1 1 85%",
-            "height": "90%",
+            "height": "96vh",
             "display": "flex",
             "flexDirection": "column",
-            "overflow": 'auto',
+            "overflow": "hidden",
             "border-radius": "10px",
-            'margin': "10px 10px 10px 10px"
+            "margin": "10px 10px 10px 10px"
         })
+
     ], style={
         "display": "flex",
         "width": "100%",
-        "height": "100%",
+        "height": "100vh",
         "backgroundColor": brand_colors['Light green']
     })
 
 
-def hanoi_resilience_tab_layout():
+def hanoi_resilience_tab_layout(all_quarters):
     """Hà Nội climate tab layout - Multi-dimensional Climate Stress Indicators"""
 
-    import app as main
-    dates = main.dates
-    date_cols = main.date_cols_drought
+    n = len(all_quarters)
+    max_tick_labels = 11  # target number of visible labels
+    step = max(1, int(np.ceil((n - 1) / max(1, (max_tick_labels - 1)))))
 
-    marks = {i: dates[i] for i in range(0, len(dates), max(1, len(dates)//12))}
+    quarter_marks = {
+        i: {"label": all_quarters[i][:4], "style": {"fontSize": "10px", "color": "#8c8590"}}
+        for i in range(0, n, step)
+    }
+    quarter_marks[0] = {"label": all_quarters[0][:4], "style": {"fontSize": "10px", "color": "#8c8590"}}
+    #quarter_marks[n - 1] = {"label": all_quarters[-1][:4], "style": {"fontSize": "10px", "color": "#8c8590"}}
+
 
     climate_indicator_options = [
         {"label": "── Vegetation ──", "value": "divider_veg", "disabled": True},
-        {"label": "Vegetative Stress", "value": "vci"},
+        {"label": "Vegetative Stress (VCI)", "value": "vci_severe_pct"},
+        {"label": "Vegetation Drought Resistance", "value": "drought_resistance"},  
+        {"label": "Vegetation Flood Resistance", "value": "flood_resistance"},  
         {"label": "── Water ──", "value": "divider_water", "disabled": True},
-        {"label": "Water Storage Anomalies", "value": "grace"},
-        {"label": "Soil Moisture Stress", "value": "soil_moisture"},
+        {"label": "Water Storage Anomalies", "value": "grace_trend"},
+        {"label": "Soil Moisture Stress (coming soon)", "value": "soil_moisture", "disabled": True},
         {"label": "── Precipitation Deficit (SPEI) ──", "value": "divider_spei", "disabled": True},
-        {"label": "SPEI-3  (Short-term, 3-month)", "value": "spei3"},
-        {"label": "SPEI-6  (Seasonal, 6-month)", "value": "spei6"},
-        {"label": "SPEI-12  (Annual, 12-month)", "value": "spei12"},
-        {"label": "SPEI-24  (Long-term, 24-month)", "value": "spei24"},
+        {"label": "SPEI-3 Median Class", "value": "spei3_class_median"},
+        {"label": "SPEI-3 Peak Absolute Class", "value": "spei3_peak_abs"},
+        {"label": "SPEI-6 Median Class", "value": "spei6_class_median"},
+        {"label": "SPEI-6 Peak Absolute Class", "value": "spei6_peak_abs"},
+        {"label": "SPEI-12 Median Class", "value": "spei12_class_median"},
+        {"label": "SPEI-12 Peak Absolute Class", "value": "spei12_peak_abs"},
+        #{"label": "SPEI-24  (Long-term, 24-month)", "value": "spei24"},
     ]
 
     # Descriptions shown in the info card per indicator
     indicator_descriptions = {
-        "vci": "The Vegetation Condition Index (VCI) measures relative vegetation health compared to historical conditions. Values below 35% indicate stress; this map shows the percentage of each district under severe vegetative stress.",
-        "grace": "GRACE Terrestrial Water Storage Anomalies (TWSA) capture changes in total water storage — including groundwater, surface water, and soil moisture — relative to a long-term baseline. Negative anomalies signal depletion.",
+        "vci_severe_pct": "The Vegetation Condition Index (VCI) measures relative vegetation health compared to historical conditions. Quantiles are applied to calculate indicators of stress; this map shows the percentage of each district under severe vegetative stress.",
+        "drought_resistance": "Vegetation Drought Resistance measures how well cropland vegetation maintained healthy VCI during SPEI6 drought events, weighted by how severe the stress conditions were. Higher values indicate crops sustained better health under equivalent stress. Grey districts recorded no drought that year.",
+        "flood_resistance": "Vegetation Flood Resistance measures how well cropland vegetation maintained healthy VCI during flood events, weighted by how severe the stress conditions were. Higher values indicate crops sustained better health under equivalent stress. Grey districts recorded no flood that year.",
+        "grace_trend": "GRACE Terrestrial Water Storage Anomalies (TWSA) capture changes in total water storage — including groundwater, surface water, and soil moisture — relative to a long-term baseline. Negative anomalies signal depletion.",
         "soil_moisture": "Soil Moisture Stress reflects root-zone water availability for crops. Severe deficits indicate conditions where plants cannot access sufficient water, directly threatening agricultural yields.",
-        "spei3": "SPEI-3 captures short-term (3-month) precipitation deficits relative to evapotranspiration demand. Sensitive to flash droughts and rapid drying events.",
-        "spei6": "SPEI-6 reflects seasonal drought accumulation over 6 months, relevant to within-season crop failure and water availability.",
-        "spei12": "SPEI-12 captures annual drought patterns, integrating a full year of precipitation and evapotranspiration to identify sustained water stress.",
-        "spei24": "SPEI-24 reveals long-term (2-year) drought trends, indicating persistent structural water deficits that threaten multi-season food production.",
+        "spei3_class_median": "SPEI-3 Median Class summarizes the typical short-term moisture anomaly across the quarter using the median monthly class. Negative values indicate drier-than-normal conditions, while positive values indicate wetter-than-normal conditions.",
+        "spei3_peak_abs": "SPEI-3 Peak Absolute Class captures the strongest short-term moisture shock reached within the quarter, regardless of sign. Larger values indicate more extreme departures from normal conditions.",
+        "spei6_class_median": "SPEI-6 Median Class summarizes the typical seasonal moisture anomaly across the quarter using the median monthly class. Negative values indicate sustained dryness and positive values indicate sustained wetness.",
+        "spei6_peak_abs": "SPEI-6 Peak Absolute Class captures the strongest seasonal moisture shock reached within the quarter, regardless of whether it was dry or wet.",
+        "spei12_class_median": "SPEI-12 Median Class summarizes the typical long-duration moisture anomaly across the quarter using the median monthly class. Negative values indicate prolonged drying and positive values indicate prolonged wetness.",
+        "spei12_peak_abs": "SPEI-12 Peak Absolute Class captures the strongest annual-scale moisture shock reached within the quarter, regardless of sign.",
+        #"spei24": "SPEI-24 reveals long-term (2-year) drought trends, indicating persistent structural water deficits that threaten multi-season food production.",
     }
 
     return html.Div([
         city_selector(selected_city='hanoi', visible=False),
+        dcc.Store(id="climate-indicator-descriptions", data=indicator_descriptions),
+        html.Script(f"window.quarterLookup = {json.dumps(all_quarters)};"),
+
 
         html.Div([sidebar], style={
             "width": "15%",
@@ -923,7 +1015,6 @@ def hanoi_resilience_tab_layout():
         # ── Left panel ──────────────────────────────────────────
         html.Div([
 
-            # Title card
             dbc.Card([
                 dbc.CardBody([
                     html.H2("Climate Stress Indicators", style=header_style),
@@ -941,139 +1032,121 @@ def hanoi_resilience_tab_layout():
                     )
                 ])
             ], style={
-                "height": "auto",
-                "padding": "6px",
-                "marginBottom": "10px",
+                "height": "auto", "padding": "6px", "marginBottom": "10px",
                 "boxShadow": "0 2px 6px rgba(0,0,0,0.1)",
-                "backgroundColor": brand_colors['White'],
-                "borderRadius": "10px"
+                "backgroundColor": brand_colors['White'], "borderRadius": "10px"
             }),
 
-            # Indicator selector card
             dbc.Card([
                 dbc.CardBody([
                     html.P("Select a climate stress indicator:",
-                           style={
-                               "margin": "6px",
-                               "fontSize": 'clamp(0.7em, 1em, 1.0em)',
-                               "textAlign": "center",
-                               "fontStyle": "italic"
-                           }),
+                           style={"margin": "6px", "fontSize": 'clamp(0.7em, 1em, 1.0em)',
+                                  "textAlign": "center", "fontStyle": "italic"}),
                     dcc.Dropdown(
                         id="climate-indicator-select",
                         options=climate_indicator_options,
-                        value="vci",
+                        value="vci_severe_pct",
                         clearable=False,
                         style={"zIndex": "2000", "marginBottom": "6px"}
                     ),
-                    # Dynamic description box
-                    html.Div(
-                        id="climate-indicator-description",
-                        style={
-                            "marginTop": "8px",
-                            "padding": "8px 10px",
-                            "backgroundColor": brand_colors['Light green'],
-                            "borderRadius": "6px",
-                            "fontSize": "clamp(0.65em, 0.85em, 0.95em)",
-                            "color": brand_colors['Brown'],
-                            "fontStyle": "italic",
-                            "lineHeight": "1.4"
-                        }
-                    )
+
+                    # Indciator description card, updated dynamically based on selection, with initial content for VCI
+                    dbc.Card([
+                        dbc.CardBody([
+                            html.Div(
+                                id="climate-indicator-description",
+                                children=indicator_descriptions.get("vci_severe_pct", ""),
+                                style={
+                                    "padding": "2px 4px",
+                                    "fontSize": "clamp(0.65em, 0.85em, 0.95em)",
+                                    "color": brand_colors['Brown'],
+                                    "fontStyle": "italic",
+                                    "lineHeight": "1.4"
+                                }
+                            )
+                        ])
+                    ], id="climate-indicator-description-card", style={
+                        "height": "auto", "padding": "6px", "marginBottom": "10px",
+                        "boxShadow": "0 2px 6px rgba(0,0,0,0.1)",
+                        "backgroundColor": brand_colors['Light green'], "borderRadius": "10px"
+                    })
                 ])
             ], style={
-                "height": "auto",
-                "padding": "6px",
-                "marginBottom": "10px",
+                "height": "auto", "padding": "6px", "marginBottom": "10px",
                 "boxShadow": "0 2px 6px rgba(0,0,0,0.1)",
-                "backgroundColor": brand_colors['White'],
-                "borderRadius": "10px",
-                "zIndex": "2000",
-                "position": "relative"
+                "backgroundColor": brand_colors['White'], "borderRadius": "10px",
+                "zIndex": "2000", "position": "relative"
             }),
 
-            # Date slider card
+            # ── Date slider (VCI + other monthly indicators) ──────────────────
             dbc.Card([
                 dbc.CardBody([
                     html.P("Select a date:",
-                           style={
-                               "margin": "6px",
-                               "fontSize": 'clamp(0.7em, 1em, 1.0em)',
-                               "textAlign": "center",
-                               "fontStyle": "italic"
-                           }),
+                           style={"margin": "6px", "fontSize": 'clamp(0.7em, 1em, 1.0em)',
+                                  "textAlign": "center", "fontStyle": "italic"}),
                     html.Label(
                         id="drought-slider-label",
                         style={
-                            'fontWeight': 'bold',
-                            'textAlign': 'center',
-                            'display': 'block',
+                            'fontWeight': 'bold', 'textAlign': 'center', 'display': 'block',
                             'color': brand_colors['Red'],
-                            'fontSize': 'clamp(0.9em, 1.1em, 1.4em)',
-                            'marginBottom': '8px'
+                            'fontSize': 'clamp(0.9em, 1.1em, 1.4em)', 'marginBottom': '8px'
                         }
                     ),
-                    dcc.Slider(
-                        id="drought-date-slider",
-                        min=0,
-                        max=len(date_cols) - 1,
-                        step=1,
-                        value=0,
-                        marks=None,
-                        updatemode='mouseup'
-                    )
+                dcc.Slider(
+                    id="drought-date-slider",
+                    min=0,
+                    max=n - 1,
+                    step=1,
+                    value=0,
+                    marks=quarter_marks,
+                    updatemode="mouseup",
+                ),
+
                 ])
-            ], style={
-                "height": "auto",
-                "padding": "6px",
+            ], id="date-slider-card", style={
+                "height": "auto", "padding": "6px", "marginBottom": "10px",
                 "boxShadow": "0 2px 6px rgba(0,0,0,0.1)",
-                "backgroundColor": brand_colors['White'],
-                "borderRadius": "10px"
+                "backgroundColor": brand_colors['White'], "borderRadius": "10px"
             }),
 
+            html.Div(id="region-kpi-cards", className="mt-3"),
+
         ], style={
-            "width": "min(40%)",
-            "height": "100%",
-            "padding": "10px",
-            "backgroundColor": brand_colors['Light green'],
-            "borderRadius": "0",
-            "margin": "0",
-            "display": "flex",
-            "flexDirection": "column",
-            "justifyContent": "flex-start",
-            "overflowY": "auto",
-            "boxSizing": "border-box",
-            "position": "relative",
+            "width": "min(40%)", "height": "100%", "padding": "10px",
+            "backgroundColor": brand_colors['Light green'], "borderRadius": "0", "margin": "0",
+            "display": "flex", "flexDirection": "column", "justifyContent": "flex-start",
+            "overflowY": "auto", "boxSizing": "border-box", "position": "relative",
         }),
 
         # ── Right panel: map ─────────────────────────────────────
-        html.Div([
-            dcc.Graph(
-                id='drought-choro-map',
-                style={
+        html.Div(
+            dcc.Loading(
+                id="loading-drought-map",
+                parent_style={
                     "height": "100%",
                     "width": "100%",
-                    "padding": "0",
-                    "margin": "0"
-                }
-            )
-        ], style={
-            "flex": "1",
-            "height": "100%",
-            "padding": "0",
-            "margin": "0",
-            "backgroundColor": brand_colors['White'],
-            "borderRadius": "0",
-            "display": "flex",
-            "alignItems": "stretch",
-            "justifyContent": "center",
-            "boxSizing": "border-box",
-            "zIndex": 1000,
-            "position": "relative",
-        })
+                    "position": "relative"
+                },
+                style={"height": "100%", "width": "100%"},
+                custom_spinner=html.Div(
+                    dbc.Spinner(color="danger", type="border"),
+                    style={
+                        "position": "absolute",
+                        "inset": "0",
+                        "display": "flex",
+                        "alignItems": "center",
+                        "justifyContent": "center",
+                        "zIndex": 1000,
+                        "pointerEvents": "none",
+                    }
+                ),
+                children=html.Div(
+                    id="drought-map-container",
+                    style={"height": "100%", "width": "100%"},
+                ),
+            ),
+            style={"flex": "1", "height": "100%", "minHeight": "calc(100vh - 140px)"}
+        ),
 
-    ], style={
-        "display": "flex",
-        "width": "100vw",
-        "height": "100%"
-    })
+
+    ], style={"display": "flex", "width": "100vw", "height": "100%"})

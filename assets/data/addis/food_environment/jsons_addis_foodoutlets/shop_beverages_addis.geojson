@@ -1,0 +1,19 @@
+{
+"type": "FeatureCollection",
+"name": "shop_beverages_addis",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:EPSG::3857" } },
+"features": [
+{ "type": "Feature", "properties": { "id": 4830561446, "category": "shop", "label": "beverages" }, "geometry": { "type": "Point", "coordinates": [ 4323069.259370745159686, 1008366.77922431146726 ] } },
+{ "type": "Feature", "properties": { "id": 5124354431, "category": "shop", "label": "beverages" }, "geometry": { "type": "Point", "coordinates": [ 4316172.159756022505462, 1009641.319437108351849 ] } },
+{ "type": "Feature", "properties": { "id": 5428870325, "category": "shop", "label": "beverages" }, "geometry": { "type": "Point", "coordinates": [ 4321502.393010034225881, 1007336.950688188197091 ] } },
+{ "type": "Feature", "properties": { "id": 5475556628, "category": "shop", "label": "beverages" }, "geometry": { "type": "Point", "coordinates": [ 4314000.027059970423579, 1009633.012185624684207 ] } },
+{ "type": "Feature", "properties": { "id": 5805163953, "category": "shop", "label": "beverages" }, "geometry": { "type": "Point", "coordinates": [ 4321368.520190404728055, 1007264.218511203769594 ] } },
+{ "type": "Feature", "properties": { "id": 6332851587, "category": "shop", "label": "beverages" }, "geometry": { "type": "Point", "coordinates": [ 4317510.331354849040508, 1005765.443848466966301 ] } },
+{ "type": "Feature", "properties": { "id": 6525504085, "category": "shop", "label": "beverages" }, "geometry": { "type": "Point", "coordinates": [ 4323208.920803894288838, 1008300.898181846132502 ] } },
+{ "type": "Feature", "properties": { "id": 6611752681, "category": "shop", "label": "beverages" }, "geometry": { "type": "Point", "coordinates": [ 4316632.922260365448892, 1008051.82484716840554 ] } },
+{ "type": "Feature", "properties": { "id": 7055094086, "category": "shop", "label": "beverages" }, "geometry": { "type": "Point", "coordinates": [ 4310615.970199598930776, 1003392.164111938327551 ] } },
+{ "type": "Feature", "properties": { "id": 7272693785, "category": "shop", "label": "beverages" }, "geometry": { "type": "Point", "coordinates": [ 4309747.4221365833655, 1001706.817739192279987 ] } },
+{ "type": "Feature", "properties": { "id": 8568510817, "category": "shop", "label": "beverages" }, "geometry": { "type": "Point", "coordinates": [ 4317363.857168862596154, 1009146.75350433238782 ] } },
+{ "type": "Feature", "properties": { "id": 8850364619, "category": "shop", "label": "beverages" }, "geometry": { "type": "Point", "coordinates": [ 4309495.238962139934301, 1009735.562337127979845 ] } }
+]
+}

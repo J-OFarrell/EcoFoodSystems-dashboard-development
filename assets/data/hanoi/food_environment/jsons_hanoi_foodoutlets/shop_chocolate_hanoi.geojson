@@ -1,0 +1,9 @@
+{
+"type": "FeatureCollection",
+"name": "shop_chocolate_hanoi",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:EPSG::3857" } },
+"features": [
+{ "type": "Feature", "properties": { "id": 11500070698, "category": "shop", "label": "chocolate" }, "geometry": { "type": "Point", "coordinates": [ 11783232.287286397069693, 2393625.947043444029987 ] } },
+{ "type": "Feature", "properties": { "id": 863793816, "category": "shop", "label": "chocolate" }, "geometry": { "type": "Point", "coordinates": [ 11783151.082918912172318, 2394505.41138912551105 ] } }
+]
+}

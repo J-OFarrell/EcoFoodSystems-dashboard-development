@@ -42,7 +42,7 @@ def stakeholders_tab_layout():
                             {"name": str(i), "id": str(i), "presentation": "markdown"} if i == "Website" else {"name": str(i), "id": str(i)}
                             for i in df_sh.columns
                         ],
-                        page_size=13,
+                        page_size=14,
                         page_action='native',
                         filter_action='native',
                         sort_action='native',
@@ -79,26 +79,44 @@ def stakeholders_tab_layout():
                             } for row in df_sh.to_dict('records')
                         ],
                         tooltip_duration=4000,
-                        css=[{
-                            'selector': '.dash-table-tooltip',
-                            'rule': 'position: fixed !important; background-color: ' + brand_colors['Light green'] + '; color: ' + brand_colors['Black'] + '; border: 2px solid ' + brand_colors['Dark green'] + '; padding: 6px; font-size: 14px; box-shadow: 0 4px 8px ' + brand_colors['Black'] + ';'
-                        }],
+                        css=[
+                            {
+                                'selector': '.dash-table-tooltip',
+                                'rule': 'position: fixed !important; background-color: ' + brand_colors['Light green'] + '; color: ' + brand_colors['Black'] + '; border: 2px solid ' + brand_colors['Dark green'] + '; padding: 6px; font-size: 14px; box-shadow: 0 4px 8px ' + brand_colors['Black'] + ';'
+                            },
+                            {
+                                'selector': '.dash-table-container .dash-spreadsheet-container',
+                                'rule': 'overflow-x: scroll !important; scrollbar-width: auto;'
+                            },
+                            {
+                                'selector': '.dash-table-container .dash-spreadsheet-container::-webkit-scrollbar',
+                                'rule': 'height: 14px; width: 14px; -webkit-appearance: none;'
+                            },
+                            {
+                                'selector': '.dash-table-container .dash-spreadsheet-container::-webkit-scrollbar-track',
+                                'rule': 'background: #f0f0f0; border-radius: 8px;'
+                            },
+                            {
+                                'selector': '.dash-table-container .dash-spreadsheet-container::-webkit-scrollbar-thumb',
+                                'rule': 'background: ' + brand_colors['Dark green'] + '; border-radius: 8px; border: 2px solid #f0f0f0;'
+                            }
+                        ],
                         style_table={
-                            'overflowX': 'auto',
-                            'overflowY': 'auto',
+                            'overflowX': 'scroll',
                             'height': '100%',
-                            'whiteSpace': 'nowrap'
+                            'width': '100%',
+                            'overflowY': 'auto'
                         },
                         style_as_list_view=True
                     )
-                ], style={"height": "100%", "display": "flex", "flexDirection": "column",
-                          'overflowX': 'auto',})
-            ], style={"height": "90%", "padding": "10px", "box-shadow": "0 2px 6px rgba(0,0,0,0.1)", "backgroundColor": brand_colors['White'], "border-radius": "10px"}),
+                ], style={"flex": "1", "display": "flex", "flexDirection": "column", "minHeight": "0"})
+            ], style={"height": "100%", "padding": "10px", "box-shadow": "0 2px 6px rgba(0,0,0,0.1)", "backgroundColor": brand_colors['White'], "border-radius": "10px", "display": "flex", "flexDirection": "column"}),
         ], style={
             "flex": "1 1 85%",
-            "height": "100%",
+            "height": "96vh",
             "display": "flex",
-            "overflow": "auto",
+            "flexDirection": "column",
+            "overflow": "hidden",
             "border-radius": "10px",
             "margin": "10px 10px 10px 10px"
         })
@@ -106,7 +124,7 @@ def stakeholders_tab_layout():
     ], style={
         "display": "flex",
         "width": "100%",
-        "height": "100%",
+        "height": "100vh",
         "backgroundColor": brand_colors['Light green']
     })
 
@@ -332,6 +350,7 @@ def poverty_tab_layout():
         html.Div([
             dcc.Graph(
                 id='map',
+                config={"displayModeBar": False, "scrollZoom": True, "responsive": True},
                 style={"height": "100%",
                        "width": "100%",
                        "padding": "0",
@@ -409,7 +428,7 @@ def affordability_tab_layout():
                 dbc.Card([
                     dbc.CardBody([
                         html.Div([
-                                html.P(["Select food outlet layers to display on the map."],                                    
+                                html.P(["Select food outlets (walkability zones display automatically)."],                                    
                                        style={   "margin": "6px", 
                                                 'fontSize': 'clamp(0.7em, 1em, 1.0em)',
                                                 "textAlign": "center",
@@ -417,12 +436,16 @@ def affordability_tab_layout():
                                                 "fontStyle": "italic"
                                                 }),
                                 dcc.Dropdown(
-                                    id="outlets-layer-select",
-                                    options=[{"label": f.split('_')[1] if len(f.split('_')) < 4 else f"{f.split('_')[1]} {f.split('_')[2]}", 
-                                            "value": f} for f in outlets_geojson_files],
+                                    id="food-outlets-and-isochrones",
+                                    options=[
+                                        {"label": "Select All", "value": "SELECT_ALL"}
+                                    ] + [{
+                                        "label": f.split('_')[1] if len(f.split('_')) < 4 else f"{f.split('_')[1]} {f.split('_')[2]}", 
+                                        "value": f
+                                    } for f in outlets_geojson_files],
                                     multi=True,
                                     placeholder="Select outlet layers to display",
-                                    style={'zIndex': '2000'})
+                                    style={'zIndex': '3000'})
                                 ],
                                 style={
                                     'margin': '2px 0px',
@@ -439,9 +462,8 @@ def affordability_tab_layout():
                             "box-shadow": "0 2px 6px rgba(0,0,0,0.1)",
                             "backgroundColor": brand_colors['White'],
                             "border-radius": "10px",
-                            "zIndex": "2000",
-                            "position": "relative"}),
-
+                            "zIndex": "3000",
+                                            "position": "relative"}),
                 dbc.Card([
                     dbc.CardBody([
                         html.Div([
@@ -495,14 +517,39 @@ def affordability_tab_layout():
 
                 # Right panel: map, full height
                 html.Div([
-                    dcc.Graph(
-                        id='affordability-map',
-                        figure=go.Figure().update_layout(
-                            mapbox=dict(style="carto-positron", center={"lat": 9.1, "lon": 38.7}, zoom=10),
-                            margin=dict(l=0, r=0, t=0, b=0),
-                            paper_bgcolor=brand_colors['White']
+                    dcc.Loading(
+                        id="loading-affordability-map",
+                        parent_style={
+                            "height": "100%",
+                            "width": "100%",
+                            "position": "relative"
+                        },
+                        style={"height": "100%", "width": "100%"},
+                        custom_spinner=html.Div(
+                            dbc.Spinner(color="danger", type="border"),
+                            style={
+                                "position": "absolute",
+                                "inset": "0",
+                                "display": "flex",
+                                "alignItems": "center",
+                                "justifyContent": "center",
+                                "zIndex": 1000,
+                                "pointerEvents": "none",
+                            }
                         ),
-                        style={"height": "100%", "width": "100%", "padding": "0", "margin": "0"}
+                        children=html.Div(
+                            dcc.Graph(
+                                id='affordability-map',
+                                figure=go.Figure().update_layout(
+                                    mapbox=dict(style="carto-positron", center={"lat": 9.1, "lon": 38.7}, zoom=10),
+                                    margin=dict(l=0, r=0, t=0, b=0),
+                                    paper_bgcolor=brand_colors['White']
+                                ),
+                                config={"displayModeBar": False, "scrollZoom": True, "responsive": True},
+                                style={"height": "100%", "width": "100%", "padding": "0", "margin": "0"}
+                            ),
+                            style={"height": "100%", "width": "100%"}
+                        )
                     )
                 ], style={
                     "flex": "1",
@@ -665,15 +712,33 @@ def sustainability_tab_layout():
                             } for row in df_display.to_dict('records')
                         ],
                         tooltip_duration=None,
-                        css=[{
-                            'selector': '.dash-table-tooltip',
-                            'rule': 'background-color: ' + brand_colors['Light green'] + '; color: ' + brand_colors['Black'] + '; border: 2px solid ' + brand_colors['Dark green'] + '; padding: 6px; font-size: 14px; box-shadow: 0 4px 8px ' + brand_colors['Black'] + ';'
-                        }],
+                        css=[
+                            {
+                                'selector': '.dash-table-tooltip',
+                                'rule': 'background-color: ' + brand_colors['Light green'] + '; color: ' + brand_colors['Black'] + '; border: 2px solid ' + brand_colors['Dark green'] + '; padding: 6px; font-size: 14px; box-shadow: 0 4px 8px ' + brand_colors['Black'] + ';'
+                            },
+                            {
+                                'selector': '.dash-table-container .dash-spreadsheet-container',
+                                'rule': 'overflow-x: scroll !important; scrollbar-width: auto;'
+                            },
+                            {
+                                'selector': '.dash-table-container .dash-spreadsheet-container::-webkit-scrollbar',
+                                'rule': 'height: 14px; width: 14px; -webkit-appearance: none;'
+                            },
+                            {
+                                'selector': '.dash-table-container .dash-spreadsheet-container::-webkit-scrollbar-track',
+                                'rule': 'background: #f0f0f0; border-radius: 8px;'
+                            },
+                            {
+                                'selector': '.dash-table-container .dash-spreadsheet-container::-webkit-scrollbar-thumb',
+                                'rule': 'background: ' + brand_colors['Dark green'] + '; border-radius: 8px; border: 2px solid #f0f0f0;'
+                            }
+                        ],
                         style_table={
-                            'overflowX': 'auto',
+                            'overflowX': 'scroll',
                             'width': '100%',
-                            'display': 'block',
-                            #'minWidth': 'max-content'
+                            'height': '100%',
+                            'overflowY': 'auto'
                         }
                     ,
                         style_as_list_view=True
@@ -740,13 +805,15 @@ def policies_tab_layout():
                         sort_mode='multi',
                         style_cell={
                             'textAlign': 'left',
-                            'padding': '8px',
+                            'padding': '2px 6px',
                             'whiteSpace': 'nowrap',
                             'overflow': 'hidden',
                             'textOverflow': 'ellipsis',
-                            'fontSize': 'clamp(0.7em, 1vw, 1em)',
+                            'fontSize': 'clamp(0.64em, 0.85vw, 0.9em)',
+                            'lineHeight': '1.1',
                             'minWidth': '120px',
                             'maxWidth': '250px',
+                            'height': '36px'
                         },
                         style_header={
                             'fontWeight': 'bold',
@@ -757,8 +824,8 @@ def policies_tab_layout():
                         },
                         style_filter={
                             'backgroundColor': '#f0f0f0',
-                            'fontSize': 'clamp(0.7em, 0.9vw, 0.95em)',
-                            'padding': '5px'
+                            'fontSize': 'clamp(0.64em, 0.85vw, 0.9em)',
+                            'padding': '2px 6px'
                         },
                         style_data_conditional=[
                             {'if': {'row_index': 'odd'}, 'backgroundColor': '#f9f9f9'}
@@ -773,40 +840,60 @@ def policies_tab_layout():
                             } for row in df_policies.to_dict('records')
                         ],
                         tooltip_duration=4000,
-                        css=[{
-                            'selector': '.dash-table-tooltip',
-                            'rule': 'position: fixed !important; background-color: ' + brand_colors['Light green'] + '; color: ' + brand_colors['Black'] + '; border: 2px solid ' + brand_colors['Dark green'] + '; padding: 6px; font-size: 14px; box-shadow: 0 4px 8px ' + brand_colors['Black'] + ';'
-                        }],
+                        css=[
+                            {
+                                'selector': '.dash-table-tooltip',
+                                'rule': 'position: fixed !important; background-color: ' + brand_colors['Light green'] + '; color: ' + brand_colors['Black'] + '; border: 2px solid ' + brand_colors['Dark green'] + '; padding: 6px; font-size: 14px; box-shadow: 0 4px 8px ' + brand_colors['Black'] + ';'
+                            },
+                            {
+                                'selector': '.dash-table-container .dash-spreadsheet-container',
+                                'rule': 'overflow-x: scroll !important; scrollbar-width: auto;'
+                            },
+                            {
+                                'selector': '.dash-table-container .dash-spreadsheet-container::-webkit-scrollbar',
+                                'rule': 'height: 14px; width: 14px; -webkit-appearance: none;'
+                            },
+                            {
+                                'selector': '.dash-table-container .dash-spreadsheet-container::-webkit-scrollbar-track',
+                                'rule': 'background: #f0f0f0; border-radius: 8px;'
+                            },
+                            {
+                                'selector': '.dash-table-container .dash-spreadsheet-container::-webkit-scrollbar-thumb',
+                                'rule': 'background: ' + brand_colors['Dark green'] + '; border-radius: 8px; border: 2px solid #f0f0f0;'
+                            }
+                        ],
                         style_table={
-                            'overflowX': 'auto',
+                            'overflowX': 'scroll',
                             'width': '100%',
-                            'display': 'block'
+                            'height': '100%',
+                            'overflowY': 'auto'
                         }
                     ,
                         style_as_list_view=True
                     )
-                ], style={"height": "100%", "display": "flex", "flexDirection": "column"})
+                ], style={"flex": "1", "display": "flex", "flexDirection": "column", "minHeight": "0"})
             ], style={
-                "height": "auto",
-                "overflowY":"auto",
+                "height": "100%",
                 "box-shadow": "0 2px 6px rgba(0,0,0,0.1)",
                 "backgroundColor": brand_colors['White'],
                 "border-radius": "10px",
-                "padding": "10px"
+                "padding": "10px",
+                "display": "flex",
+                "flexDirection": "column"
             }),
         ], style={
             "flex": "1 1 85%",
-            "height": "90%",
+            "height": "96vh",
             "display": "flex",
             "flexDirection": "column",
-            "overflow": 'auto',
+            "overflow": "hidden",
             "border-radius": "10px",
             'margin': "10px 10px 10px 10px"
         })
     ], style={
         "display": "flex",
         "width": "100%",
-        "height": "100%",
+        "height": "100vh",
         "backgroundColor": brand_colors['Light green']
     })
 

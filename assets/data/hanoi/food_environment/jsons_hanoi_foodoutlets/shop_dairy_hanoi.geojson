@@ -1,0 +1,23 @@
+{
+"type": "FeatureCollection",
+"name": "shop_dairy_hanoi",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:EPSG::3857" } },
+"features": [
+{ "type": "Feature", "properties": { "id": 4725374790, "category": "shop", "label": "dairy" }, "geometry": { "type": "Point", "coordinates": [ 11782665.481835126876831, 2389650.442680456675589 ] } },
+{ "type": "Feature", "properties": { "id": 7813034096, "category": "shop", "label": "dairy" }, "geometry": { "type": "Point", "coordinates": [ 11775521.776152450591326, 2399172.891574922949076 ] } },
+{ "type": "Feature", "properties": { "id": 8841323507, "category": "shop", "label": "dairy" }, "geometry": { "type": "Point", "coordinates": [ 11779379.274807162582874, 2389767.473730696365237 ] } },
+{ "type": "Feature", "properties": { "id": 8957577168, "category": "shop", "label": "dairy" }, "geometry": { "type": "Point", "coordinates": [ 11783883.439515843987465, 2394825.187726595904678 ] } },
+{ "type": "Feature", "properties": { "id": 10219076573, "category": "shop", "label": "dairy" }, "geometry": { "type": "Point", "coordinates": [ 11774516.037948980927467, 2401627.321908912155777 ] } },
+{ "type": "Feature", "properties": { "id": 10219253934, "category": "shop", "label": "dairy" }, "geometry": { "type": "Point", "coordinates": [ 11774462.103655692189932, 2401532.761201871559024 ] } },
+{ "type": "Feature", "properties": { "id": 10248628301, "category": "shop", "label": "dairy" }, "geometry": { "type": "Point", "coordinates": [ 11775694.699849447235465, 2396845.288788357749581 ] } },
+{ "type": "Feature", "properties": { "id": 10258564259, "category": "shop", "label": "dairy" }, "geometry": { "type": "Point", "coordinates": [ 11774622.192215399816632, 2400753.949000006075948 ] } },
+{ "type": "Feature", "properties": { "id": 10258564264, "category": "shop", "label": "dairy" }, "geometry": { "type": "Point", "coordinates": [ 11774643.420842295512557, 2400752.756011117249727 ] } },
+{ "type": "Feature", "properties": { "id": 11093749825, "category": "shop", "label": "dairy" }, "geometry": { "type": "Point", "coordinates": [ 11728116.315338388085365, 2419707.507565584499389 ] } },
+{ "type": "Feature", "properties": { "id": 11246117186, "category": "shop", "label": "dairy" }, "geometry": { "type": "Point", "coordinates": [ 11777968.478372545912862, 2397428.911266217008233 ] } },
+{ "type": "Feature", "properties": { "id": 11299159069, "category": "shop", "label": "dairy" }, "geometry": { "type": "Point", "coordinates": [ 11781297.766043443232775, 2393739.653260679915547 ] } },
+{ "type": "Feature", "properties": { "id": 11772909769, "category": "shop", "label": "dairy" }, "geometry": { "type": "Point", "coordinates": [ 11782691.196637500077486, 2395394.444230698049068 ] } },
+{ "type": "Feature", "properties": { "id": 11804627469, "category": "shop", "label": "dairy" }, "geometry": { "type": "Point", "coordinates": [ 11782862.361486542969942, 2396480.23481038492173 ] } },
+{ "type": "Feature", "properties": { "id": 12055526805, "category": "shop", "label": "dairy" }, "geometry": { "type": "Point", "coordinates": [ 11772486.561180379241705, 2391349.733666275627911 ] } },
+{ "type": "Feature", "properties": { "id": 1249564992, "category": "shop", "label": "dairy" }, "geometry": { "type": "Point", "coordinates": [ 11783155.224491132423282, 2393884.633396591525525 ] } }
+]
+}
