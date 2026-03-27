@@ -290,12 +290,12 @@ def poverty_tab_layout():
                                     "whiteSpace": "normal",
                                     })
                             ])
-                    ], style={  "height": "auto", 
-                                "padding":"6px" ,
-                                "margin-bottom": "5px",
-                                "box-shadow": "0 2px 6px rgba(0,0,0,0.1)",
-                                "backgroundColor": brand_colors['White'],
-                                "border-radius": "10px"}),
+                            ], style={  "flex": "0 0 auto",
+                                        "padding":"6px" ,
+                                        "margin-bottom": "5px",
+                                        "box-shadow": "0 2px 6px rgba(0,0,0,0.1)",
+                                        "backgroundColor": brand_colors['White'],
+                                        "border-radius": "10px"}),
 
         html.Div([
             dbc.Card([
@@ -303,26 +303,41 @@ def poverty_tab_layout():
                     dcc.Dropdown(
                         id='variable-dropdown',
                         options=[{'label': v, 'value': v} for v in variables],
-                    value=variables[0],
-                    style={"margin-bottom": "20px"}),
+                        value=variables[0],
+                        persistence=True,
+                        persistence_type='session',
+                        style={"margin-bottom": "12px"}
+                    ),
 
                     dcc.Graph(id='bar-plot',
+                            config={"displayModeBar": False, "responsive": True},
                             style={
-                            "flex": "1 1 auto",
-                            "height":"98%",
-                            'padding': '4px',
-                            'margin': '8px',
+                                "minHeight": 0,
+                                "width": "100%",
+                                "flex": "1 1 auto",
+                                'padding': '4px',
+                                'margin': '8px',
+                                "border-radius": "8px",
+                                "box-shadow": "0 2px 8px rgba(0,0,0,0.15)",
+                                "overflowY": "auto"
                             })
                             ],style={
                                         "display": "flex",
                                         "flexDirection": "column",
-                                        "height": "100%"             
+                                        "flex": "1 1 auto",
+                                        "minHeight": 0,
+                                        "overflow": "hidden"
                                     })
                     ], style={
+                                "flex": "1 1 auto",
                                 "padding":"6px" ,
                                 "box-shadow": "0 2px 6px rgba(0,0,0,0.1)",
                                 "backgroundColor": brand_colors['White'],
-                                "border-radius": "10px"}),
+                                "border-radius": "10px",
+                                "overflow": "hidden",
+                                "display": "flex",
+                                "flexDirection": "column"
+                    }),
 
                     ], style={
                         "height": "100%",
@@ -373,7 +388,7 @@ def poverty_tab_layout():
     ], style={
         "display": "flex",
         "width": "100vw",
-        "height": "100%"
+        "height": "100vh"
     })
 
 
@@ -404,8 +419,8 @@ def affordability_tab_layout():
                             html.H2("Food Environment Analysis", style=header_style),
                             html.P("This map shows the distribution of healthy and unhealthy food outlets across Addis Ababa's sub-cities. The obesogenic ratio reveals where unhealthy outlets dominate, indicating areas with limited access to nutritious food. Population exposure metrics highlight which communities face the greatest imbalance, providing evidence to guide equitable food policy interventions. This analysis forms part of a broader assessment integrating socioeconomic and built environment factors.",
                                        style={  "margin": "10px 6px", 
-                                                "fontSize": 'clamp(0.7em, 1em, 1.0em)',
-                                                "textAlign": "justify",
+                                                "fontSize": 'clamp(0.7em, 0.9em, 1.0em)',
+                                                #"textAlign": "justify",
                                                 "whiteSpace": "normal",
                                                 })],
                                 style={
@@ -428,7 +443,7 @@ def affordability_tab_layout():
                 dbc.Card([
                     dbc.CardBody([
                         html.Div([
-                                html.P(["Select food outlets (walkability zones display automatically)."],                                    
+                                html.P(["Select food outlets (30-minute walkability zones display automatically)."],                                    
                                        style={   "margin": "6px", 
                                                 'fontSize': 'clamp(0.7em, 1em, 1.0em)',
                                                 "textAlign": "center",

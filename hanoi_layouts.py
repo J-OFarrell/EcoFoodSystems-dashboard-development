@@ -12,6 +12,7 @@ import json
 
 from config import brand_colors, header_style, kpi_card_style_2, card_style
 from shared_components import sidebar, city_selector
+from dashboard_components import create_nutrition_kpi_card, create_nutrition_kpi_card_hanoi
 
 
 def hanoi_stakeholders_tab_layout():
@@ -275,7 +276,7 @@ def hanoi_supply_tab_layout():
 def hanoi_poverty_tab_layout():
     """Hà Nội poverty tab layout"""
     import app as main
-    variables_hanoi = main.variables_hanoi
+    mpi_vars = main.mpi_vars
     
     return html.Div([
         city_selector(selected_city='hanoi', visible=False),  # Hidden but present for callback
@@ -295,12 +296,12 @@ def hanoi_poverty_tab_layout():
                     html.H2("Multidimensional Poverty Index", style=header_style),
                     html.P("The Multidimensional Poverty Index (MPI) assesses poverty across health, education, and living standards using ten indicators including nutrition, schooling, sanitation, water, electricity, and housing. This spatial analysis maps deprivation levels across Hanoi's districts, revealing where households face multiple overlapping disadvantages. These insights identify priority areas for targeted interventions, supporting equitable resource allocation and sustainable poverty reduction strategies aligned with SDG goals.",
                             style={  "margin": "10px 6px", 
-                                    "fontSize": 'clamp(0.7em, 1em, 1.0em)',
-                                    "textAlign": "justify",
+                                    "fontSize": 'clamp(0.6em, 0.8em, 1.0em)',
+                                    #"textAlign": "justify",
                                     "whiteSpace": "normal",
                                     })
                 ])
-            ], style={  "height": "auto", 
+            ], style={  "flex": "0 0 auto",
                         "padding":"6px" ,
                         "margin-bottom": "5px",
                         "box-shadow": "0 2px 6px rgba(0,0,0,0.1)",
@@ -312,46 +313,56 @@ def hanoi_poverty_tab_layout():
                     dbc.CardBody([
                         dcc.Dropdown(
                             id='variable-dropdown-hanoi',
-                            options=[{'label': v, 'value': v} for v in variables_hanoi],
-                            value=variables_hanoi[0],
-                            style={"margin-bottom": "20px"}
+                            options=[{'label': v, 'value': v} for v in mpi_vars],
+                            value=mpi_vars[0],
+                            persistence=True,
+                            persistence_type='session',
+                            style={"margin-bottom": "12px"}
                         ),
-
                         dcc.Graph(
                             id='bar-plot-hanoi',
                             config={"displayModeBar": False, "responsive": True},
                             style={
-                                "height": "auto",
+                                "minHeight": 0,
                                 "width": "100%",
+                                "flex": "1 1 auto",
                                 'padding': '4px',
                                 'margin': '8px',
                                 "border-radius": "8px",
                                 "box-shadow": "0 2px 8px rgba(0,0,0,0.15)",
+                                "overflowY": "auto"
                             }
                         )
                     ], style={
-                        "display": "block",
-                        "height": "auto",
+                        "display": "flex",
+                        "flexDirection": "column",
+                        "flex": "1 1 auto",
+                        "minHeight": 0,
+                        "overflow": "hidden"
                     })
                 ], style={
-                    "height": "auto",
+                    "flex": "1 1 auto",
                     "width": "100%",
                     "padding": "6px",
                     "box-shadow": "0 2px 6px rgba(0,0,0,0.1)",
                     "backgroundColor": brand_colors['White'],
                     "border-radius": "10px",
-                    "overflow": "hidden"
+                    "overflow": "hidden",
+                    "display": "flex",
+                    "flexDirection": "column"
                 }),
 
             ], style={
-                "height": "auto",
+                "height": "100%",
                 "backgroundColor": brand_colors['Light green'],
                 "border-radius": "0",
                 "margin": "0",
-                "display": "block",
+                "display": "flex",
+                "flexDirection": "column",
                 "box-sizing": "border-box",
                 "zIndex": 2,
                 "position": "relative",
+                "overflowY": "auto"
             }),
         ],style={
             "overflowY": "auto",
@@ -392,7 +403,7 @@ def hanoi_poverty_tab_layout():
     ], style={
         "display": "flex",
         "width": "100vw",
-        "height": "100%"
+        "height": "100vh"
     })
 
 
@@ -511,6 +522,9 @@ def hanoi_health_nutrition_tab_layout():
     
     labels = df_diet_2_hanoi['Cat'].unique()
     
+    tile_width, lg = 12, 4
+    years = list(range(2010, 2024))
+
     return html.Div([
         city_selector(selected_city='hanoi', visible=False),  # Hidden but present for callback
         
@@ -523,75 +537,69 @@ def hanoi_health_nutrition_tab_layout():
             "justifyContent": "flex-start",
         }),
 
-        # Left panel
+        # KPI cards (left)
         html.Div([
-            dbc.Card([
-                dbc.CardBody([
-                    html.H2('Health & Nutrition', 
-                            style=header_style),
-                ])
-            ], style={"height": "auto",
-                    "width":"100%",
-                    "padding":"1px" ,
-                    "box-shadow": "0 2px 6px rgba(0,0,0,0.1)",
-                    "backgroundColor": brand_colors['Mid green'],
-                    "border-radius": "10px",
-                    'margin':"0px 0px 10px 0px",
-                    "justifyContent": "center"
-            }),
+            html.H3("Children under 5 years", style={
+                        "color": brand_colors['Brown'],
+                        "fontWeight": "bold",
+                        "marginTop": "20px",
+                        "marginBottom": "15px",
+                        "borderBottom": f"3px solid {brand_colors['Mid green']}",
+                        "paddingBottom": "10px"
+                    }),
+            dbc.Row([
+                        dbc.Col([create_nutrition_kpi_card_hanoi(
+                                        df_diet_2_hanoi[(df_diet_2_hanoi['Cat'] == labels[0]) & (df_diet_2_hanoi['Reg'] == 'Hanoi')][['Year', 'value']],
+                                        labels[0].split(' in ')[0], 
+                                        df_diet_2_hanoi[(df_diet_2_hanoi['Cat'] == labels[0]) & (df_diet_2_hanoi['Reg'] == 'Hanoi')]['value'].dropna().values[-1], 
+                                        df_diet_2_hanoi[(df_diet_2_hanoi['Cat'] == labels[0]) & (df_diet_2_hanoi['Reg'] == 'Vietnam')]['value'].dropna().values[-1], 
+                                        lower_is_better=True)], width=tile_width, lg=lg),
 
-            html.Div([
-                dbc.Card([
-                    dbc.CardBody([
-                        dcc.Dropdown(
-                            id='health-filter-dropdown-hanoi',
-                            options=[
-                                {'label': labels[i], 'value': labels[i]} for i in range(len(labels))
-                            ],
-                            value=labels[0],
-                            clearable=False,
-                            style={"margin-bottom": "0", 
-                                    'fontSize': 'clamp(0.8em, 1em, 1.4em)',
-                                    'width':'100%'
-                            })
-                    ], style={  "display":'flex',
-                                "flexDirection":'column',
-                                'width':'100%'
-                    })
-                ])
-            ], style={  "height": "auto", 
-                        "padding":"2px" ,
-                        "box-shadow": "0 2px 6px rgba(0,0,0,0.1)",
-                        'margin-bottom': '15px',
-                        "backgroundColor": brand_colors['White'],
-                        "border-radius": "10px"
-            }),
+                        dbc.Col([create_nutrition_kpi_card_hanoi(
+                                        df_diet_2_hanoi[(df_diet_2_hanoi['Cat'] == labels[1]) & (df_diet_2_hanoi['Reg'] == 'Hanoi')][['Year', 'value']],
+                                        labels[1].split(' in ')[0], 
+                                        df_diet_2_hanoi[(df_diet_2_hanoi['Cat'] == labels[1]) & (df_diet_2_hanoi['Reg'] == 'Hanoi')]['value'].dropna().values[-1], 
+                                        df_diet_2_hanoi[(df_diet_2_hanoi['Cat'] == labels[1]) & (df_diet_2_hanoi['Reg'] == 'Vietnam')]['value'].dropna().values[-1], 
+                                        lower_is_better=True)], width=tile_width, lg=lg),
 
-            dbc.Card([
-                dbc.CardBody([
-                    dcc.Graph(id='health-trend-hanoi', 
-                            style={
-                                "flex": "1 1 auto",
-                                "height":"98%",
-                                'padding': '4px',
-                                'margin': '0',
-                                "border-radius": "8px",
-                                "box-shadow": "0 2px 8px rgba(0,0,0,0.15)",
-                            })
-                ],style={
-                    "display": "flex",
-                    "flexDirection": "column",
-                    "height": "100%"             
-                })
-            ], style={"height": "100%", 
-                        "padding":"2px" ,
-                        "box-shadow": "0 2px 6px rgba(0,0,0,0.1)",
-                        "backgroundColor": brand_colors['White'],
-                        "border-radius": "10px"
-            })
+                        dbc.Col([create_nutrition_kpi_card_hanoi(
+                                        df_diet_2_hanoi[(df_diet_2_hanoi['Cat'] == labels[2]) & (df_diet_2_hanoi['Reg'] == 'Hanoi')][['Year', 'value']],
+                                        labels[2].split(' in ')[0], 
+                                        df_diet_2_hanoi[(df_diet_2_hanoi['Cat'] == labels[2]) & (df_diet_2_hanoi['Reg'] == 'Hanoi')]['value'].dropna().values[-1], 
+                                        df_diet_2_hanoi[(df_diet_2_hanoi['Cat'] == labels[2]) & (df_diet_2_hanoi['Reg'] == 'Vietnam')]['value'].dropna().values[-1], 
+                                        lower_is_better=True)], width=tile_width, lg=lg),
+                    ]),
+
+            dbc.Row([
+                        dbc.Col([create_nutrition_kpi_card_hanoi(
+                                        df_diet_2_hanoi[(df_diet_2_hanoi['Cat'] == labels[3]) & (df_diet_2_hanoi['Reg'] == 'Hanoi')][['Year', 'value']],
+                                        labels[3].split(' in ')[0], 
+                                        df_diet_2_hanoi[(df_diet_2_hanoi['Cat'] == labels[3]) & (df_diet_2_hanoi['Reg'] == 'Hanoi')]['value'].dropna().values[-1], 
+                                        df_diet_2_hanoi[(df_diet_2_hanoi['Cat'] == labels[3]) & (df_diet_2_hanoi['Reg'] == 'Vietnam')]['value'].dropna().values[-1], 
+                                        lower_is_better=True)], width=tile_width, lg=lg),
+                    ]),
+
+            html.H3("Women of reproductive age", style={
+                        "color": brand_colors['Brown'],
+                        "fontWeight": "bold",
+                        "marginTop": "20px",
+                        "marginBottom": "15px",
+                        "borderBottom": f"3px solid {brand_colors['Mid green']}",
+                        "paddingBottom": "10px"
+                    }),
+
+            dbc.Row([
+
+                        dbc.Col([create_nutrition_kpi_card_hanoi(
+                                        df_diet_2_hanoi[(df_diet_2_hanoi['Cat'] == labels[4]) & (df_diet_2_hanoi['Reg'] == 'Hanoi')][['Year', 'value']],
+                                        labels[4].split(' in ')[0], 
+                                        df_diet_2_hanoi[(df_diet_2_hanoi['Cat'] == labels[4]) & (df_diet_2_hanoi['Reg'] == 'Hanoi')]['value'].dropna().values[-1], 
+                                        df_diet_2_hanoi[(df_diet_2_hanoi['Cat'] == labels[4]) & (df_diet_2_hanoi['Reg'] == 'Vietnam')]['value'].dropna().values[-1], 
+                                        lower_is_better=True)], width=tile_width, lg=lg),
+                    ]),
 
         ], style={
-            "width": "min(35%)",
+            "width": "min(90%)",
             "height": "100%",
             "padding": "10px",
             "backgroundColor": brand_colors['Light green'],
@@ -605,59 +613,9 @@ def hanoi_health_nutrition_tab_layout():
             "box-sizing": "border-box",
             "position": "relative",
         }),
-
-        # Right panel
-        html.Div([
-            dbc.Card([
-                dbc.CardBody([
-                    dcc.Graph(id='diet-dumbbell-hanoi', style={
-                        "flex": "1 1 90vh",
-                        "height":"82vh",
-                        'padding': '2px',
-                        'margin': '0',
-                        "border-radius": "8px",
-                        "box-shadow": "0 2px 8px rgba(0,0,0,0.15)",
-                    }),
-
-                    html.Div([dcc.Slider(
-                        id='dumbbell-slider-hanoi', min=2010, max=2023, value=2013, step=2,
-                        marks={year: str(year) for year in range(2010,2023,1)},
-                        tooltip={"placement": "bottom", "always_visible": True},
-                        updatemode='mouseup'
-                        )
-                    ], style={  "margin-top":"8px", 
-                                "color":brand_colors['Brown'],
-                                "width": "100%", 
-                                "height":"auto",
-                                "flex": "0 0 auto",
-                                'marginBottom': '4px'
-                    })
-                ], style={
-                    "display": "flex",
-                    "flexDirection": "column",
-                    "height": "100%",
-                    "justifyContent": "flex-start"
-                })
-            ])
-        ], style={
-            "width": "min(50%)",
-            "height": "100%",
-            "padding": "10px",
-            "backgroundColor": brand_colors['Light green'],
-            "border-radius": "0",
-            "margin": "0",
-            "box-shadow": "0 2px 8px rgba(0,0,0,0.05)",
-            "display": "flex",
-            "flexDirection": "column",
-            "justifyContent": "flex-start",
-            "overflowY": "auto",
-            "box-sizing": "border-box",
-            "position": "relative",
-        })
-
     ], style={
-        "display": "flex", 
-        "width": "100%", 
+        "display": "flex",
+        "width": "100%",
         "height": "100%",
         "backgroundColor": brand_colors['Light green']
     })
@@ -668,6 +626,8 @@ def hanoi_affordability_tab_layout():
     import app as main
     outlets_geojson_files_hanoi = main.outlets_geojson_files_hanoi
     isochrones_geojson_files_hanoi = main.isochrones_geojson_files_hanoi
+    data_labels_food_env = getattr(main, 'data_labels_food_env_hanoi', getattr(main, 'data_labels_food_env', []))
+    cols_food_env = getattr(main, 'cols_food_env_hanoi', getattr(main, 'cols_food_env', []))
     
     return html.Div([
         city_selector(selected_city='hanoi', visible=False),  # Hidden but present for callback
@@ -689,8 +649,8 @@ def hanoi_affordability_tab_layout():
                             html.H2("Food Environment Analysis", style=header_style),
                             html.P("This map shows the distribution of healthy and unhealthy food outlets across Hanoi's districts. The obesogenic ratio reveals where unhealthy outlets dominate, indicating areas with limited access to nutritious food. Population exposure metrics highlight which communities face the greatest imbalance, providing evidence to guide equitable food policy interventions. This analysis forms part of a broader assessment integrating socioeconomic and built environment factors.",
                                        style={  "margin": "10px 6px", 
-                                                "fontSize": 'clamp(0.7em, 1em, 1.0em)',
-                                                "textAlign": "justify",
+                                                "fontSize": 'clamp(0.7em, 0.9em, 1.0em)',
+                                                #"textAlign": "justify",
                                                 "whiteSpace": "normal",
                                                 })],
                                 style={
@@ -710,46 +670,51 @@ def hanoi_affordability_tab_layout():
                             "backgroundColor": brand_colors['White'],
                             "border-radius": "10px"}),
 
+                # Food outlets selector first (ensure high z-index so dropdown menus render above others)
                 dbc.Card([
                     dbc.CardBody([
                         html.Div([
-                                html.P(["Select food outlets (walkability zones display automatically)."],                                    
-                                       style={   "margin": "6px", 
-                                                'fontSize': 'clamp(0.7em, 1em, 1.0em)',
-                                                "textAlign": "center",
-                                                "whiteSpace": "normal",
-                                                "fontStyle": "italic"
-                                                }),
+                                html.P(["Select food outlets (30-minute walkability zones display automatically)."],
+                                       style={"margin": "6px", 'fontSize': 'clamp(0.7em, 1em, 1.0em)',
+                                              "textAlign": "center", "whiteSpace": "normal", "fontStyle": "italic"}),
                                 dcc.Dropdown(
                                     id="food-outlets-and-isochrones-hanoi",
                                     options=[
                                         {"label": "Select All", "value": "SELECT_ALL"}
                                     ] + [{
-                                        "label": f.split('_')[1] if len(f.split('_')) < 4 else f"{f.split('_')[1]} {f.split('_')[2]}", 
+                                        "label": f.split('_')[1] if len(f.split('_')) < 4 else f"{f.split('_')[1]} {f.split('_')[2]}",
                                         "value": f
                                     } for f in outlets_geojson_files_hanoi],
-                                    value=None,  # Default selection
+                                    value=None,
                                     multi=True,
                                     placeholder="Select outlet layers to display",
-                                    style={'zIndex': '2000'})
+                                    style={'zIndex': '5000', 'position': 'relative'})
                                 ],
-                                style={
-                                    'margin': '2px 0px',
-                                    'justifyContent': 'end',
-                                    'alignItems': 'center',
-                                    'textAlign': 'center'
-                    })],style={
-                                "display": "flex",
-                                "flexDirection": "column",
-                                "height": "100%"             
-                            })
-                ], style={"height": "auto", 
-                            "padding":"6px" ,
-                            "box-shadow": "0 2px 6px rgba(0,0,0,0.1)",
-                            "backgroundColor": brand_colors['White'],
-                            "border-radius": "10px",
-                            "zIndex": "3000",
-                            "position": "relative"}),
+                                style={'margin': '2px 0px', 'justifyContent': 'end', 'alignItems': 'center', 'textAlign': 'center'}),
+                    ])
+                ], style={"height": "auto", "padding":"6px", "box-shadow": "0 2px 6px rgba(0,0,0,0.1)",
+                            "backgroundColor": brand_colors['White'], "border-radius": "10px",
+                            "zIndex": "5000", "position": "relative"}),
+
+                # Choropleth metric selector below outlets
+                dbc.Card([
+                    dbc.CardBody([
+                        html.Div([
+                                html.P(["Select a food environment metric to display as a choropleth layer."],
+                                       style={"margin": "6px", 'fontSize': 'clamp(0.7em, 1em, 1.0em)',
+                                              "textAlign": "center", "whiteSpace": "normal", "fontStyle": "italic"}),
+                                dcc.Dropdown(
+                                    id="choropleth-select-hanoi",
+                                    options=[{"label": label, "value": col} for label, col in zip(data_labels_food_env, cols_food_env)],
+                                    multi=False,
+                                    value='ratio_obesogenic' if 'ratio_obesogenic' in cols_food_env else (cols_food_env[0] if cols_food_env else None),
+                                    placeholder="Select metric to display",
+                                    style={'zIndex': '1900', 'position': 'relative'})
+                                ],
+                                style={'margin': '2px 0px', 'justifyContent': 'end', 'alignItems': 'center', 'textAlign': 'center'})
+                    ])
+                ], style={"height": "auto", "padding":"6px", "box-shadow": "0 2px 6px rgba(0,0,0,0.1)",
+                            "backgroundColor": brand_colors['White'], "border-radius": "10px"}),
                 
             ], style={
                     "width": "min(30%)",
@@ -967,17 +932,20 @@ def hanoi_resilience_tab_layout(all_quarters):
         {"label": "── Vegetation ──", "value": "divider_veg", "disabled": True},
         {"label": "Vegetative Stress (VCI)", "value": "vci_severe_pct"},
         {"label": "Vegetation Drought Resistance", "value": "drought_resistance"},  
-        {"label": "Vegetation Flood Resistance", "value": "flood_resistance"},  
+       #{"label": "Vegetation Flood Resistance", "value": "flood_resistance"},  
         {"label": "── Water ──", "value": "divider_water", "disabled": True},
         {"label": "Water Storage Anomalies", "value": "grace_trend"},
         {"label": "Soil Moisture Stress (coming soon)", "value": "soil_moisture", "disabled": True},
         {"label": "── Precipitation Deficit (SPEI) ──", "value": "divider_spei", "disabled": True},
-        {"label": "SPEI-3 Median Class", "value": "spei3_class_median"},
-        {"label": "SPEI-3 Peak Absolute Class", "value": "spei3_peak_abs"},
-        {"label": "SPEI-6 Median Class", "value": "spei6_class_median"},
-        {"label": "SPEI-6 Peak Absolute Class", "value": "spei6_peak_abs"},
-        {"label": "SPEI-12 Median Class", "value": "spei12_class_median"},
-        {"label": "SPEI-12 Peak Absolute Class", "value": "spei12_peak_abs"},
+        {"label": "SPEI-3 Moderate Drought", "value": "class_-3_months_SPEI3"},
+        {"label": "SPEI-3 Severe Drought", "value": "class_-2_months_SPEI3"},
+        {"label": "SPEI-3 Extreme Drought", "value": "class_-1_months_SPEI3"},
+        {"label": "SPEI-6 Moderate Drought", "value": "class_-3_months_SPEI6"},
+        {"label": "SPEI-6 Severe Drought", "value": "class_-2_months_SPEI6"},
+        {"label": "SPEI-6 Extreme Drought", "value": "class_-1_months_SPEI6"},
+        {"label": "SPEI-12 Moderate Drought", "value": "class_-3_months_SPEI12"},
+        {"label": "SPEI-12 Severe Drought", "value": "class_-2_months_SPEI12"},
+        {"label": "SPEI-12 Extreme Drought", "value": "class_-1_months_SPEI12"},
         #{"label": "SPEI-24  (Long-term, 24-month)", "value": "spei24"},
     ]
 
@@ -985,15 +953,18 @@ def hanoi_resilience_tab_layout(all_quarters):
     indicator_descriptions = {
         "vci_severe_pct": "The Vegetation Condition Index (VCI) measures relative vegetation health compared to historical conditions. Quantiles are applied to calculate indicators of stress; this map shows the percentage of each district under severe vegetative stress.",
         "drought_resistance": "Vegetation Drought Resistance measures how well cropland vegetation maintained healthy VCI during SPEI6 drought events, weighted by how severe the stress conditions were. Higher values indicate crops sustained better health under equivalent stress. Grey districts recorded no drought that year.",
-        "flood_resistance": "Vegetation Flood Resistance measures how well cropland vegetation maintained healthy VCI during flood events, weighted by how severe the stress conditions were. Higher values indicate crops sustained better health under equivalent stress. Grey districts recorded no flood that year.",
+       # "flood_resistance": "Vegetation Flood Resistance measures how well cropland vegetation maintained healthy VCI during flood events, weighted by how severe the stress conditions were. Higher values indicate crops sustained better health under equivalent stress. Grey districts recorded no flood that year.",
         "grace_trend": "GRACE Terrestrial Water Storage Anomalies (TWSA) capture changes in total water storage — including groundwater, surface water, and soil moisture — relative to a long-term baseline. Negative anomalies signal depletion.",
         "soil_moisture": "Soil Moisture Stress reflects root-zone water availability for crops. Severe deficits indicate conditions where plants cannot access sufficient water, directly threatening agricultural yields.",
-        "spei3_class_median": "SPEI-3 Median Class summarizes the typical short-term moisture anomaly across the quarter using the median monthly class. Negative values indicate drier-than-normal conditions, while positive values indicate wetter-than-normal conditions.",
-        "spei3_peak_abs": "SPEI-3 Peak Absolute Class captures the strongest short-term moisture shock reached within the quarter, regardless of sign. Larger values indicate more extreme departures from normal conditions.",
-        "spei6_class_median": "SPEI-6 Median Class summarizes the typical seasonal moisture anomaly across the quarter using the median monthly class. Negative values indicate sustained dryness and positive values indicate sustained wetness.",
-        "spei6_peak_abs": "SPEI-6 Peak Absolute Class captures the strongest seasonal moisture shock reached within the quarter, regardless of whether it was dry or wet.",
-        "spei12_class_median": "SPEI-12 Median Class summarizes the typical long-duration moisture anomaly across the quarter using the median monthly class. Negative values indicate prolonged drying and positive values indicate prolonged wetness.",
-        "spei12_peak_abs": "SPEI-12 Peak Absolute Class captures the strongest annual-scale moisture shock reached within the quarter, regardless of sign.",
+        "class_-3_months_SPEI3": "SPEI-3 Moderate Drought captures the short-term water balance deficits aggregated by number of months since 1990.",
+        "class_-2_months_SPEI3": "SPEI-3 Severe Drought captures the short-term water balance deficits aggregated by number of months since 1990.",
+        "class_-1_months_SPEI3": "SPEI-3 Extreme Drought captures the short-term water balance deficits aggregated by number of months since 1990.",
+        "class_-3_months_SPEI6": "SPEI-6 Moderate Drought captures the seasonal water balance deficits aggregated by number of months since 1990.",
+        "class_-2_months_SPEI6": "SPEI-6 Severe Drought captures the seasonal water balance deficits aggregated by number of months since 1990.",
+        "class_-1_months_SPEI6": "SPEI-6 Extreme Drought captures the seasonal water balance deficits aggregated by number of months since 1990.",
+        "class_-3_months_SPEI12": "SPEI-12 Moderate Drought captures the long-duration water balance deficits aggregated by number of months since 1990.",
+        "class_-2_months_SPEI12": "SPEI-12 Severe Drought captures the long-duration water balance deficits aggregated by number of months since 1990.",
+        "class_-1_months_SPEI12": "SPEI-12 Extreme Drought captures the long-duration water balance deficits aggregated by number of months since 1990.",
         #"spei24": "SPEI-24 reveals long-term (2-year) drought trends, indicating persistent structural water deficits that threaten multi-season food production.",
     }
 
@@ -1070,6 +1041,8 @@ def hanoi_resilience_tab_layout(all_quarters):
                         "boxShadow": "0 2px 6px rgba(0,0,0,0.1)",
                         "backgroundColor": brand_colors['Light green'], "borderRadius": "10px"
                     })
+                    ,
+                    # (removed horizontal colorbar placeholder — colorbar is now on the map)
                 ])
             ], style={
                 "height": "auto", "padding": "6px", "marginBottom": "10px",
@@ -1097,7 +1070,7 @@ def hanoi_resilience_tab_layout(all_quarters):
                     min=0,
                     max=n - 1,
                     step=1,
-                    value=0,
+                    value=50,
                     marks=quarter_marks,
                     updatemode="mouseup",
                 ),

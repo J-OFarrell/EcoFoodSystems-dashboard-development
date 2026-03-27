@@ -1,81 +1,17 @@
 region,indicator,slope
 Central Highlands,grace_trend,0.038097
 Central Highlands,vci_severe_pct,-0.151072
-Central Highlands,drought_resistance,0.000793
-Central Highlands,flood_resistance,0.000762
-Central Highlands,spei3_class_median,0.001857
-Central Highlands,spei3_peak_abs,0.002327
-Central Highlands,spei6_class_median,0.003542
-Central Highlands,spei6_peak_abs,0.000577
-Central Highlands,spei12_class_median,0.005201
-Central Highlands,spei12_peak_abs,-0.002008
 Mekong Delta,grace_trend,-0.047749
 Mekong Delta,vci_severe_pct,-0.237409
-Mekong Delta,drought_resistance,0.000226
-Mekong Delta,flood_resistance,0.000807
-Mekong Delta,spei3_class_median,0.001912
-Mekong Delta,spei3_peak_abs,-0.001676
-Mekong Delta,spei6_class_median,0.004099
-Mekong Delta,spei6_peak_abs,-0.002716
-Mekong Delta,spei12_class_median,0.005705
-Mekong Delta,spei12_peak_abs,-0.002301
 North Central Coast,grace_trend,0.022292
 North Central Coast,vci_severe_pct,-0.314382
-North Central Coast,drought_resistance,0.001585
-North Central Coast,flood_resistance,0.002199
-North Central Coast,spei3_class_median,0.002346
-North Central Coast,spei3_peak_abs,0.007253
-North Central Coast,spei6_class_median,0.003494
-North Central Coast,spei6_peak_abs,0.007621
-North Central Coast,spei12_class_median,0.004912
-North Central Coast,spei12_peak_abs,0.005266
 Northeast,grace_trend,0.012761
 Northeast,vci_severe_pct,-0.345267
-Northeast,drought_resistance,0.001729
-Northeast,flood_resistance,0.001891
-Northeast,spei3_class_median,0.003005
-Northeast,spei3_peak_abs,0.009878
-Northeast,spei6_class_median,0.004543
-Northeast,spei6_peak_abs,0.00671
-Northeast,spei12_class_median,0.006071
-Northeast,spei12_peak_abs,-2e-05
 Northwest,grace_trend,0.024099
 Northwest,vci_severe_pct,-0.190853
-Northwest,drought_resistance,0.001576
-Northwest,flood_resistance,0.001175
-Northwest,spei3_class_median,0.001454
-Northwest,spei3_peak_abs,0.007934
-Northwest,spei6_class_median,0.000732
-Northwest,spei6_peak_abs,0.008147
-Northwest,spei12_class_median,0.00077
-Northwest,spei12_peak_abs,0.005884
 Red River Delta,grace_trend,0.015337
 Red River Delta,vci_severe_pct,-0.252203
-Red River Delta,drought_resistance,0.000189
-Red River Delta,flood_resistance,0.00047
-Red River Delta,spei3_class_median,0.0048
-Red River Delta,spei3_peak_abs,0.00905
-Red River Delta,spei6_class_median,0.006208
-Red River Delta,spei6_peak_abs,0.006358
-Red River Delta,spei12_class_median,0.010251
-Red River Delta,spei12_peak_abs,3.7e-05
 South Central Coast,grace_trend,0.05356
 South Central Coast,vci_severe_pct,-0.269019
-South Central Coast,drought_resistance,0.001702
-South Central Coast,flood_resistance,0.001613
-South Central Coast,spei3_class_median,-0.000427
-South Central Coast,spei3_peak_abs,0.003606
-South Central Coast,spei6_class_median,0.00036
-South Central Coast,spei6_peak_abs,0.002838
-South Central Coast,spei12_class_median,0.000475
-South Central Coast,spei12_peak_abs,0.001091
 Southeast,grace_trend,-0.033776
 Southeast,vci_severe_pct,-0.176584
-Southeast,drought_resistance,0.00101
-Southeast,flood_resistance,0.000615
-Southeast,spei3_class_median,0.002714
-Southeast,spei3_peak_abs,-0.001732
-Southeast,spei6_class_median,0.004249
-Southeast,spei6_peak_abs,-0.001044
-Southeast,spei12_class_median,0.004161
-Southeast,spei12_peak_abs,-0.000977
