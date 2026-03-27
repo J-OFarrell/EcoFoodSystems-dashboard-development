@@ -990,14 +990,14 @@ def hanoi_resilience_tab_layout(all_quarters):
                 dbc.CardBody([
                     html.H2("Climate Stress Indicators", style=header_style),
                     html.P(
-                        "This panel visualises multiple dimensions of climate stress across Vietnam's districts. "
-                        "Select an indicator below to explore how different aspects of drought — from vegetation health "
-                        "to groundwater depletion and precipitation deficits — have evolved over time. "
-                        "Use the slider to step through dates.",
+                        "This page provides a multi-dimensional view of climate stress and biophysical shocks across Hanoi's districts and nationally," \
+                        "integrating climate resilience for vegetation health in key production areas, water availability trends, and districts most " \
+                        "frequently impacted by severe water deficits. "
+                        "Select an indicator below to explore how different aspects of climate have evolved over time. ",
                         style={
                             "margin": "10px 6px",
-                            "fontSize": 'clamp(0.7em, 1em, 1.0em)',
-                            "textAlign": "justify",
+                            "fontSize": 'clamp(0.6em, 0.9em, 1.0em)',
+                            #"textAlign": "justify",
                             "whiteSpace": "normal",
                         }
                     )
@@ -1083,6 +1083,28 @@ def hanoi_resilience_tab_layout(all_quarters):
             }),
 
             html.Div(id="region-kpi-cards", className="mt-3"),
+
+            # EMDAT natural disasters summary (bottom of left panel)
+            dbc.Card([
+                dbc.CardBody([
+                    html.H6("EMDAT Natural Disasters (2000-2026)", style={"marginBottom": "6px", "fontSize": "0.9em", "fontWeight": "bold"}),
+                    html.Div("Summary of natural disaster events and total affected (source: EMDAT)", style={"fontSize": "0.8em", "color": "#444", "marginBottom": "6px"}),
+                    dcc.Graph(
+                        id='resilience-emdat-graph',
+                        config={"displayModeBar": False},
+                        style={"flex": "1 1 auto", "minHeight": "0", "height": "600px", "width": "100%"}
+                    )
+                ], style={"display": "flex", "flexDirection": "column", "flex": "1 1 auto", "minHeight": "0"})
+            ], style={
+                "height": "auto",
+                "padding": "6px",
+                "marginTop": "10px",
+                "box-shadow": "0 2px 6px rgba(0,0,0,0.08)",
+                "backgroundColor": brand_colors['White'],
+                "border-radius": "10px",
+                "display": "flex",
+                "flexDirection": "column"
+            }),
 
         ], style={
             "width": "min(40%)", "height": "100%", "padding": "10px",

@@ -20,6 +20,7 @@ import random
 from matplotlib.colors import ListedColormap, LinearSegmentedColormap
 import plotly.graph_objects as go
 import plotly.colors as pc
+from plotly.subplots import make_subplots
 from lorem_text import lorem
 
 import warnings
@@ -407,6 +408,69 @@ else:
     )
 
 resilience_base_geojson = json.loads(districts_unique.to_json())
+
+# Paths for cached EMDAT parquet files (resilience)
+EMDAT_COUNTS_PQ = os.path.join(hanoi_resilience_dir, "emdat_counts.parquet")
+EMDAT_TOTALS_PQ = os.path.join(hanoi_resilience_dir, "emdat_totals.parquet")
+
+def _load_emdat_cached():
+    if os.path.exists(EMDAT_COUNTS_PQ) and os.path.exists(EMDAT_TOTALS_PQ):
+        df_counts = pd.read_parquet(EMDAT_COUNTS_PQ)
+        df_totals = pd.read_parquet(EMDAT_TOTALS_PQ)
+        return df_counts, df_totals
+    return None, None
+
+def build_resilience_figure_from_cache(df_counts=None, df_totals=None, size_max=40):
+    if df_counts is None or df_totals is None:
+        df_counts, df_totals = _load_emdat_cached()
+        if df_counts is None or df_totals is None:
+            empty = go.Figure()
+            empty.add_annotation(text="EMDAT cache not found", showarrow=False, xref='paper', yref='paper', x=0.5, y=0.5, font=dict(size=12))
+            empty.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=420)
+            return empty
+
+    scatter_fig = px.scatter(
+        df_counts,
+        x='Year',
+        y='Disaster Subtype',
+        color='Disaster Subgroup',
+        size='Count',
+        size_max=size_max,
+        hover_data={'Count': True, 'Year': True, 'Disaster Subgroup': True}
+    )
+    scatter_fig.update_traces(showlegend=False)
+
+    bar_fig = px.bar(
+        df_totals,
+        x='Year',
+        y='TotalAffected',
+        labels={'TotalAffected': 'Total Affected (people)'},
+        color_discrete_sequence=['orangered']
+    )
+
+    fig = make_subplots(rows=2, cols=1, shared_xaxes=True, row_heights=[0.9, 0.4], vertical_spacing=0.06)
+    for tr in scatter_fig.data:
+        fig.add_trace(tr, row=1, col=1)
+    for tr in bar_fig.data:
+        fig.add_trace(tr, row=2, col=1)
+
+    fig.update_yaxes(title_text=None, row=1, col=1, automargin=True)
+    fig.update_yaxes(title_text="Total Affected", row=2, col=1, automargin=True)
+    fig.update_yaxes(tickfont=dict(size=11))
+    fig.update_xaxes(dtick=1, tickangle=90)
+    fig.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=550, template='plotly_white', showlegend=False)
+    fig.update_yaxes(row=2, col=1, tickformat=",", separatethousands=True)
+    return fig
+
+
+@app.callback(
+    Output('resilience-emdat-graph', 'figure'),
+    Input('selected-city', 'data')
+)
+def update_resilience_emdat(selected_city):
+    df_counts, df_totals = _load_emdat_cached()
+    fig = build_resilience_figure_from_cache(df_counts, df_totals, size_max=20)
+    return fig
 
 regions_gdf = gpd.read_file(
     os.path.join(hanoi_climate_dir, "vnm_regions.geojson")
