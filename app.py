@@ -417,9 +417,13 @@ EMDAT_TOTALS_PQ = os.path.join(hanoi_resilience_dir, "emdat_totals.parquet")
 
 def _load_emdat_cached():
     if os.path.exists(EMDAT_COUNTS_PQ) and os.path.exists(EMDAT_TOTALS_PQ):
-        df_counts = pd.read_parquet(EMDAT_COUNTS_PQ)
-        df_totals = pd.read_parquet(EMDAT_TOTALS_PQ)
-        return df_counts, df_totals
+        try:
+            df_counts = pd.read_parquet(EMDAT_COUNTS_PQ)
+            df_totals = pd.read_parquet(EMDAT_TOTALS_PQ)
+            return df_counts, df_totals
+        except Exception as exc:
+            print(f"[WARN] Could not read EMDAT parquet cache: {exc}")
+            return None, None
     return None, None
 
 def build_resilience_figure_from_cache(df_counts=None, df_totals=None, size_max=40):
