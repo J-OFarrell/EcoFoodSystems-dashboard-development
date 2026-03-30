@@ -1,0 +1,100 @@
+Year,Disaster Subgroup,Disaster Subtype,Count
+2000,Hydrological,Landslide (wet),2.0
+2000,Hydrological,Riverine flood,2.0
+2000,Meteorological,Storm (General),4.0
+2000,Meteorological,Tornado,1.0
+2000,Meteorological,Tropical cyclone,2.0
+2001,Hydrological,Coastal flood,1.0
+2001,Hydrological,Flash flood,1.0
+2001,Hydrological,Flood (General),1.0
+2001,Hydrological,Riverine flood,1.0
+2001,Meteorological,Tropical cyclone,3.0
+2002,Climatological,Drought,1.0
+2002,Climatological,Forest fire,1.0
+2002,Hydrological,Riverine flood,3.0
+2002,Meteorological,Lightning/Thunderstorms,1.0
+2003,Biological,Viral disease,1.0
+2003,Hydrological,Coastal flood,1.0
+2003,Hydrological,Riverine flood,2.0
+2003,Meteorological,Tropical cyclone,1.0
+2004,Hydrological,Flash flood,1.0
+2004,Hydrological,Landslide (wet),1.0
+2004,Hydrological,Riverine flood,2.0
+2004,Meteorological,Tropical cyclone,2.0
+2005,Biological,Infectious disease (General),1.0
+2005,Climatological,Drought,1.0
+2005,Hydrological,Flash flood,1.0
+2005,Hydrological,Riverine flood,4.0
+2005,Meteorological,Storm (General),1.0
+2005,Meteorological,Tropical cyclone,3.0
+2006,Hydrological,Flash flood,2.0
+2006,Hydrological,Riverine flood,3.0
+2006,Meteorological,Hail,1.0
+2006,Meteorological,Storm (General),1.0
+2006,Meteorological,Tropical cyclone,4.0
+2007,Biological,Viral disease,1.0
+2007,Hydrological,Coastal flood,2.0
+2007,Hydrological,Flood (General),1.0
+2007,Hydrological,Riverine flood,2.0
+2007,Meteorological,Tropical cyclone,1.0
+2008,Hydrological,Flash flood,2.0
+2008,Hydrological,Riverine flood,3.0
+2008,Meteorological,Tropical cyclone,5.0
+2009,Hydrological,Landslide (wet),1.0
+2009,Hydrological,Riverine flood,2.0
+2009,Meteorological,Tropical cyclone,3.0
+2010,Hydrological,Flash flood,1.0
+2010,Hydrological,Riverine flood,3.0
+2010,Meteorological,Tropical cyclone,3.0
+2011,Hydrological,Riverine flood,3.0
+2011,Meteorological,Lightning/Thunderstorms,1.0
+2011,Meteorological,Tropical cyclone,1.0
+2012,Hydrological,Riverine flood,1.0
+2012,Meteorological,Tropical cyclone,3.0
+2013,Hydrological,Riverine flood,6.0
+2013,Meteorological,Tropical cyclone,4.0
+2014,Meteorological,Tropical cyclone,3.0
+2015,Climatological,Drought,1.0
+2015,Hydrological,Flash flood,1.0
+2015,Hydrological,Flood (General),1.0
+2015,Meteorological,Tropical cyclone,2.0
+2016,Biological,Viral disease,1.0
+2016,Hydrological,Flood (General),3.0
+2016,Hydrological,Riverine flood,1.0
+2016,Meteorological,Storm (General),1.0
+2016,Meteorological,Tropical cyclone,3.0
+2017,Hydrological,Flash flood,1.0
+2017,Hydrological,Flood (General),4.0
+2017,Meteorological,Tropical cyclone,4.0
+2018,Hydrological,Flash flood,2.0
+2018,Hydrological,Flood (General),1.0
+2018,Meteorological,Tropical cyclone,4.0
+2019,Climatological,Drought,1.0
+2019,Hydrological,Flash flood,1.0
+2019,Hydrological,Flood (General),4.0
+2019,Meteorological,Tropical cyclone,2.0
+2020,Hydrological,Flash flood,1.0
+2020,Meteorological,Extra-tropical storm,1.0
+2020,Meteorological,Lightning/Thunderstorms,1.0
+2020,Meteorological,Tropical cyclone,8.0
+2021,Hydrological,Flash flood,1.0
+2021,Hydrological,Flood (General),2.0
+2021,Meteorological,Severe weather,1.0
+2021,Meteorological,Tropical cyclone,4.0
+2022,Hydrological,Flood (General),5.0
+2022,Meteorological,Storm (General),1.0
+2022,Meteorological,Storm surge,1.0
+2022,Meteorological,Tropical cyclone,1.0
+2023,Hydrological,Flash flood,1.0
+2023,Hydrological,Flood (General),3.0
+2023,Meteorological,Severe weather,1.0
+2023,Meteorological,Tropical cyclone,1.0
+2024,Climatological,Drought,1.0
+2024,Hydrological,Flood (General),1.0
+2024,Hydrological,Landslide (wet),1.0
+2024,Meteorological,Heat wave,1.0
+2024,Meteorological,Severe weather,3.0
+2024,Meteorological,Tropical cyclone,3.0
+2025,Hydrological,Flood (General),2.0
+2025,Meteorological,Severe weather,5.0
+2025,Meteorological,Tropical cyclone,7.0

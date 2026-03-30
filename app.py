@@ -426,6 +426,8 @@ resilience_base_geojson = json.loads(districts_unique.to_json())
 # Paths for cached EMDAT parquet files (resilience)
 EMDAT_COUNTS_PQ = os.path.join(hanoi_resilience_dir, "emdat_counts.parquet")
 EMDAT_TOTALS_PQ = os.path.join(hanoi_resilience_dir, "emdat_totals.parquet")
+EMDAT_COUNTS_CSV = os.path.join(hanoi_resilience_dir, "emdat_counts.csv")
+EMDAT_TOTALS_CSV = os.path.join(hanoi_resilience_dir, "emdat_totals.csv")
 
 def _load_emdat_cached():
     if os.path.exists(EMDAT_COUNTS_PQ) and os.path.exists(EMDAT_TOTALS_PQ):
@@ -435,7 +437,17 @@ def _load_emdat_cached():
             return df_counts, df_totals
         except Exception as exc:
             print(f"[WARN] Could not read EMDAT parquet cache: {exc}")
+
+    # Fallback for environments where parquet engine is unavailable (e.g., hosted deploys)
+    if os.path.exists(EMDAT_COUNTS_CSV) and os.path.exists(EMDAT_TOTALS_CSV):
+        try:
+            df_counts = pd.read_csv(EMDAT_COUNTS_CSV)
+            df_totals = pd.read_csv(EMDAT_TOTALS_CSV)
+            return df_counts, df_totals
+        except Exception as exc:
+            print(f"[WARN] Could not read EMDAT CSV cache: {exc}")
             return None, None
+
     return None, None
 
 def build_resilience_figure_from_cache(df_counts=None, df_totals=None, size_max=40):
