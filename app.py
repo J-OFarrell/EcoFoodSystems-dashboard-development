@@ -275,6 +275,18 @@ green_scale = ['#e3f6d5', '#c1d88e', '#a5be91', '#6f946d', '#3a6649']
 red_scale = ['#fee5d9', '#fcbba1', '#fc9272', '#fb6a4a', '#de2d26']
 grey_scale = ['#f7f7f7', '#d9d9d9', '#bdbdbd', '#969696', '#636363']
 
+# Food-environment choropleth palettes
+# Plotly equivalents for requested styles: RdOrYl_r and GnYl_r
+FOOD_ENV_NEG_SCALE = "YlOrRd"
+FOOD_ENV_POS_SCALE = "YlGn"
+FOOD_ENV_NEUTRAL_BONE_SCALE = [
+    [0.00, "#fffdf8"],
+    [0.25, "#f7f1e3"],
+    [0.50, "#eadfc8"],
+    [0.75, "#d8c9ab"],
+    [1.00, "#c5b395"],
+]
+
 # Loading supply flow data for Sankey Diagram
 df_sankey = pd.read_csv(os.path.join(hanoi_supply_dir, 'hanoi_supply.csv'))
 
@@ -1213,11 +1225,11 @@ def _build_affordability_figure(
                 direction = metric_direction_local.get(selected_metric, None)
 
             if direction is True:
-                colorscale = [[0, green_scale[0]], [0.25, green_scale[1]], [0.5, green_scale[2]], [0.75, green_scale[3]], [1, green_scale[4]]]
+                colorscale = FOOD_ENV_POS_SCALE
             elif direction is False:
-                colorscale = [[0, red_scale[0]], [0.25, red_scale[1]], [0.5, red_scale[2]], [0.75, red_scale[3]], [1, red_scale[4]]]
+                colorscale = FOOD_ENV_NEG_SCALE
             else:
-                colorscale = [[0, grey_scale[0]], [0.25, grey_scale[1]], [0.5, grey_scale[2]], [0.75, grey_scale[3]], [1, grey_scale[4]]]
+                colorscale = FOOD_ENV_NEUTRAL_BONE_SCALE
 
             geojson_data = json.loads(gdf.to_json())
             fig.add_trace(go.Choroplethmapbox(
