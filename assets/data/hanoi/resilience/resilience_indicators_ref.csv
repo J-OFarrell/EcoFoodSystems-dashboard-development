@@ -1,0 +1,37 @@
+Indicator,Pillar,Component,Unit,Source
+Average monthly income per capita,1,Financial,VND,"VHLSS, GSO"
+"Government expenditure on human health, population and family planning / GRDP",1,Social,Percentage,GSO
+Gross Regional Domestic Product (GRDP) per capita,1,Financial,Million VND,HSO
+HHI for employed population by economic sector,1,Adaptive Capacity,,HSO
+Health insurance coverage,1,Human,Percentage,HSO
+Literacy rate of population aged 15+,1,Human,Percentage,GSO
+Poverty rate,1,Financial,Percentage,HSO
+Rate of trained labour(with technical/vocational or higher qualification),1,Human,Percentage,GSO
+Share of agricultural land,1,Physical,Percentage,GSO
+"Share of semi-permanent, less permanent and simple housing",1,Physical,Percentage,VHLSS
+Social security coverage,1,Human,Percentage,HSO
+Population,"1,2",,,HSO
+Fish import rate,2,Trade & Market Dependence,Ratio,"WITS, GSO"
+Fish self-sufficiency rate,2,Supply & Diversification,Ratio,"GSO, HSO"
+Fish supplier concentration (HHI for import partners),2,Trade & Market Dependence,,"WITS, GSO"
+Fishery production,2,Supply & Diversification,tons,"GSO, HSO"
+Meat import rate,2,Trade & Market Dependence,Ratio,"WITS, GSO"
+Meat production,2,Supply & Diversification,tons,"GSO, HSO"
+Meat self-sufficiency rate,2,Supply & Diversification,Ratio,"GSO, HSO"
+Meat supplier concentration (HHI for import partners),2,Trade & Market Dependence,,"WITS, GSO"
+Number of cows,2,Supply & Diversification,,"GSO, HSO"
+Number of pigs,2,Supply & Diversification,,"GSO, HSO"
+Number of policies on Food,2,Supply Chain,,Desk Review
+Number of poultry,2,Supply & Diversification,,"GSO, HSO"
+Paddy production,2,Supply & Diversification,tons,"GSO, HSO"
+Post-harvest lost rate,2,Supply Chain,Percentage,HSO
+Provincial Competitiveness Index (PCI),2,Supply Chain,,VCCI
+Rice import rate,2,Trade & Market Dependence,Ratio,"WITS, GSO"
+Rice self-sufficiency rate,2,Supply & Diversification,Ratio,"GSO, HSO"
+Rice supplier concentration (HHI for import partners),2,Trade & Market Dependence,,"WITS, GSO"
+Share of household food expenditure on non-staple groups,2,Supply & Diversification,Percentage,VHLSS
+Total markets/supermarkets,2,Supply Chain,,GSO
+Diesel price,3,Economic,VND,Petrolimex
+Diesel price change,3,Economic,Percentage,Petrolimex
+Food Consumer Price Index (CPI) Year-on-Year change,3,Economic,Percentage,HSO
+Gross Regional Domestic Product (GRDP) growth,3,Economic,Percentage,HSO

@@ -39,7 +39,9 @@ from hanoi_layouts import (
     hanoi_stakeholders_tab_layout, hanoi_supply_tab_layout,
     hanoi_poverty_tab_layout, hanoi_affordability_tab_layout,
     hanoi_health_nutrition_tab_layout, hanoi_policies_tab_layout, 
-    hanoi_resilience_tab_layout
+    hanoi_resilience_tab_layout,
+    render_spatial_resilience_layout,
+    render_temporal_resilience_layout,
 )
 
 app = Dash(__name__, suppress_callback_exceptions=True, external_stylesheets=[dbc.themes.BOOTSTRAP])
@@ -2252,6 +2254,37 @@ def update_climate_indicator_description(indicator, descriptions):
         return ""
     desc = descriptions.get(indicator, "No description available for this indicator.")
     return desc
+
+
+@app.callback(
+    Output("resilience-view-container", "children"),
+    Input("resilience_view-select", "value"),
+    State("resilience-spatial-data", "data"),
+    prevent_initial_call=False,
+)
+def update_resilience_view_layout(view_selection, spatial_data):
+    if view_selection == "Temporal trends":
+        return render_temporal_resilience_layout()
+
+    spatial_data = spatial_data or {}
+    climate_indicator_options = spatial_data.get("climate_indicator_options", [])
+    indicator_descriptions = spatial_data.get("indicator_descriptions", {})
+
+    n_raw = spatial_data.get("n", 1)
+    try:
+        n = max(1, int(n_raw))
+    except (TypeError, ValueError):
+        n = 1
+
+    quarter_marks_raw = spatial_data.get("quarter_marks", {0: {"label": "", "style": {"fontSize": "10px", "color": "#8c8590"}}})
+    quarter_marks = {int(k): v for k, v in quarter_marks_raw.items()}
+
+    return render_spatial_resilience_layout(
+        climate_indicator_options,
+        indicator_descriptions,
+        n,
+        quarter_marks,
+    )
 
 # Expose the Flask server for production deployment
 server = app.server
