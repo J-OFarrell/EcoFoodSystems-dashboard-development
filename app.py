@@ -1,5 +1,9 @@
 import os
 import csv
+import uuid
+from datetime import datetime, timedelta
+from collections import deque
+from threading import Lock
 import numpy as np
 import xarray as xr
 import rioxarray as rxr
@@ -23,6 +27,7 @@ import plotly.graph_objects as go
 import plotly.colors as pc
 from plotly.subplots import make_subplots
 from lorem_text import lorem
+from flask import jsonify, request, session as flask_session
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -47,6 +52,7 @@ from hanoi_layouts import (
 )
 
 app = Dash(__name__, suppress_callback_exceptions=True, external_stylesheets=[dbc.themes.BOOTSTRAP])
+app.server.secret_key = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
 
 VALID_USERNAME = os.environ.get('DASH_USERNAME', 'ecofoodsystems')
 VALID_PASSWORD = os.environ.get('DASH_PASSWORD', 'data4decisions!')
@@ -55,6 +61,46 @@ auth = dash_auth.BasicAuth(
     app,
     {VALID_USERNAME: VALID_PASSWORD}
 )
+
+
+ACTIVE_USER_TIMEOUT_SECONDS = int(os.environ.get("ACTIVE_USER_TIMEOUT_SECONDS", "300"))
+USER_HEARTBEAT_LOG_INTERVAL_SECONDS = int(os.environ.get("USER_HEARTBEAT_LOG_INTERVAL_SECONDS", "300"))
+USAGE_LOG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets", "data", "usage", "user_activity_log.csv")
+
+_active_users_lock = Lock()
+_active_users_last_seen = {}
+_active_users_last_log = {}
+
+
+def _utc_now():
+    return datetime.utcnow()
+
+
+def _cleanup_stale_active_users(now_utc):
+    cutoff = now_utc - timedelta(seconds=ACTIVE_USER_TIMEOUT_SECONDS)
+    stale_sids = [sid for sid, last_seen in _active_users_last_seen.items() if last_seen < cutoff]
+    for sid in stale_sids:
+        _active_users_last_seen.pop(sid, None)
+        _active_users_last_log.pop(sid, None)
+
+
+def _append_usage_log(session_id, event):
+    os.makedirs(os.path.dirname(USAGE_LOG_PATH), exist_ok=True)
+    log_exists = os.path.exists(USAGE_LOG_PATH)
+    with open(USAGE_LOG_PATH, "a", newline="", encoding="utf-8") as f:
+        writer = csv.writer(f)
+        if not log_exists:
+            writer.writerow(["timestamp_utc", "event", "session_id"])
+        writer.writerow([_utc_now().isoformat(timespec="seconds") + "Z", event, session_id])
+
+
+def _get_or_create_session_id():
+    sid = flask_session.get("active_user_sid")
+    if not sid:
+        sid = uuid.uuid4().hex
+        flask_session["active_user_sid"] = sid
+        _append_usage_log(sid, "session_start")
+    return sid
 
 #colors = {
 #  'eco_green': '#AFC912',
@@ -1235,6 +1281,8 @@ app.layout = html.Div([
     dcc.Store(id='atlas-open-tab', data=None),
     dcc.Store(id='sh-table-page-size-store', data=13),
     dcc.Interval(id='resize-interval', interval=1000, n_intervals=0),
+    dcc.Interval(id='active-user-heartbeat', interval=30 * 1000, n_intervals=0),
+    html.Div(id='active-user-heartbeat-ping', style={'display': 'none'}),
     html.Div(id="tab-content", children=landing_page_layout(selected_city='hanoi'), style={"width": "100%",
                                                                        "height": "100%"})
     # Parent container for full page
@@ -1273,6 +1321,75 @@ app.clientside_callback(
 )
 def store_selected_city(city):
     return city
+
+
+@app.callback(
+    Output('active-user-heartbeat-ping', 'children'),
+    Input('active-user-heartbeat', 'n_intervals'),
+    prevent_initial_call=False,
+)
+def track_active_users(_n_intervals):
+    now_utc = _utc_now()
+    sid = _get_or_create_session_id()
+
+    should_log_heartbeat = False
+    with _active_users_lock:
+        _active_users_last_seen[sid] = now_utc
+        _cleanup_stale_active_users(now_utc)
+
+        last_logged = _active_users_last_log.get(sid)
+        if (
+            last_logged is None
+            or (now_utc - last_logged).total_seconds() >= USER_HEARTBEAT_LOG_INTERVAL_SECONDS
+        ):
+            _active_users_last_log[sid] = now_utc
+            should_log_heartbeat = True
+
+        active_count = len(_active_users_last_seen)
+
+    if should_log_heartbeat:
+        _append_usage_log(sid, "heartbeat")
+
+    return f"active_users:{active_count}"
+
+
+@app.server.route('/api/usage/active-users', methods=['GET'])
+def usage_active_users():
+    now_utc = _utc_now()
+    with _active_users_lock:
+        _cleanup_stale_active_users(now_utc)
+        active_count = len(_active_users_last_seen)
+
+    return jsonify({
+        "active_users": active_count,
+        "timeout_seconds": ACTIVE_USER_TIMEOUT_SECONDS,
+        "as_of_utc": now_utc.isoformat(timespec="seconds") + "Z",
+    })
+
+
+@app.server.route('/api/usage/timelog', methods=['GET'])
+def usage_timelog():
+    try:
+        limit = int(request.args.get('limit', 200))
+    except (TypeError, ValueError):
+        limit = 200
+    limit = max(1, min(limit, 5000))
+
+    if not os.path.exists(USAGE_LOG_PATH):
+        return jsonify({"entries": [], "count": 0, "log_path": USAGE_LOG_PATH})
+
+    with open(USAGE_LOG_PATH, 'r', encoding='utf-8') as f:
+        tail_lines = deque(f, maxlen=limit + 1)
+
+    if not tail_lines:
+        return jsonify({"entries": [], "count": 0, "log_path": USAGE_LOG_PATH})
+
+    rows = list(csv.DictReader(tail_lines))
+    return jsonify({
+        "entries": rows,
+        "count": len(rows),
+        "log_path": USAGE_LOG_PATH,
+    })
 
 # Linking the dropdown to the bar chart for the MPI page    
 @app.callback(
@@ -2863,7 +2980,6 @@ def update_lulc_map(indicator):
 
 # Expose the Flask server for production deployment
 server = app.server
-app.server.secret_key = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')  # ← move ABOVE app.run()
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8051))
