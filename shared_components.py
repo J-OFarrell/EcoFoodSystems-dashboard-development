@@ -43,16 +43,16 @@ sidebar = dbc.Card([
             style={"marginBottom": "8px", "textAlign": "center", 'width': '90%'}
         ),
         dbc.NavItem(dbc.NavLink("Food Systems Stakeholders", id="tab-1-stakeholders", href="#", active="exact"), style=tabs_style),
-        dbc.NavItem(dbc.NavLink("Food Flows, Supply & Value Chains", id="tab-2-supply", href="#", active="exact"), style=tabs_style),
-        dbc.NavItem(dbc.NavLink("Sustainability Metrics & Indicators", id="tab-3-sustainability", href="#", active="exact"), style=tabs_style),
+        dbc.NavItem(dbc.NavLink("Food Flows & Supply Chains", id="tab-2-supply", href="#", active="exact"), style=tabs_style),
+        dbc.NavItem(dbc.NavLink("Sustainability Metrics", id="tab-3-sustainability", href="#", active="exact"), style=tabs_style),
         dbc.NavItem(dbc.NavLink("Multidimensional Poverty", id="tab-4-poverty", href="#", active="exact"), style=tabs_style),
         dbc.NavItem(dbc.NavLink("Labour, Skills & Green Jobs", id="tab-5-labour", href="#", active="exact"), style=tabs_style),
-        dbc.NavItem(dbc.NavLink("Resilience to Food System Shocks", id="tab-6-resilience", href="#", active="exact"), style=tabs_style),
-        dbc.NavItem(dbc.NavLink("Dietary Mapping & Affordability", id="tab-7-affordability", href="#", active="exact"), style=tabs_style),
+        dbc.NavItem(dbc.NavLink("Resilience", id="tab-6-resilience", href="#", active="exact"), style=tabs_style),
+        dbc.NavItem(dbc.NavLink("Food Environments", id="tab-7-food-environments", href="#", active="exact"), style=tabs_style),
         dbc.NavItem(dbc.NavLink("Food Losses & Waste", id="tab-8-losses", href="#", active="exact"), style=tabs_style),
-        dbc.NavItem(dbc.NavLink("Food System Policies", id="tab-9-policies", href="#", active="exact"), style=tabs_style),
-        dbc.NavItem(dbc.NavLink("Health & Nutrition", id="tab-10-nutrition", href="#", active="exact"), style=tabs_style),
-        dbc.NavItem(dbc.NavLink("Environmental Footprints of Food & Diets", id="tab-11-footprints", href="#", active="exact"), style=tabs_style),
+        dbc.NavItem(dbc.NavLink("Policies & Regulation", id="tab-9-policies", href="#", active="exact"), style=tabs_style),
+        dbc.NavItem(dbc.NavLink("Nutrition & Health", id="tab-10-nutrition", href="#", active="exact"), style=tabs_style),
+        dbc.NavItem(dbc.NavLink("Environmental Footprints", id="tab-11-footprints", href="#", active="exact"), style=tabs_style),
         dbc.NavItem(dbc.NavLink("Behaviour Change Tool (AI Chatbot & Game)", id="tab-12-behaviour", href="#", active="exact"), style=tabs_style),
     ], 
     vertical="md", 
@@ -89,6 +89,33 @@ def city_selector(selected_city='addis', visible=True):
     Set visible=False to hide it on tab pages.
     """
     return html.Div([
+        # Indicator Atlas button
+        html.Div([
+            dbc.Button(
+                "🔍  Indicator Atlas",
+                id='atlas-top-button',
+                color='light',
+                n_clicks=0,
+                style={
+                    "fontSize": "1.1em",
+                    "fontWeight": "200",
+                    "borderRadius": "20px",
+                    "border": f"1px solid {brand_colors['Dark green']}",
+                    "color": brand_colors['Brown'],
+                    "backgroundColor": brand_colors['White'],
+                    "padding": "6px 12px",
+                    "boxShadow": "0 4px 10px rgba(0,0,0,0.08)",
+                }
+            )
+        ], style={
+            "position": "absolute",
+            "left": "2%",
+            "top": "50%",
+            "transform": "translateY(-50%)",
+            "display": "flex" if visible else "none",
+            "alignItems": "center",
+        }),
+
         # Dropdown selector
         html.Div([
             html.Label("City:", style={

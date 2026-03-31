@@ -167,15 +167,15 @@ metric_direction = {
 # ========================== Tab Labels ==========================
 
 tabs = [
-    'Food Systems Stakeholders',                 # Populated
-    'Food Flows, Supply & Value Chains',         # Populated
-    'Sustainability Metrics & Indicators',       # Currently empty
-    'Multidimensional Poverty',                  # Populated
-    'Resilience to Food System Shocks',          # In progress
-    'Dietary Mapping & Affordability',           # Semi-Populated (In development)
-    'Food Losses & Waste',                       # Currently empty
-    'Food System Policies',                      # Currently empty
-    'Health & Nutrition',                        # Populated
-    'Environmental Footprints of Food & Diets',  # Currently empty
-    'Behaviour Change Tool (AI Chatbot & Game)'  # Currently empty (In development)
+    'Food Systems Stakeholders',                 
+    'Food Flows & Supply Chains',         
+    'Sustainability Metrics',       
+    'Multidimensional Poverty',                  
+    'Resilience',          
+    'Food Environments',           
+    'Food Losses & Waste',                      
+    'Policies & Regulation',                     
+    'Nutrition & Health',                       
+    'Environmental Footprints',  
+    'Behaviour Change Tool (AI Chatbot & Game)'  
 ]

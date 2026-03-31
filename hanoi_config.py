@@ -16,7 +16,7 @@ TAB_BACKGROUNDS = {
     "poverty": white_tab_bg,
     "labour": grey_tab_bg,
     "resilience": white_tab_bg, 
-    "affordability": white_tab_bg, 
+    "food-environments": white_tab_bg, 
     "losses": grey_tab_bg,
     "policies": white_tab_bg, 
     "nutrition": white_tab_bg, 

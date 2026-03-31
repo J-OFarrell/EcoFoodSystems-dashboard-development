@@ -1589,7 +1589,7 @@ def render_lulc_resilience_layout(lulc_indicator_options):
     ], style={"display": "flex", "width": "100%", "height": "100%"})
 
 
-def hanoi_resilience_tab_layout(all_quarters):
+def hanoi_resilience_tab_layout(all_quarters, default_view='Biophysical shocks'):
     """Hà Nội climate tab layout - Multi-dimensional Climate Stress Indicators"""
 
     n = len(all_quarters)
@@ -1637,6 +1637,16 @@ def hanoi_resilience_tab_layout(all_quarters):
         "class_-1_months_SPEI12": "SPEI-12 Extreme Drought captures the long-duration water balance deficits aggregated by number of months since 1990.",
     }
 
+    view_options = ['Biophysical shocks', 'Resilience Indicator Trends', 'Land-use & Land-cover']
+    selected_view = default_view if default_view in view_options else 'Biophysical shocks'
+
+    if selected_view == 'Resilience Indicator Trends':
+        initial_view_content = render_temporal_resilience_layout()
+    elif selected_view == 'Land-use & Land-cover':
+        initial_view_content = render_lulc_resilience_layout([])
+    else:
+        initial_view_content = render_spatial_resilience_layout(climate_indicator_options, indicator_descriptions, n, quarter_marks)
+
     return html.Div([
         city_selector(selected_city='hanoi', visible=False),
         dcc.Store(id="climate-indicator-descriptions", data=indicator_descriptions),
@@ -1662,8 +1672,8 @@ def hanoi_resilience_tab_layout(all_quarters):
             dbc.CardHeader(
                 dcc.Dropdown(
                     id="resilience_view-select",
-                    options=['Biophysical shocks', 'Resilience Indicator Trends', 'Land-use & Land-cover'],
-                    value='Biophysical shocks',
+                    options=view_options,
+                    value=selected_view,
                     clearable=False,
                     style={"zIndex": "2000", "marginBottom": "0", 'fontSize': 'clamp(0.8em, 1em, 1.4em)', 'width': '100%'}
                 ),
@@ -1675,7 +1685,7 @@ def hanoi_resilience_tab_layout(all_quarters):
             ),
             html.Div(
                 id="resilience-view-container",
-                children=render_spatial_resilience_layout(climate_indicator_options, indicator_descriptions, n, quarter_marks),
+                children=initial_view_content,
                 style={"flex": "1", "display": "flex", "minHeight": 0}
             ),
         ], style={

@@ -1,4 +1,5 @@
 import os
+import csv
 import numpy as np
 import xarray as xr
 import rioxarray as rxr
@@ -11,7 +12,7 @@ import seaborn as sns
 import plotly.express as px
 import json
 import dash
-from dash import Dash, html, dcc, Output, Input, State, callback, dash_table
+from dash import Dash, html, dcc, Output, Input, State, callback, dash_table, ALL
 import dash_bootstrap_components as dbc
 import dash_auth  
 import dash_leaflet as dl
@@ -135,19 +136,18 @@ drought_colorscale = [[round(i/9, 2), mcolors.to_hex(_cmap(i/9))] for i in range
 
 
 tabs = [
-        'Food Systems Stakeholders',               
-        'Food Flows, Supply & Value Chains',        
-        'Sustainability Metrics & Indicators',      
-        'Multidimensional Poverty',                 
-        'Resilience to Food System Shocks',         
-        'Food Environments',          
-        'Food Losses & Waste',                      
-        'Food System Policies',                     
-        'Health & Nutrition',                       
-        'Environmental Footprints of Food & Diets', 
-        'Behaviour Change Tool (AI Chatbot & Game)'
-        ]
-
+    'Food Systems Stakeholders',                 
+    'Food Flows & Supply Chains',         
+    'Sustainability Metrics',       
+    'Multidimensional Poverty',                  
+    'Resilience',          
+    'Food Environments',           
+    'Food Losses & Waste',                      
+    'Policies & Regulation',                     
+    'Nutrition & Health',                       
+    'Environmental Footprints',  
+    'Behaviour Change Tool (AI Chatbot & Game)'  
+]
 
 # -------------------------- Loading and Formatting All Data ------------------------- #
 
@@ -171,6 +171,7 @@ hanoi_nutrition_dir = os.path.join(hanoi_root, "nutrition")
 hanoi_food_env_dir = os.path.join(hanoi_root, "food_environment")
 hanoi_resilience_dir = os.path.join(hanoi_root, "resilience")
 hanoi_climate_dir = os.path.join(hanoi_resilience_dir, "precomputed_hanoi_climate_vars")
+atlas_csv_path = os.path.join(homepath, "EcoFoodSystems_indicator_architecture - 260326 - Hanoi_rewritten_descriptions_final.csv")
 
 # Loading and Formatting MPI Data
 MPI = gpd.read_file(os.path.join(addis_mpi_dir, "addis_districts_MPI.geojson"))#.set_index('Dist_Name')
@@ -391,6 +392,43 @@ df_affordability_hanoi = pd.read_csv(os.path.join(hanoi_affordability_dir, 'hano
 # Hanoi dietary data
 df_diet_hanoi = pd.read_csv(os.path.join(hanoi_nutrition_dir, 'hanoi_health_nutrition_cleaned.csv'))
 df_diet_2_hanoi = pd.read_csv(os.path.join(hanoi_nutrition_dir, 'hanoi_health_nutrition_cleaned_2.csv'))
+
+
+def _load_indicator_atlas_records(csv_path):
+    if not os.path.exists(csv_path):
+        return []
+    with open(csv_path, newline='', encoding='utf-8-sig') as f:
+        rows = list(csv.reader(f))
+    if len(rows) < 2:
+        return []
+
+    # Find the real header row dynamically (some files include a title/metadata row first).
+    header_idx = None
+    for idx, row in enumerate(rows):
+        normalized = [str(c).strip() for c in row]
+        if 'Domain / Sub-theme' in normalized and 'Indicator name' in normalized:
+            header_idx = idx
+            break
+
+    if header_idx is None:
+        return []
+
+    header = [str(c).strip() for c in rows[header_idx]]
+    records = []
+    for row in rows[header_idx + 1:]:
+        if not any((c or '').strip() for c in row):
+            continue
+        if len(row) < len(header):
+            row = row + [''] * (len(header) - len(row))
+        rec = dict(zip(header, row[:len(header)]))
+        indicator_name = (rec.get('Indicator name') or '').strip()
+        if not indicator_name:
+            continue
+        records.append(rec)
+    return records
+
+
+atlas_records_hanoi = _load_indicator_atlas_records(atlas_csv_path)
 
 
 
@@ -671,24 +709,241 @@ card_style = {
 }
 
 
+ATLAS_SECTIONS = [
+    ("Food Systems Stakeholders", "tab-1-stakeholders"),
+    ("Food Flows & Supply Chains", "tab-2-supply"),
+    ("Sustainability Metrics", "tab-3-sustainability"),
+    ("Multidimensional Poverty", "tab-4-poverty"),
+    ("Resilience", "tab-6-resilience"),
+    ("Food Environments", "tab-7-food-environments"),
+    ("Food Losses & Waste", "tab-8-losses"),
+    ("Policies & Regulation", "tab-9-policies"),
+    ("Nutrition & Health", "tab-10-nutrition"),
+    ("Environmental Footprints", "tab-11-footprints"),
+    ("Behaviour Change Tool (AI Chatbot & Game)", "tab-12-behaviour"),
+    #("Other Indicators", "tab-3-sustainability"),
+]
+
+ATLAS_CITY_TABS = {
+    "hanoi": {
+        "tab-1-stakeholders", "tab-2-supply", "tab-3-sustainability", "tab-4-poverty",
+        "tab-6-resilience", "tab-7-food-environments", "tab-9-policies", "tab-10-nutrition",
+        "tab-home",
+    },
+    "addis": {
+        "tab-1-stakeholders", "tab-2-supply", "tab-3-sustainability", "tab-4-poverty",
+        "tab-7-food-environments", "tab-9-policies", "tab-10-nutrition", "tab-11-footprints",
+        "tab-home",
+    },
+}
+
+
+def _normalize_indicator_name(name):
+    normalized = (name or '').strip().lower().replace('&', ' and ')
+    return ' '.join(normalized.split())
+
+
+ATLAS_UNAVAILABLE_BOTH_INDICATORS = {
+    _normalize_indicator_name('Active Urban Mobility'),
+    _normalize_indicator_name('Percent access to Cost of affordable diets'),
+    _normalize_indicator_name('Cost and affordability of healthy diets'),
+    _normalize_indicator_name('Water & Air Quality'),
+    _normalize_indicator_name('Food poisoning'),
+    _normalize_indicator_name('Prevalence of adult hypertension'),
+    _normalize_indicator_name('Prevalence of adult diabetes'),
+    _normalize_indicator_name('Cost of affordable diets')
+}
+
+ATLAS_UNAVAILABLE_HANOI_INDICATORS = {
+    _normalize_indicator_name('Prevalence of obesity and overweight for women'),
+    _normalize_indicator_name('Percent access to unhealthy food'),
+    _normalize_indicator_name('Percent access to healthy food'),
+}
+
+
+def _is_indicator_available_for_city(indicator_name, city, target_tab):
+    if target_tab not in ATLAS_CITY_TABS.get(city, set()):
+        return False
+
+    normalized_name = _normalize_indicator_name(indicator_name)
+    if normalized_name in ATLAS_UNAVAILABLE_BOTH_INDICATORS:
+        return False
+
+    if city == 'hanoi' and normalized_name in ATLAS_UNAVAILABLE_HANOI_INDICATORS:
+        return False
+
+    return True
+
+
+def _atlas_target_for_record(rec):
+    domain = (rec.get('Domain / Sub-theme') or '').lower()
+    theme = (rec.get('Theme') or '').lower()
+    name = (rec.get('Indicator name') or '').lower()
+
+    if 'stakeholder' in name or 'stakeholder' in domain:
+        return "Food Systems Stakeholders", "tab-1-stakeholders", None
+    if 'flow' in name or 'supply' in domain or 'value chain' in domain:
+        return "Food Flows & Supply Chains", "tab-2-supply", None
+    if 'poverty' in domain or 'multidimensional poverty' in domain:
+        return "Multidimensional Poverty", "tab-4-poverty", None
+    if 'resilience' in domain or 'resilience' in theme:
+        resilience_text = f"{domain} {theme} {name}"
+        if any(k in resilience_text for k in ['Land-use & Land-cover distribution']):
+            return "Resilience", "tab-6-resilience", "Land-use & Land-cover"
+        if any(k in resilience_text for k in  ['Agricultural climate resilience indicator' , 'Water storage anomalies', 'Natural disasters database']):
+            return "Resilience", "tab-6-resilience", "Biophysical shocks"
+        return "Resilience", "tab-6-resilience", "Resilience Indicator Trends"
+    if 'food environments' in domain or 'afford' in name or 'afford' in domain or 'dietary mapping' in domain:
+        return "Food Environments", "tab-7-food-environments", None
+    if 'loss' in domain or 'waste' in domain:
+        return "Food Losses & Waste", "tab-8-losses", None
+    if 'policy' in name or 'polic' in domain or 'governance' in theme:
+        return "Policies & Regulation", "tab-9-policies", None
+    if 'nutrition' in domain or 'health' in domain or 'food safety' in domain:
+        return "Nutrition & Health", "tab-10-nutrition", None
+    if 'footprint' in domain or 'life cycle' in name:
+        return "Environmental Footprints", "tab-11-footprints", None
+    if 'behaviour' in domain or 'behavior' in domain or 'chatbot' in name or 'game' in name:
+        return "Behaviour Change Tool (AI Chatbot & Game)", "tab-12-behaviour", None
+    if 'sustainability' in domain or 'sustainability' in name:
+        return "Sustainability Metrics", "tab-3-sustainability", None
+    return "Other Indicators", "tab-home", None
+
+
+def indicator_atlas_layout_hanoi(records):
+    section_map = {title: [] for title, _ in ATLAS_SECTIONS}
+
+    for idx, rec in enumerate(records):
+        section_title, target_tab, target_subview = _atlas_target_for_record(rec)
+        indicator_name = (rec.get('Indicator name') or '').strip()
+        definition = (rec.get('Definition (what the indicator measures)') or '').strip()
+        relevance = (rec.get('Relevance (why it matters for the project)') or '').strip()
+        source = (rec.get('Data source') or '').strip()
+        hanoi_available = _is_indicator_available_for_city(indicator_name, "hanoi", target_tab)
+        addis_available = _is_indicator_available_for_city(indicator_name, "addis", target_tab)
+
+        section_map.setdefault(section_title, []).append(
+            dbc.Card(
+                dbc.CardBody([
+                    html.H6(indicator_name, style={"fontWeight": "bold", "marginBottom": "8px", "color": brand_colors['Brown']}),
+                    html.P(definition or "No definition available.", style={"fontSize": "0.9em", "marginBottom": "8px"}),
+                    html.P(relevance or "No relevance note available.", style={"fontSize": "0.88em", "marginBottom": "8px", "color": "#4d4d4d"}),
+                    html.Div([
+                        html.Span("Source: ", style={"fontWeight": "bold"}),
+                        html.Span(source or "Not specified")
+                    ], style={"fontSize": "0.82em", "color": "#555", "marginBottom": "10px"}),
+                    html.Div([
+                        dbc.Button(
+                            "View Data - Hanoi",
+                            id={
+                                "type": "atlas-view-btn",
+                                "target": target_tab,
+                                "subview": target_subview or "",
+                                "city": "hanoi",
+                                "index": idx,
+                            },
+                            color="secondary",
+                            size="sm",
+                            disabled=not hanoi_available,
+                            title=None if hanoi_available else "Not available for Hanoi",
+                            style={
+                                "borderRadius": "20px",
+                                "fontWeight": "bold",
+                                "backgroundColor": "#d9d9d9" if not hanoi_available else None,
+                                "borderColor": "#d9d9d9" if not hanoi_available else None,
+                                "color": "#7a7a7a" if not hanoi_available else None,
+                                "opacity": 0.95 if not hanoi_available else 1,
+                                "cursor": "not-allowed" if not hanoi_available else "pointer",
+                            }
+                        ),
+                        dbc.Button(
+                            "View Data - Addis Ababa",
+                            id={
+                                "type": "atlas-view-btn",
+                                "target": target_tab,
+                                "subview": target_subview or "",
+                                "city": "addis",
+                                "index": idx,
+                            },
+                            color="secondary",
+                            size="sm",
+                            disabled=not addis_available,
+                            title=None if addis_available else "Not available for Addis Ababa",
+                            style={
+                                "borderRadius": "20px",
+                                "fontWeight": "bold",
+                                "backgroundColor": "#d9d9d9" if not addis_available else None,
+                                "borderColor": "#d9d9d9" if not addis_available else None,
+                                "color": "#7a7a7a" if not addis_available else None,
+                                "opacity": 0.95 if not addis_available else 1,
+                                "cursor": "not-allowed" if not addis_available else "pointer",
+                            }
+                        ),
+                    ], style={"display": "flex", "gap": "8px", "flexWrap": "wrap"}),
+                ]),
+                style={"borderRadius": "12px", "boxShadow": "0 2px 8px rgba(0,0,0,0.08)", "marginBottom": "12px"}
+            )
+        )
+
+    section_blocks = []
+    for title, _ in ATLAS_SECTIONS:
+        cards = section_map.get(title, [])
+        if not cards:
+            continue
+        section_blocks.append(
+            dbc.Card([
+                dbc.CardHeader(html.H4(title, style={"margin": 0, "fontWeight": "bold", "color": brand_colors['Brown']}),
+                               style={"backgroundColor": brand_colors['Mid green']}),
+                dbc.CardBody(cards),
+            ], style={"marginBottom": "14px", "borderRadius": "12px", "boxShadow": "0 2px 6px rgba(0,0,0,0.08)"})
+        )
+
+    if not section_blocks:
+        section_blocks = [
+            dbc.Alert(
+                [
+                    html.Strong("No indicator records loaded."),
+                    html.Div("Check that the atlas CSV contains 'Domain / Sub-theme' and 'Indicator name' columns and at least one populated indicator row."),
+                ],
+                color="warning",
+                style={"margin": "8px"},
+            )
+        ]
+
+    return html.Div([
+        city_selector(selected_city='hanoi', visible=False),
+        html.Div([sidebar], style={
+            "width": "15%",
+            "height": "100%",
+            "display": "flex",
+            "vertical-align": 'top',
+            "flexDirection": "column",
+            "justifyContent": "flex-start",
+        }),
+        html.Div([
+            html.Div(section_blocks),
+        ], style={"flex": "1", "padding": "10px", "overflowY": "auto", "backgroundColor": brand_colors['Light green']})
+    ], style={"display": "flex", "width": "100vw", "height": "100%"})
+
+
 # ----------------------- App Layout Components -------------------------- #
 # sidebar and footer are now imported from shared_components.py
 
 # ------------------------- Main app layout ------------------------- #
 
-def landing_page_layout(background_image=None, tab_backgrounds=None, selected_city='addis'):
+def landing_page_layout(background_image=None, tab_backgrounds=None, selected_city='hanoi'):
     """
     Generate landing page layout for a city.
     
     Args:
-        background_image: URL to background image (default: Addis)
-        tab_backgrounds: Dict mapping tab_id to background color (default: Addis)
+        background_image: URL to background image (default: selected city)
+        tab_backgrounds: Dict mapping tab_id to background color (default: selected city)
         selected_city: Currently selected city ('addis' or 'hanoi')
     """
     if background_image is None:
-        background_image = addis_config.BACKGROUND_IMAGE
+        background_image = hanoi_config.BACKGROUND_IMAGE if selected_city == 'hanoi' else addis_config.BACKGROUND_IMAGE
     if tab_backgrounds is None:
-        tab_backgrounds = addis_config.TAB_BACKGROUNDS
+        tab_backgrounds = hanoi_config.TAB_BACKGROUNDS if selected_city == 'hanoi' else addis_config.TAB_BACKGROUNDS
     
     tab_labels = [
         "Food Systems Stakeholders", "Food Flows, Supply & Value Chains", "Sustainability Metrics / Indicators", "Multidimensional Poverty",
@@ -698,7 +953,13 @@ def landing_page_layout(background_image=None, tab_backgrounds=None, selected_ci
 
     tab_ids = [
         "stakeholders", "supply", "sustainability", "poverty",
-        "labour", "resilience", "affordability", "losses",
+        "labour", "resilience", "food-environments", "losses",
+        "policies", "nutrition", "footprints", "behaviour"]
+
+    # Keep callback ids user-friendly while remaining compatible with existing background keys.
+    tab_background_keys = [
+        "stakeholders", "supply", "sustainability", "poverty",
+        "labour", "resilience", "food-environments", "losses",
         "policies", "nutrition", "footprints", "behaviour"]
     
     # Use passed-in background_colours
@@ -706,7 +967,7 @@ def landing_page_layout(background_image=None, tab_backgrounds=None, selected_ci
     
     # Create grid items
     grid_items = []
-    for i, (tab_id, label) in enumerate(zip(tab_ids, tab_labels)):
+    for i, (tab_id, bg_key, label) in enumerate(zip(tab_ids, tab_background_keys, tab_labels)):
         grid_items.append(
             dbc.Card([
                 dbc.Button(label, id=f"tab-{i+1}-{tab_id}", color="light", 
@@ -717,7 +978,7 @@ def landing_page_layout(background_image=None, tab_backgrounds=None, selected_ci
                                 "fontWeight": "bold",
                                 "fontSize": "clamp(1.25em, 1.3em, 2.25em)",
                                 "color": brand_colors['Brown'],
-                                "backgroundColor": background_colours[tab_id],
+                                "backgroundColor": background_colours[bg_key],
                                 "borderRadius": "10px",
                                 "boxShadow": "0 4px 8px rgba(0,0,0,0.08)",
                                 "border": f"2px solid {brand_colors['White']}",
@@ -970,10 +1231,11 @@ app.layout = html.Div([
         color="#A51E22",  # optional: brand red
         children=html.Div(id="page-content")
     ),
-    dcc.Store(id='selected-city', data='addis'),
+    dcc.Store(id='selected-city', data='hanoi'),
+    dcc.Store(id='atlas-open-tab', data=None),
     dcc.Store(id='sh-table-page-size-store', data=13),
     dcc.Interval(id='resize-interval', interval=1000, n_intervals=0),
-    html.Div(id="tab-content", children=landing_page_layout(), style={"width": "100%",
+    html.Div(id="tab-content", children=landing_page_layout(selected_city='hanoi'), style={"width": "100%",
                                                                        "height": "100%"})
     # Parent container for full page
 ], style={
@@ -1719,20 +1981,33 @@ def filter_by_sdg(*args):
         Input("tab-4-poverty", "n_clicks"),
         Input("tab-5-labour", "n_clicks"),
         Input("tab-6-resilience", "n_clicks"),
-        Input("tab-7-affordability", "n_clicks"),
+        Input("tab-7-food-environments", "n_clicks"),
         Input("tab-8-losses", "n_clicks"),
         Input("tab-9-policies", "n_clicks"),
         Input("tab-10-nutrition", "n_clicks"),
         Input("tab-11-footprints", "n_clicks"),
         Input("tab-12-behaviour", "n_clicks"),
+        Input("atlas-top-button", "n_clicks"),
         Input("city-selector", "value"),
+        Input("atlas-open-tab", "data"),
     ],
     [State("selected-city", "data")]
 )
-def render_tab_content(n_home, n1, n2, n3, n4, n5, n6, n7, n8, n9, n10, n11, n12, city_value, selected_city):
+def render_tab_content(n_home, n1, n2, n3, n4, n5, n6, n7, n8, n9, n10, n11, n12, n_atlas_top, city_value, atlas_open_tab, selected_city):
     ctx = dash.callback_context
     if not ctx.triggered:
-        return landing_page_layout()
+        initial_city = selected_city if selected_city in ('addis', 'hanoi') else 'hanoi'
+        if initial_city == 'hanoi':
+            return landing_page_layout(
+                background_image=hanoi_config.BACKGROUND_IMAGE,
+                tab_backgrounds=hanoi_config.TAB_BACKGROUNDS,
+                selected_city='hanoi'
+            )
+        return landing_page_layout(
+            background_image=addis_config.BACKGROUND_IMAGE,
+            tab_backgrounds=addis_config.TAB_BACKGROUNDS,
+            selected_city='addis'
+        )
     
     trigger_id = ctx.triggered[0]['prop_id'].split('.')[0]
     
@@ -1750,21 +2025,42 @@ def render_tab_content(n_home, n1, n2, n3, n4, n5, n6, n7, n8, n9, n10, n11, n12
                 tab_backgrounds=addis_config.TAB_BACKGROUNDS,
                 selected_city='addis'
             )
-    
-    tab_id = trigger_id
+
+    if trigger_id == 'atlas-top-button':
+        tab_id = 'tab-3-sustainability'
+        atlas_subview = None
+        atlas_city = None
+    else:
+        if trigger_id == 'atlas-open-tab' and atlas_open_tab:
+            if isinstance(atlas_open_tab, dict):
+                tab_id = atlas_open_tab.get('tab')
+                atlas_subview = atlas_open_tab.get('subview')
+                atlas_city = atlas_open_tab.get('city')
+            else:
+                tab_id = atlas_open_tab
+                atlas_subview = None
+                atlas_city = None
+        else:
+            tab_id = trigger_id
+            atlas_subview = None
+            atlas_city = None
+
+    route_city = atlas_city if atlas_city in ('addis', 'hanoi') else selected_city
     
     # Route to city-specific dashboards
-    if selected_city == 'hanoi':
+    if route_city == 'hanoi':
         # Hanoi-specific tabs
         if tab_id == "tab-1-stakeholders":
             return hanoi_stakeholders_tab_layout()
         elif tab_id == "tab-2-supply":
             return hanoi_supply_tab_layout()
+        elif tab_id == "tab-3-sustainability":
+            return indicator_atlas_layout_hanoi(atlas_records_hanoi)
         elif tab_id == "tab-4-poverty":
             return hanoi_poverty_tab_layout()
         elif tab_id == "tab-6-resilience":
-            return hanoi_resilience_tab_layout(all_quarters)
-        elif tab_id == "tab-7-affordability":
+            return hanoi_resilience_tab_layout(all_quarters, default_view=atlas_subview or 'Biophysical shocks')
+        elif tab_id == "tab-7-food-environments":
             return hanoi_affordability_tab_layout()
         elif tab_id == "tab-9-policies":
             return hanoi_policies_tab_layout()
@@ -1796,7 +2092,7 @@ def render_tab_content(n_home, n1, n2, n3, n4, n5, n6, n7, n8, n9, n10, n11, n12
     elif tab_id == "tab-4-poverty":
         return poverty_tab_layout()
     
-    elif tab_id == "tab-7-affordability":
+    elif tab_id == "tab-7-food-environments":
         return affordability_tab_layout()
     
     elif tab_id == "tab-9-policies":
@@ -1813,6 +2109,32 @@ def render_tab_content(n_home, n1, n2, n3, n4, n5, n6, n7, n8, n9, n10, n11, n12
 
     else:
         return landing_page_layout()
+
+
+@app.callback(
+    Output("atlas-open-tab", "data"),
+    Input({"type": "atlas-view-btn", "target": ALL, "subview": ALL, "city": ALL, "index": ALL}, "n_clicks"),
+    prevent_initial_call=True,
+)
+def open_atlas_target_tab(_n_clicks):
+    ctx = dash.callback_context
+    if not ctx.triggered:
+        return dash.no_update
+
+    trig = ctx.triggered[0]["prop_id"].split(".")[0]
+    try:
+        trig_obj = json.loads(trig)
+    except Exception:
+        return dash.no_update
+
+    target_tab = trig_obj.get("target")
+    if not target_tab:
+        return dash.no_update
+    return {
+        "tab": target_tab,
+        "subview": trig_obj.get("subview") or None,
+        "city": trig_obj.get("city") or None,
+    }
 
 
 # ------------------------- Hanoi Callbacks ------------------------- #
