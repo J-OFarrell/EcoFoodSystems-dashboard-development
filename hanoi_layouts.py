@@ -17,6 +17,27 @@ from shared_components import sidebar, city_selector
 from dashboard_components import create_nutrition_kpi_card, create_nutrition_kpi_card_hanoi
 
 
+def _red_graph_loading(children, loading_id=None):
+    return dcc.Loading(
+        id=loading_id,
+        parent_style={"height": "100%", "width": "100%", "position": "relative"},
+        style={"height": "100%", "width": "100%"},
+        custom_spinner=html.Div(
+            dbc.Spinner(color="danger", type="border"),
+            style={
+                "position": "absolute",
+                "inset": "0",
+                "display": "flex",
+                "alignItems": "center",
+                "justifyContent": "center",
+                "zIndex": 1000,
+                "pointerEvents": "none",
+            }
+        ),
+        children=children,
+    )
+
+
 def hanoi_stakeholders_tab_layout():
     """Hà Nội stakeholders tab layout"""
     import app as main
@@ -195,7 +216,10 @@ def hanoi_supply_tab_layout():
                         "color": brand_colors['Brown'],
                         "marginBottom": "10px"
                     }),
-                    dcc.Graph(id="urban-indicator-hanoi", style={"height": "clamp(80px, 10vh, 200px)"}, config={"displayModeBar": False})
+                    _red_graph_loading(
+                        dcc.Graph(id="urban-indicator-hanoi", style={"height": "clamp(80px, 10vh, 200px)"}, config={"displayModeBar": False}),
+                        loading_id="loading-urban-indicator-hanoi",
+                    )
                 ])
             ], style={**kpi_card_style_2}),
 
@@ -215,9 +239,12 @@ def hanoi_supply_tab_layout():
             dbc.Card([
                 dbc.CardBody([
                     html.Div([
-                        dcc.Graph(
-                            id="sankey-graph-hanoi", 
-                            style={"width": "100%", "height":"70vh"}  
+                        _red_graph_loading(
+                            dcc.Graph(
+                                id="sankey-graph-hanoi", 
+                                style={"width": "100%", "height":"70vh"}  
+                            ),
+                            loading_id="loading-sankey-graph-hanoi",
                         ),
                     ], style={"width": "100%"}),
 
@@ -321,19 +348,22 @@ def hanoi_poverty_tab_layout():
                             persistence_type='session',
                             style={"margin-bottom": "12px"}
                         ),
-                        dcc.Graph(
-                            id='bar-plot-hanoi',
-                            config={"displayModeBar": False, "responsive": True},
-                            style={
-                                "minHeight": 0,
-                                "width": "100%",
-                                "flex": "1 1 auto",
-                                'padding': '4px',
-                                'margin': '8px',
-                                "border-radius": "8px",
-                                "box-shadow": "0 2px 8px rgba(0,0,0,0.15)",
-                                "overflowY": "auto"
-                            }
+                        _red_graph_loading(
+                            dcc.Graph(
+                                id='bar-plot-hanoi',
+                                config={"displayModeBar": False, "responsive": True},
+                                style={
+                                    "minHeight": 0,
+                                    "width": "100%",
+                                    "flex": "1 1 auto",
+                                    'padding': '4px',
+                                    'margin': '8px',
+                                    "border-radius": "8px",
+                                    "box-shadow": "0 2px 8px rgba(0,0,0,0.15)",
+                                    "overflowY": "auto"
+                                }
+                            ),
+                            loading_id="loading-bar-plot-hanoi",
                         )
                     ], style={
                         "display": "flex",
@@ -380,13 +410,16 @@ def hanoi_poverty_tab_layout():
 
         # Right panel: map
         html.Div([
-            dcc.Graph(
-                id='map-hanoi',
-                config={"displayModeBar": False, "scrollZoom": True, "responsive": True},
-                style={"height": "100%",
-                       "width": "100%",
-                       "padding": "0",
-                       "margin": "0"})
+            _red_graph_loading(
+                dcc.Graph(
+                    id='map-hanoi',
+                    config={"displayModeBar": False, "scrollZoom": True, "responsive": True},
+                    style={"height": "100%",
+                           "width": "100%",
+                           "padding": "0",
+                           "margin": "0"}),
+                loading_id="loading-map-hanoi",
+            )
         ], style={
             "flex": "1",
             "height": "100%",
@@ -472,15 +505,18 @@ def hanoi_affordability_tab_layout_arch():
 
             dbc.Card([
                 dbc.CardBody([
-                    dcc.Graph(id='affordability-trend-hanoi', 
-                            style={
-                                "flex": "1 1 auto",
-                                "height":"98%",
-                                'padding': '4px',
-                                'margin': '0',
-                                "border-radius": "8px",
-                                "box-shadow": "0 2px 8px rgba(0,0,0,0.15)",
-                            })
+                    _red_graph_loading(
+                        dcc.Graph(id='affordability-trend-hanoi', 
+                                style={
+                                    "flex": "1 1 auto",
+                                    "height":"98%",
+                                    'padding': '4px',
+                                    'margin': '0',
+                                    "border-radius": "8px",
+                                    "box-shadow": "0 2px 8px rgba(0,0,0,0.15)",
+                                }),
+                        loading_id="loading-affordability-trend-hanoi",
+                    )
                 ],style={
                         "display": "flex",
                         "flexDirection": "column",
@@ -1307,10 +1343,13 @@ def render_temporal_resilience_layout():
             #),
             dbc.Row([
                 dbc.Col(
-                    dcc.Graph(
-                        figure=_create_sos_figure(num, label, res_ann, show_legend=(num == 2)),
-                        config={'displayModeBar': False},
-                        style={"width": "100%"}
+                    _red_graph_loading(
+                        dcc.Graph(
+                            figure=_create_sos_figure(num, label, res_ann, show_legend=(num == 2)),
+                            config={'displayModeBar': False},
+                            style={"width": "100%"}
+                        ),
+                        loading_id=f"loading-sos-pillar-{num}",
                     ),
                     xs=12, md=4
                 )
@@ -1462,10 +1501,13 @@ def render_spatial_resilience_layout(climate_indicator_options, indicator_descri
                 dbc.CardBody([
                     html.H6("EMDAT Natural Disasters (2000-2026)", style={"marginBottom": "6px", "fontSize": "0.9em", "fontWeight": "bold"}),
                     html.Div("Summary of natural disaster events and total affected (source: EMDAT)", style={"fontSize": "0.8em", "color": "#444", "marginBottom": "6px"}),
-                    dcc.Graph(
-                        id='resilience-emdat-graph',
-                        config={"displayModeBar": False},
-                        style={"flex": "1 1 auto", "minHeight": "0", "height": "600px", "width": "100%"}
+                    _red_graph_loading(
+                        dcc.Graph(
+                            id='resilience-emdat-graph',
+                            config={"displayModeBar": False},
+                            style={"flex": "1 1 auto", "minHeight": "0", "height": "600px", "width": "100%"}
+                        ),
+                        loading_id="loading-resilience-emdat-hanoi",
                     )
                 ], style={"display": "flex", "flexDirection": "column", "flex": "1 1 auto", "minHeight": "0"})
             ], style={

@@ -12,6 +12,27 @@ from shared_components import sidebar, city_selector
 from dashboard_components import create_nutrition_kpi_card
 
 
+def _red_graph_loading(children, loading_id=None):
+    return dcc.Loading(
+        id=loading_id,
+        parent_style={"height": "100%", "width": "100%", "position": "relative"},
+        style={"height": "100%", "width": "100%"},
+        custom_spinner=html.Div(
+            dbc.Spinner(color="danger", type="border"),
+            style={
+                "position": "absolute",
+                "inset": "0",
+                "display": "flex",
+                "alignItems": "center",
+                "justifyContent": "center",
+                "zIndex": 1000,
+                "pointerEvents": "none",
+            }
+        ),
+        children=children,
+    )
+
+
 def stakeholders_tab_layout():
     """Addis Ababa stakeholders tab layout"""
     # Import data at runtime to avoid circular imports
@@ -179,7 +200,10 @@ def supply_tab_layout():
 
 
 
-                        dcc.Graph(id="urban-indicator", style={"height": "clamp(80px, 10vh, 200px)"}, config={"displayModeBar": False})
+                        _red_graph_loading(
+                            dcc.Graph(id="urban-indicator", style={"height": "clamp(80px, 10vh, 200px)"}, config={"displayModeBar": False}),
+                            loading_id="loading-urban-indicator-addis",
+                        )
                                 ])
                 ], style={**kpi_card_style_2}),
 
@@ -199,12 +223,12 @@ def supply_tab_layout():
                 dbc.Card([
                     dbc.CardBody([
                         html.Div([
-                            dcc.Loading(
-                                type="circle",
-                                children=dcc.Graph(
+                            _red_graph_loading(
+                                dcc.Graph(
                                     id="sankey-graph", 
                                     style={"width": "100%", "height":"70vh"}  
-                                )
+                                ),
+                                loading_id="loading-sankey-graph-addis",
                             ),
                         ], style={"width": "100%"}),
 
@@ -309,18 +333,21 @@ def poverty_tab_layout():
                         style={"margin-bottom": "12px"}
                     ),
 
-                    dcc.Graph(id='bar-plot',
-                            config={"displayModeBar": False, "responsive": True},
-                            style={
-                                "minHeight": 0,
-                                "width": "100%",
-                                "flex": "1 1 auto",
-                                'padding': '4px',
-                                'margin': '8px',
-                                "border-radius": "8px",
-                                "box-shadow": "0 2px 8px rgba(0,0,0,0.15)",
-                                "overflowY": "auto"
-                            })
+                    _red_graph_loading(
+                        dcc.Graph(id='bar-plot',
+                                config={"displayModeBar": False, "responsive": True},
+                                style={
+                                    "minHeight": 0,
+                                    "width": "100%",
+                                    "flex": "1 1 auto",
+                                    'padding': '4px',
+                                    'margin': '8px',
+                                    "border-radius": "8px",
+                                    "box-shadow": "0 2px 8px rgba(0,0,0,0.15)",
+                                    "overflowY": "auto"
+                                }),
+                        loading_id="loading-bar-plot-addis",
+                    )
                             ],style={
                                         "display": "flex",
                                         "flexDirection": "column",
@@ -363,13 +390,16 @@ def poverty_tab_layout():
 
         # Right panel: map, full height
         html.Div([
-            dcc.Graph(
-                id='map',
-                config={"displayModeBar": False, "scrollZoom": True, "responsive": True},
-                style={"height": "100%",
-                       "width": "100%",
-                       "padding": "0",
-                       "margin": "0"})
+            _red_graph_loading(
+                dcc.Graph(
+                    id='map',
+                    config={"displayModeBar": False, "scrollZoom": True, "responsive": True},
+                    style={"height": "100%",
+                           "width": "100%",
+                           "padding": "0",
+                           "margin": "0"}),
+                loading_id="loading-map-addis",
+            )
         ], style={
             "flex": "1",
             "height": "100%",
@@ -532,27 +562,8 @@ def affordability_tab_layout():
 
                 # Right panel: map, full height
                 html.Div([
-                    dcc.Loading(
-                        id="loading-affordability-map",
-                        parent_style={
-                            "height": "100%",
-                            "width": "100%",
-                            "position": "relative"
-                        },
-                        style={"height": "100%", "width": "100%"},
-                        custom_spinner=html.Div(
-                            dbc.Spinner(color="danger", type="border"),
-                            style={
-                                "position": "absolute",
-                                "inset": "0",
-                                "display": "flex",
-                                "alignItems": "center",
-                                "justifyContent": "center",
-                                "zIndex": 1000,
-                                "pointerEvents": "none",
-                            }
-                        ),
-                        children=html.Div(
+                    _red_graph_loading(
+                        html.Div(
                             dcc.Graph(
                                 id='affordability-map',
                                 figure=go.Figure().update_layout(
@@ -564,7 +575,8 @@ def affordability_tab_layout():
                                 style={"height": "100%", "width": "100%", "padding": "0", "margin": "0"}
                             ),
                             style={"height": "100%", "width": "100%"}
-                        )
+                        ),
+                        loading_id="loading-affordability-map",
                     )
                 ], style={
                     "flex": "1",
