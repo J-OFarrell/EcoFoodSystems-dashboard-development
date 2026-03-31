@@ -42,6 +42,7 @@ from hanoi_layouts import (
     hanoi_resilience_tab_layout,
     render_spatial_resilience_layout,
     render_temporal_resilience_layout,
+    render_lulc_resilience_layout,
 )
 
 app = Dash(__name__, suppress_callback_exceptions=True, external_stylesheets=[dbc.themes.BOOTSTRAP])
@@ -423,6 +424,38 @@ else:
 
 resilience_base_geojson = json.loads(districts_unique.to_json())
 
+_lulc_stats_path = os.path.join(hanoi_resilience_dir, "lulc_stats_gdf.geojson")
+lulc_stats_gdf = None
+lulc_indicator_options = []
+lulc_map_center = {"lat": 21.03, "lon": 105.85}
+
+if os.path.exists(_lulc_stats_path):
+    try:
+        lulc_stats_gdf = gpd.read_file(_lulc_stats_path).to_crs("EPSG:4326")
+        lulc_stats_gdf["geometry"] = lulc_stats_gdf["geometry"].buffer(0)
+        lulc_stats_gdf = lulc_stats_gdf[lulc_stats_gdf["geometry"].is_valid & ~lulc_stats_gdf["geometry"].is_empty].copy()
+        lulc_stats_gdf["__rid"] = lulc_stats_gdf.index.astype(str)
+
+        if not lulc_stats_gdf.empty:
+            minx, miny, maxx, maxy = lulc_stats_gdf.total_bounds
+            lulc_map_center = {
+                "lat": float((miny + maxy) / 2.0),
+                "lon": float((minx + maxx) / 2.0),
+            }
+
+        excluded_lulc_cols = {"Dis_code", "Dist_name", "Dist_Name", "geometry", "__rid"}
+        lulc_columns = []
+        for c in lulc_stats_gdf.columns:
+            if c in excluded_lulc_cols:
+                continue
+            numeric_vals = pd.to_numeric(lulc_stats_gdf[c], errors="coerce")
+            if numeric_vals.notna().any():
+                lulc_columns.append(c)
+
+        lulc_indicator_options = [{"label": c, "value": c} for c in lulc_columns]
+    except Exception as exc:
+        print(f"[WARN] Could not load LULC stats geojson: {exc}")
+
 # Paths for cached EMDAT parquet files (resilience)
 EMDAT_COUNTS_PQ = os.path.join(hanoi_resilience_dir, "emdat_counts.parquet")
 EMDAT_TOTALS_PQ = os.path.join(hanoi_resilience_dir, "emdat_totals.parquet")
@@ -459,30 +492,64 @@ def build_resilience_figure_from_cache(df_counts=None, df_totals=None, size_max=
             empty.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=420)
             return empty
 
-    scatter_fig = px.scatter(
-        df_counts,
-        x='Year',
-        y='Disaster Subtype',
-        color='Disaster Subgroup',
-        size='Count',
-        size_max=size_max,
-        hover_data={'Count': True, 'Year': True, 'Disaster Subgroup': True}
-    )
-    scatter_fig.update_traces(showlegend=False)
-
-    bar_fig = px.bar(
-        df_totals,
-        x='Year',
-        y='TotalAffected',
-        labels={'TotalAffected': 'Total Affected (people)'},
-        color_discrete_sequence=['orangered']
-    )
-
     fig = make_subplots(rows=2, cols=1, shared_xaxes=True, row_heights=[0.9, 0.4], vertical_spacing=0.06)
-    for tr in scatter_fig.data:
-        fig.add_trace(tr, row=1, col=1)
-    for tr in bar_fig.data:
-        fig.add_trace(tr, row=2, col=1)
+
+    counts = df_counts.copy()
+    counts["Year"] = pd.to_numeric(counts["Year"], errors="coerce")
+    counts["Count"] = pd.to_numeric(counts["Count"], errors="coerce")
+    counts = counts.dropna(subset=["Year", "Disaster Subtype", "Count"])
+
+    if not counts.empty:
+        max_count = float(max(counts["Count"].max(), 1.0))
+        size_ref = 2.0 * max_count / (max(size_max, 1) ** 2)
+
+        for subgroup, sub in counts.groupby("Disaster Subgroup", dropna=False):
+            subgroup_label = "Unknown" if pd.isna(subgroup) else str(subgroup)
+            fig.add_trace(
+                go.Scatter(
+                    x=sub["Year"],
+                    y=sub["Disaster Subtype"],
+                    mode="markers",
+                    marker=dict(
+                        size=sub["Count"].clip(lower=1),
+                        sizemode="area",
+                        sizeref=size_ref,
+                        sizemin=4,
+                    ),
+                    name=subgroup_label,
+                    showlegend=False,
+                    customdata=np.column_stack([
+                        sub["Count"].to_numpy(),
+                        np.full(len(sub), subgroup_label),
+                    ]),
+                    hovertemplate=(
+                        "Year: %{x}<br>"
+                        "Subtype: %{y}<br>"
+                        "Subgroup: %{customdata[1]}<br>"
+                        "Count: %{customdata[0]}<extra></extra>"
+                    ),
+                ),
+                row=1,
+                col=1,
+            )
+
+    totals = df_totals.copy()
+    totals["Year"] = pd.to_numeric(totals["Year"], errors="coerce")
+    totals["TotalAffected"] = pd.to_numeric(totals["TotalAffected"], errors="coerce")
+    totals = totals.dropna(subset=["Year", "TotalAffected"])
+
+    if not totals.empty:
+        fig.add_trace(
+            go.Bar(
+                x=totals["Year"],
+                y=totals["TotalAffected"],
+                marker_color="orangered",
+                hovertemplate="Year: %{x}<br>Total Affected: %{y:,}<extra></extra>",
+                showlegend=False,
+            ),
+            row=2,
+            col=1,
+        )
 
     fig.update_yaxes(title_text=None, row=1, col=1, automargin=True)
     fig.update_yaxes(title_text="Total Affected", row=2, col=1, automargin=True)
@@ -2181,6 +2248,33 @@ def update_drought_map(slider_idx, indicator):
     overlay = plot_gdf[plot_gdf[col].notna()].copy()
     print(f"[DEBUG] col={col!r}, df rows={len(df)}, overlay rows={len(overlay)}")
 
+    hover_label_col = None
+    explicit_name_candidates = [
+        "shapeName",
+        "shapeName_x",
+        "shapeName_y",
+        "Dist_Name",
+        "Dist_Name_x",
+        "Dist_Name_y",
+        "Dist_name",
+        "Dist_name_x",
+        "Dist_name_y",
+    ]
+    for candidate in explicit_name_candidates:
+        if candidate in overlay.columns and overlay[candidate].notna().any():
+            hover_label_col = candidate
+            break
+
+    if hover_label_col is None:
+        for c in overlay.columns:
+            c_norm = c.lower()
+            if ("name" in c_norm) and overlay[c].notna().any():
+                hover_label_col = c
+                break
+
+    if hover_label_col is None:
+        hover_label_col = DISTRICT_JOIN_KEY
+
     # 1) District indicator fill
     fig = go.Figure()
     if not overlay.empty:
@@ -2221,12 +2315,17 @@ def update_drought_map(slider_idx, indicator):
             featureidkey=DISTRICT_FEATUREIDKEY,
             locations=overlay[DISTRICT_JOIN_KEY],
             z=overlay[col],
+            text=overlay[hover_label_col].astype(str) if hover_label_col else overlay[DISTRICT_JOIN_KEY].astype(str),
             colorscale=cfg["colorscale"],
             zmin=zmin, zmax=zmax,
             marker=dict(opacity=0.78, line=dict(color="black", width=0.4)),
             showscale=True,
             colorbar=colorbar_map,
-            hoverinfo="skip",
+            hovertemplate=(
+                "<b>%{text}</b><br>"
+                + f"{col}: "
+                + "%{z:.3f}<extra></extra>"
+            ),
         ))
 
     # 2) Region boundaries — Scattermapbox lines (avoids choropleth layer interference)
@@ -2291,8 +2390,11 @@ def update_climate_indicator_description(indicator, descriptions):
     prevent_initial_call=False,
 )
 def update_resilience_view_layout(view_selection, spatial_data):
-    if view_selection == "Temporal trends":
+    if view_selection == "Resilience Indicator Trends":
         return render_temporal_resilience_layout()
+
+    if view_selection == "Land-use & Land-cover":
+        return render_lulc_resilience_layout(lulc_indicator_options)
 
     spatial_data = spatial_data or {}
     climate_indicator_options = spatial_data.get("climate_indicator_options", [])
@@ -2312,6 +2414,129 @@ def update_resilience_view_layout(view_selection, spatial_data):
         indicator_descriptions,
         n,
         quarter_marks,
+    )
+
+
+@app.callback(
+    Output("lulc-map-container", "children"),
+    Input("lulc-indicator-select", "value"),
+)
+def update_lulc_map(indicator):
+    map_layout = dict(
+        mapbox=dict(style="carto-positron", center=lulc_map_center, zoom=9),
+        margin=dict(l=0, r=0, t=0, b=0),
+        showlegend=False,
+    )
+
+    if lulc_stats_gdf is None or not indicator:
+        empty_fig = go.Figure().update_layout(**map_layout)
+        return dcc.Graph(
+            figure=empty_fig,
+            config={"displayModeBar": False, "scrollZoom": True},
+            style={"height": "100%", "width": "100%"},
+        )
+
+    if indicator not in lulc_stats_gdf.columns:
+        empty_fig = go.Figure().update_layout(**map_layout)
+        return dcc.Graph(
+            figure=empty_fig,
+            config={"displayModeBar": False, "scrollZoom": True},
+            style={"height": "100%", "width": "100%"},
+        )
+
+    plot_gdf = lulc_stats_gdf.copy()
+    plot_gdf["__rid"] = plot_gdf["__rid"].astype(str)
+    plot_gdf["__value"] = pd.to_numeric(plot_gdf[indicator], errors="coerce")
+    overlay = plot_gdf[plot_gdf["__value"].notna()].copy()
+
+    indicator_l = str(indicator).lower()
+    if any(k in indicator_l for k in ["water", "aqua"]):
+        lulc_colorscale = "Blues"
+    elif any(k in indicator_l for k in ["urban", "built"]):
+        lulc_colorscale = "Reds"
+    elif any(k in indicator_l for k in ["barren"]):
+        lulc_colorscale = "YlOrBr"
+    elif any(k in indicator_l for k in ["mangrove"]):
+        lulc_colorscale = "Tealgrn"
+    elif any(k in indicator_l for k in ["forest", "rice", "crop", "grass", "woody", "plantation", "deciduous", "evergreen"]):
+        lulc_colorscale = "YlGn"
+    else:
+        lulc_colorscale = "Viridis"
+
+    fig = go.Figure()
+
+    if not overlay.empty:
+        zvals = overlay["__value"].to_numpy(dtype=float)
+        zmin = float(np.nanmin(zvals))
+        zmax = float(np.nanmax(zvals))
+        if zmax <= zmin:
+            zmax = zmin + 1e-9
+
+        if zmax <= 1.0 and zmin >= 0.0:
+            hover_val_fmt = "%{z:.1%}"
+            colorbar_tickformat = ".0%"
+        elif zmax <= 100.0 and zmin >= 0.0:
+            hover_val_fmt = "%{z:.1f}%"
+            colorbar_tickformat = ".0f"
+        else:
+            hover_val_fmt = "%{z:.3f}"
+            colorbar_tickformat = ".2f"
+
+        minx, miny, maxx, maxy = overlay.total_bounds
+        fig.update_layout(
+            mapbox=dict(
+                center={"lat": float((miny + maxy) / 2.0), "lon": float((minx + maxx) / 2.0)},
+                zoom=9,
+                style="carto-positron",
+            )
+        )
+
+        label_col = None
+        for candidate in ["Dist_Name", "Dist_name", "shapeName"]:
+            if candidate in overlay.columns:
+                label_col = candidate
+                break
+
+        if label_col is None:
+            hover_text = overlay["__rid"].astype(str)
+        else:
+            hover_text = overlay[label_col].astype(str)
+
+        overlay_for_map = overlay.copy()
+        overlay_for_map["_fid"] = overlay_for_map.index.astype(str)
+
+        fig.add_trace(go.Choroplethmapbox(
+            geojson=json.loads(overlay_for_map.to_json()),
+            featureidkey="id",
+            locations=overlay_for_map["_fid"],
+            z=overlay["__value"],
+            text=hover_text,
+            colorscale=lulc_colorscale,
+            zmin=zmin,
+            zmax=zmax,
+            marker=dict(opacity=0.78, line=dict(color="black", width=0.4)),
+            hovertemplate="<b>%{text}</b><br>" + indicator + ": " + hover_val_fmt + "<extra></extra>",
+            colorbar=dict(
+                title=None,
+                thickness=8,
+                len=0.28,
+                x=0.99,
+                y=0.98,
+                xanchor="right",
+                yanchor="top",
+                outlinewidth=0,
+                tickfont=dict(size=9),
+                tickformat=colorbar_tickformat,
+            ),
+            showscale=True,
+        ))
+
+    fig.update_layout(**map_layout)
+
+    return dcc.Graph(
+        figure=fig,
+        config={"displayModeBar": False, "scrollZoom": True},
+        style={"height": "100%", "width": "100%"},
     )
 
 # Expose the Flask server for production deployment

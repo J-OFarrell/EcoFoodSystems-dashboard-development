@@ -986,7 +986,7 @@ def _create_resilience_temporal_kpi_card(df, indicator_col, time_labels, line_co
                 "minHeight": "48px"
             }),
             html.Div(_format_indicator_value(latest_value), style={
-                "fontSize": "1.5em",
+                "fontSize": "2.0em",
                 "fontWeight": "bold",
                 "color": brand_colors['Red'],
                 "lineHeight": "1.2",
@@ -1088,7 +1088,7 @@ def _build_temporal_pillar_section(title, csv_filename, line_color, pillar_num, 
             df_plot[col] = numeric_vals
             cards.append(
                 dbc.Col(
-                    _create_resilience_temporal_kpi_card(df_plot, col, time_labels, line_color, unit=unit, source=source),
+                    _create_resilience_temporal_kpi_card(df_plot, col, time_labels, brand_colors['Mid green'], unit=unit, source=source),
                     xs=12,
                     md=6,
                     lg=4,
@@ -1157,8 +1157,8 @@ def _load_sos_data():
             .mean()
             .reset_index()
         )
-        res_ann['Index'] = res_ann['Index'] - 1
-        res_ann['SOS'] = res_ann['SOS'] - 1
+        res_ann['Index'] = res_ann['Index'] #- 1
+        res_ann['SOS'] = res_ann['SOS'] #- 1
         return res_ann
     except Exception:
         return pd.DataFrame()
@@ -1507,6 +1507,88 @@ def render_spatial_resilience_layout(climate_indicator_options, indicator_descri
     ], style={"display": "flex", "width": "100%", "height": "100%"})
 
 
+def render_lulc_resilience_layout(lulc_indicator_options):
+    """Land-use & Land-cover sub-layout for the resilience tab."""
+    default_value = None
+    if lulc_indicator_options:
+        default_value = lulc_indicator_options[0].get("value")
+
+    return html.Div([
+
+        html.Div([
+            dbc.Card([
+                dbc.CardBody([
+                    html.H2("Land-use & Land-cover", style=header_style),
+                    html.P(
+                        "Explore district-level land-use and land-cover indicators for Hanoi. "
+                        "Select a variable to display the corresponding district pattern on the map.",
+                        style={
+                            "margin": "10px 6px",
+                            "fontSize": 'clamp(0.6em, 0.9em, 1.0em)',
+                            "whiteSpace": "normal",
+                        }
+                    )
+                ])
+            ], style={
+                "height": "auto", "padding": "6px", "marginBottom": "10px",
+                "boxShadow": "0 2px 6px rgba(0,0,0,0.1)",
+                "backgroundColor": brand_colors['White'], "borderRadius": "10px"
+            }),
+
+            dbc.Card([
+                dbc.CardBody([
+                    html.P(
+                        "Select a land-cover indicator:",
+                        style={
+                            "margin": "6px", "fontSize": 'clamp(0.7em, 1em, 1.0em)',
+                            "textAlign": "center", "fontStyle": "italic"
+                        }
+                    ),
+                    dcc.Dropdown(
+                        id="lulc-indicator-select",
+                        options=lulc_indicator_options,
+                        value=default_value,
+                        clearable=False,
+                        style={"zIndex": "2000", "marginBottom": "6px"}
+                    ),
+                ])
+            ], style={
+                "height": "auto", "padding": "6px", "marginBottom": "10px",
+                "boxShadow": "0 2px 6px rgba(0,0,0,0.1)",
+                "backgroundColor": brand_colors['White'], "borderRadius": "10px",
+                "zIndex": "2000", "position": "relative"
+            }),
+        ], style={
+            "width": "min(50%)", "height": "100%", "padding": "10px",
+            "backgroundColor": brand_colors['Light green'], "borderRadius": "0", "margin": "0",
+            "display": "flex", "flexDirection": "column", "justifyContent": "flex-start",
+            "overflowY": "auto", "boxSizing": "border-box", "position": "relative",
+        }),
+
+        html.Div(
+            dcc.Loading(
+                id="loading-lulc-map",
+                parent_style={"height": "100%", "width": "100%", "position": "relative"},
+                style={"height": "100%", "width": "100%"},
+                custom_spinner=html.Div(
+                    dbc.Spinner(color="danger", type="border"),
+                    style={
+                        "position": "absolute", "inset": "0", "display": "flex",
+                        "alignItems": "center", "justifyContent": "center",
+                        "zIndex": 1000, "pointerEvents": "none",
+                    }
+                ),
+                children=html.Div(
+                    id="lulc-map-container",
+                    style={"height": "100%", "width": "100%"},
+                ),
+            ),
+            style={"flex": "1", "height": "100%", "minHeight": "calc(100vh - 140px)"}
+        ),
+
+    ], style={"display": "flex", "width": "100%", "height": "100%"})
+
+
 def hanoi_resilience_tab_layout(all_quarters):
     """Hà Nội climate tab layout - Multi-dimensional Climate Stress Indicators"""
 
@@ -1528,15 +1610,15 @@ def hanoi_resilience_tab_layout(all_quarters):
         {"label": "Water Storage Anomalies", "value": "grace_trend"},
         {"label": "Soil Moisture Stress (coming soon)", "value": "soil_moisture", "disabled": True},
         {"label": "── Precipitation Deficit (SPEI) ──", "value": "divider_spei", "disabled": True},
-        {"label": "SPEI-3 Moderate Drought", "value": "class_-3_months_SPEI3"},
-        {"label": "SPEI-3 Severe Drought", "value": "class_-2_months_SPEI3"},
-        {"label": "SPEI-3 Extreme Drought", "value": "class_-1_months_SPEI3"},
-        {"label": "SPEI-6 Moderate Drought", "value": "class_-3_months_SPEI6"},
-        {"label": "SPEI-6 Severe Drought", "value": "class_-2_months_SPEI6"},
-        {"label": "SPEI-6 Extreme Drought", "value": "class_-1_months_SPEI6"},
-        {"label": "SPEI-12 Moderate Drought", "value": "class_-3_months_SPEI12"},
-        {"label": "SPEI-12 Severe Drought", "value": "class_-2_months_SPEI12"},
-        {"label": "SPEI-12 Extreme Drought", "value": "class_-1_months_SPEI12"},
+        {"label": "Short-term Moderate Drought", "value": "class_-3_months_SPEI3"},
+        {"label": "Short-term Severe Drought", "value": "class_-2_months_SPEI3"},
+        {"label": "Short-term Extreme Drought", "value": "class_-1_months_SPEI3"},
+        {"label": "Seasonal Moderate Drought", "value": "class_-3_months_SPEI6"},
+        {"label": "Seasonal Severe Drought", "value": "class_-2_months_SPEI6"},
+        {"label": "Seasonal Extreme Drought", "value": "class_-1_months_SPEI6"},
+        {"label": "Long-term Moderate Drought", "value": "class_-3_months_SPEI12"},
+        {"label": "Long-term Severe Drought", "value": "class_-2_months_SPEI12"},
+        {"label": "Long-term Extreme Drought", "value": "class_-1_months_SPEI12"},
     ]
 
     indicator_descriptions = {
@@ -1580,8 +1662,8 @@ def hanoi_resilience_tab_layout(all_quarters):
             dbc.CardHeader(
                 dcc.Dropdown(
                     id="resilience_view-select",
-                    options=['Spatial view', 'Temporal trends'],
-                    value='Spatial view',
+                    options=['Biophysical shocks', 'Resilience Indicator Trends', 'Land-use & Land-cover'],
+                    value='Biophysical shocks',
                     clearable=False,
                     style={"zIndex": "2000", "marginBottom": "0", 'fontSize': 'clamp(0.8em, 1em, 1.4em)', 'width': '100%'}
                 ),
