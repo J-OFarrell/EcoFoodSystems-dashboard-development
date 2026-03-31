@@ -1088,7 +1088,7 @@ def _build_temporal_pillar_section(title, csv_filename, line_color, pillar_num, 
             df_plot[col] = numeric_vals
             cards.append(
                 dbc.Col(
-                    _create_resilience_temporal_kpi_card(df_plot, col, time_labels, brand_colors['Mid green'], unit=unit, source=source),
+                    _create_resilience_temporal_kpi_card(df_plot, col, time_labels, brand_colors['Dark green'], unit=unit, source=source),
                     xs=12,
                     md=6,
                     lg=4,
@@ -1105,7 +1105,7 @@ def _build_temporal_pillar_section(title, csv_filename, line_color, pillar_num, 
                             "fontWeight": "bold",
                             "margin": "0",
                         }),
-                        style={"backgroundColor": line_color, "borderRadius": "7px 7px 0 0"}
+                        style={"backgroundColor": brand_colors['Mid green'], "borderRadius": "7px 7px 0 0"}
                     ),
                     dbc.CardBody([
                         dbc.Row(cards, className="g-3")
@@ -1191,7 +1191,7 @@ def _create_sos_figure(pillar_num, title, res_ann, show_legend=False):
 
     # Invisible baseline at y=1 for fill reference (SOS fill is between SOS line and 1)
     fig.add_trace(go.Scatter(
-        x=years, y=[1] * len(years),
+        x=years, y=[2] * len(years),
         fill=None, mode='lines',
         line=dict(color='rgba(0,0,0,0)'),
         showlegend=False, hoverinfo='skip'
