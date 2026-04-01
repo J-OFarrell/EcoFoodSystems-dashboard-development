@@ -1,0 +1,9 @@
+{
+"type": "FeatureCollection",
+"name": "shop_seafood_addis",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:EPSG::3857" } },
+"features": [
+{ "type": "Feature", "properties": { "id": 1594370155, "category": "shop", "label": "seafood" }, "geometry": { "type": "Point", "coordinates": [ 4315494.591411410830915, 999722.934356395853683 ] } },
+{ "type": "Feature", "properties": { "id": 4954579026, "category": "shop", "label": "seafood" }, "geometry": { "type": "Point", "coordinates": [ 4311664.354899992235005, 1008316.90348945138976 ] } }
+]
+}

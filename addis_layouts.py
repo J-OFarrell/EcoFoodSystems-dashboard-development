@@ -2,6 +2,8 @@
 Addis Ababa dashboard tab layouts
 """
 
+import os
+import pandas as pd
 from dash import html, dcc, dash_table
 import dash_bootstrap_components as dbc
 import plotly.graph_objects as go
@@ -9,7 +11,7 @@ import plotly.express as px
 
 from config import brand_colors, header_style, kpi_card_style_2, card_style
 from shared_components import sidebar, city_selector
-from dashboard_components import create_nutrition_kpi_card
+from dashboard_components import create_nutrition_kpi_card, create_price_volatility_kpi_card
 
 
 def _red_graph_loading(children, loading_id=None):
@@ -1069,3 +1071,118 @@ def footprints_tab_layout():
         "height": "100%",
         "backgroundColor": brand_colors['Light green']
     })
+
+
+def addis_resilience_tab_layout(default_view=None):
+    """Addis Ababa resilience tab layout with Socio-Economic Shocks (price volatility)"""
+    import app as main
+    
+    # Load price volatility data
+    volatility_csv_path = os.path.join(
+        os.path.dirname(__file__), 
+        'assets/data/addis/resilience/addis_rolling_price_volatility.csv'
+    )
+    
+    # Load UFPRI scores data
+    ufpri_csv_path = os.path.join(
+        os.path.dirname(__file__), 
+        'assets/data/addis/resilience/addis_ufpri_scores.csv'
+    )
+    
+    try:
+        df_volatility = pd.read_csv(volatility_csv_path)
+    except Exception as e:
+        df_volatility = pd.DataFrame()
+    
+    try:
+        df_ufpri = pd.read_csv(ufpri_csv_path)
+    except Exception as e:
+        df_ufpri = pd.DataFrame()
+    
+    # Define resilience view options
+    view_options = [
+        'Socio-Economic Shocks',
+        'Biophysical Shocks (coming soon)',
+        'Resilience Indicator Trends (coming soon)',
+        'Land-use & Land-cover (coming soon)'
+    ]
+    
+    # Get unique commodities and sort
+    if not df_volatility.empty:
+        commodities = sorted(df_volatility['commodity'].unique())
+    else:
+        commodities = []
+    
+    # Create KPI cards for each commodity
+    kpi_cards = []
+    if not df_volatility.empty and not df_ufpri.empty:
+        for commodity in commodities:
+            commodity_vol_data = df_volatility[df_volatility['commodity'] == commodity].copy()
+            commodity_vol_data = commodity_vol_data.sort_values('date')
+            
+            # Get UFPRI scores for this commodity
+            commodity_ufpri = df_ufpri[df_ufpri['commodity'] == commodity]
+            
+            if not commodity_vol_data.empty and not commodity_ufpri.empty:
+                current_volatility = commodity_vol_data['rolling_volatility'].iloc[-1]
+                ufpri_score = commodity_ufpri['ufpri_score'].iloc[0]
+                shock_frequency = commodity_ufpri['shock_frequency'].iloc[0]
+                
+                kpi_card = create_price_volatility_kpi_card(
+                    commodity_vol_data[['date', 'rolling_volatility']],
+                    commodity,
+                    current_volatility,
+                    ufpri_score,
+                    shock_frequency
+                )
+                kpi_cards.append(
+                    dbc.Col([kpi_card], width=12, lg=3)
+                )
+    
+    return html.Div([
+        city_selector(selected_city='addis', visible=False),
+        
+        html.Div([sidebar], style={
+            "width": "15%",
+            "height": "100%",
+            "display": "flex",
+            "vertical-align": 'top',
+            "flexDirection": "column",
+            "justifyContent": "flex-start",
+        }),
+        
+        # Content area with dropdown and KPI cards
+        html.Div([
+            dbc.CardHeader(
+                dcc.Dropdown(
+                    id="addis_resilience_view-select",
+                    options=[
+                        {"label": opt, "value": opt, "disabled": "(coming soon)" in opt}
+                        for opt in view_options
+                    ],
+                    value=default_view or 'Socio-Economic Shocks',
+                    clearable=False,
+                    style={"zIndex": "2000", "marginBottom": "0", 'fontSize': 'clamp(0.8em, 1em, 1.4em)', 'width': '100%'}
+                ),
+                style={
+                    "height": "auto", "padding": "6px", "marginBottom": "10px",
+                    "boxShadow": "0 2px 6px rgba(0,0,0,0.1)",
+                    "backgroundColor": brand_colors['White'], "borderRadius": "10px"
+                }
+            ),
+            
+            # KPI cards container for Socio-Economic Shocks view
+            html.Div(
+                id="addis-resilience-view-container",
+                children=html.Div([
+                    dbc.Row(kpi_cards) if kpi_cards else html.Div("No price volatility or UFPRI data available.", style={"color": "#999"}),
+                ]),
+                style={"flex": "1", "display": "flex", "minHeight": 0, "flexDirection": "column", "overflowY": "auto"}
+            ),
+        ], style={
+            "flex": "1", "height": "100%", "display": "flex", "flexDirection": "column",
+            "backgroundColor": brand_colors['Light green'], "padding": "10px",
+            "overflowY": "auto", "boxSizing": "border-box",
+        }),
+        
+    ], style={"display": "flex", "width": "100vw", "height": "100%"})

@@ -1,0 +1,15 @@
+{
+"type": "FeatureCollection",
+"name": "shop_deli_hanoi",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:EPSG::3857" } },
+"features": [
+{ "type": "Feature", "properties": { "id": 9931530711, "category": "shop", "label": "deli" }, "geometry": { "type": "Point", "coordinates": [ 11782929.887889659032226, 2394178.731842459179461 ] } },
+{ "type": "Feature", "properties": { "id": 11212195516, "category": "shop", "label": "deli" }, "geometry": { "type": "Point", "coordinates": [ 11781425.182332606986165, 2392888.835946397855878 ] } },
+{ "type": "Feature", "properties": { "id": 11295820777, "category": "shop", "label": "deli" }, "geometry": { "type": "Point", "coordinates": [ 11781166.464704053476453, 2393865.345090331509709 ] } },
+{ "type": "Feature", "properties": { "id": 11491290543, "category": "shop", "label": "deli" }, "geometry": { "type": "Point", "coordinates": [ 11783196.030528247356415, 2393602.860059697646648 ] } },
+{ "type": "Feature", "properties": { "id": 11782452950, "category": "shop", "label": "deli" }, "geometry": { "type": "Point", "coordinates": [ 11783323.580400798469782, 2393696.162186444737017 ] } },
+{ "type": "Feature", "properties": { "id": 904729856, "category": "shop", "label": "deli" }, "geometry": { "type": "Point", "coordinates": [ 11782978.859929088503122, 2393270.353895724285394 ] } },
+{ "type": "Feature", "properties": { "id": 1329845939, "category": "shop", "label": "deli" }, "geometry": { "type": "Point", "coordinates": [ 11772504.781594986096025, 2392570.505258628632873 ] } },
+{ "type": "Feature", "properties": { "id": 1331638464, "category": "shop", "label": "deli" }, "geometry": { "type": "Point", "coordinates": [ 11785241.515003018081188, 2391088.909677455201745 ] } }
+]
+}

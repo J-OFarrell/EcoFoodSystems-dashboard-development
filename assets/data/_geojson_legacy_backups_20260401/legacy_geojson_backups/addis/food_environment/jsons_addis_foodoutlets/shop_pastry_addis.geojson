@@ -1,0 +1,17 @@
+{
+"type": "FeatureCollection",
+"name": "shop_pastry_addis",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:EPSG::3857" } },
+"features": [
+{ "type": "Feature", "properties": { "id": 4555239812, "category": "shop", "label": "pastry" }, "geometry": { "type": "Point", "coordinates": [ 4327763.246075127273798, 1009245.131935419165529 ] } },
+{ "type": "Feature", "properties": { "id": 4967654934, "category": "shop", "label": "pastry" }, "geometry": { "type": "Point", "coordinates": [ 4320908.570318345911801, 1008212.237908838898875 ] } },
+{ "type": "Feature", "properties": { "id": 4968426954, "category": "shop", "label": "pastry" }, "geometry": { "type": "Point", "coordinates": [ 4323434.966161898337305, 1008407.660465472494252 ] } },
+{ "type": "Feature", "properties": { "id": 6723488310, "category": "shop", "label": "pastry" }, "geometry": { "type": "Point", "coordinates": [ 4310537.968632400967181, 1000265.257349493447691 ] } },
+{ "type": "Feature", "properties": { "id": 6736192720, "category": "shop", "label": "pastry" }, "geometry": { "type": "Point", "coordinates": [ 4306317.65749329328537, 1006512.040390598005615 ] } },
+{ "type": "Feature", "properties": { "id": 6742385088, "category": "shop", "label": "pastry" }, "geometry": { "type": "Point", "coordinates": [ 4313340.013799056410789, 1008561.808023914811201 ] } },
+{ "type": "Feature", "properties": { "id": 6814279384, "category": "shop", "label": "pastry" }, "geometry": { "type": "Point", "coordinates": [ 4310322.654473308473825, 1013137.696109961951151 ] } },
+{ "type": "Feature", "properties": { "id": 6814283318, "category": "shop", "label": "pastry" }, "geometry": { "type": "Point", "coordinates": [ 4309614.963074487634003, 1001010.468736413517036 ] } },
+{ "type": "Feature", "properties": { "id": 6837208439, "category": "shop", "label": "pastry" }, "geometry": { "type": "Point", "coordinates": [ 4326857.272399306297302, 1013394.206858644960448 ] } },
+{ "type": "Feature", "properties": { "id": 9137849087, "category": "shop", "label": "pastry" }, "geometry": { "type": "Point", "coordinates": [ 4317043.546466054394841, 1006551.815225474187173 ] } }
+]
+}

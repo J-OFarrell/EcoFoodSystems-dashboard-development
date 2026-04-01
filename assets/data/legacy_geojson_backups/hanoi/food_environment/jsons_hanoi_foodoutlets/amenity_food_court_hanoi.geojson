@@ -1,0 +1,28 @@
+{
+"type": "FeatureCollection",
+"name": "amenity_food_court_hanoi",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:EPSG::3857" } },
+"features": [
+{ "type": "Feature", "properties": { "id": 104770283, "category": "amenity", "label": "food_court" }, "geometry": { "type": "Point", "coordinates": [ 11782954.122142804786563, 2396541.25353716313839 ] } },
+{ "type": "Feature", "properties": { "id": 1708540209, "category": "amenity", "label": "food_court" }, "geometry": { "type": "Point", "coordinates": [ 11783696.500694956630468, 2392225.184236939996481 ] } },
+{ "type": "Feature", "properties": { "id": 3316120061, "category": "amenity", "label": "food_court" }, "geometry": { "type": "Point", "coordinates": [ 11779403.063782347366214, 2394612.7766672084108 ] } },
+{ "type": "Feature", "properties": { "id": 5315672621, "category": "amenity", "label": "food_court" }, "geometry": { "type": "Point", "coordinates": [ 11779102.233990425243974, 2400773.97929543396458 ] } },
+{ "type": "Feature", "properties": { "id": 5350734821, "category": "amenity", "label": "food_court" }, "geometry": { "type": "Point", "coordinates": [ 11779709.949354566633701, 2396088.71091778203845 ] } },
+{ "type": "Feature", "properties": { "id": 6035928576, "category": "amenity", "label": "food_court" }, "geometry": { "type": "Point", "coordinates": [ 11784512.839916791766882, 2394866.045930686872452 ] } },
+{ "type": "Feature", "properties": { "id": 6957667188, "category": "amenity", "label": "food_court" }, "geometry": { "type": "Point", "coordinates": [ 11782953.264982726424932, 2395733.392591880168766 ] } },
+{ "type": "Feature", "properties": { "id": 7055939380, "category": "amenity", "label": "food_court" }, "geometry": { "type": "Point", "coordinates": [ 11781344.798528304323554, 2390122.33908550394699 ] } },
+{ "type": "Feature", "properties": { "id": 7178803503, "category": "amenity", "label": "food_court" }, "geometry": { "type": "Point", "coordinates": [ 11785808.175775559619069, 2405251.21678069839254 ] } },
+{ "type": "Feature", "properties": { "id": 7192525585, "category": "amenity", "label": "food_court" }, "geometry": { "type": "Point", "coordinates": [ 11782778.33753489330411, 2395730.840317574329674 ] } },
+{ "type": "Feature", "properties": { "id": 892577273, "category": "amenity", "label": "food_court" }, "geometry": { "type": "Point", "coordinates": [ 11779411.124679690226912, 2392221.332597506698221 ] } },
+{ "type": "Feature", "properties": { "id": 1115212902, "category": "amenity", "label": "food_court" }, "geometry": { "type": "Point", "coordinates": [ 11775231.973127037286758, 2399186.286206733901054 ] } },
+{ "type": "Feature", "properties": { "id": 1115220861, "category": "amenity", "label": "food_court" }, "geometry": { "type": "Point", "coordinates": [ 11775231.495944358408451, 2399258.610867170616984 ] } },
+{ "type": "Feature", "properties": { "id": 1115220865, "category": "amenity", "label": "food_court" }, "geometry": { "type": "Point", "coordinates": [ 11775163.874783307313919, 2399250.749029320199043 ] } },
+{ "type": "Feature", "properties": { "id": 1115533828, "category": "amenity", "label": "food_court" }, "geometry": { "type": "Point", "coordinates": [ 11775257.055876361206174, 2399117.683647065423429 ] } },
+{ "type": "Feature", "properties": { "id": 1115537725, "category": "amenity", "label": "food_court" }, "geometry": { "type": "Point", "coordinates": [ 11775325.431084644049406, 2399088.068572009913623 ] } },
+{ "type": "Feature", "properties": { "id": 1115540595, "category": "amenity", "label": "food_court" }, "geometry": { "type": "Point", "coordinates": [ 11775261.258005512878299, 2399161.156662796158344 ] } },
+{ "type": "Feature", "properties": { "id": 1115657576, "category": "amenity", "label": "food_court" }, "geometry": { "type": "Point", "coordinates": [ 11775335.826923662796617, 2399332.686426256317645 ] } },
+{ "type": "Feature", "properties": { "id": 1115657581, "category": "amenity", "label": "food_court" }, "geometry": { "type": "Point", "coordinates": [ 11775297.79192266613245, 2399273.746093845460564 ] } },
+{ "type": "Feature", "properties": { "id": 1247565027, "category": "amenity", "label": "food_court" }, "geometry": { "type": "Point", "coordinates": [ 11775637.202431228011847, 2396755.498796679079533 ] } },
+{ "type": "Feature", "properties": { "id": 1350647805, "category": "amenity", "label": "food_court" }, "geometry": { "type": "Point", "coordinates": [ 11777692.111906154081225, 2393945.889335472602397 ] } }
+]
+}

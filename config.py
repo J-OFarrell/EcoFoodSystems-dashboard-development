@@ -8,6 +8,7 @@ brand_colors = {
     'Black': '#333333',
     "Brown": "#313715",
     "Red": "#A80050",
+    "Orange": "#D9A85C",
     "Dark green": "#939f5c",
     "Mid green": "#bbce8a",
     "Light green": "#E8F0DA",

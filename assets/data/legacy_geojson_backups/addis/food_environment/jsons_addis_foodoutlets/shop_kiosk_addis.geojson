@@ -1,0 +1,33 @@
+{
+"type": "FeatureCollection",
+"name": "shop_kiosk_addis",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:EPSG::3857" } },
+"features": [
+{ "type": "Feature", "properties": { "id": 747862389, "category": "shop", "label": "kiosk" }, "geometry": { "type": "Point", "coordinates": [ 4313898.370100977830589, 1008861.358211390324868 ] } },
+{ "type": "Feature", "properties": { "id": 849596943, "category": "shop", "label": "kiosk" }, "geometry": { "type": "Point", "coordinates": [ 4315247.295162613503635, 997260.60199225100223 ] } },
+{ "type": "Feature", "properties": { "id": 1424016342, "category": "shop", "label": "kiosk" }, "geometry": { "type": "Point", "coordinates": [ 4311826.324759096838534, 1005549.882165662012994 ] } },
+{ "type": "Feature", "properties": { "id": 1435174674, "category": "shop", "label": "kiosk" }, "geometry": { "type": "Point", "coordinates": [ 4313871.876062167808414, 1010318.676122022909112 ] } },
+{ "type": "Feature", "properties": { "id": 1435199884, "category": "shop", "label": "kiosk" }, "geometry": { "type": "Point", "coordinates": [ 4321174.334470665082335, 1008707.953433490474708 ] } },
+{ "type": "Feature", "properties": { "id": 1435242263, "category": "shop", "label": "kiosk" }, "geometry": { "type": "Point", "coordinates": [ 4316205.422019871883094, 994179.536106452927925 ] } },
+{ "type": "Feature", "properties": { "id": 3207323759, "category": "shop", "label": "kiosk" }, "geometry": { "type": "Point", "coordinates": [ 4314270.900776917114854, 999864.382770802825689 ] } },
+{ "type": "Feature", "properties": { "id": 3207324263, "category": "shop", "label": "kiosk" }, "geometry": { "type": "Point", "coordinates": [ 4314152.390047018416226, 999938.994977483176626 ] } },
+{ "type": "Feature", "properties": { "id": 5839875987, "category": "shop", "label": "kiosk" }, "geometry": { "type": "Point", "coordinates": [ 4314894.612751882523298, 1003541.300088469171897 ] } },
+{ "type": "Feature", "properties": { "id": 5839876086, "category": "shop", "label": "kiosk" }, "geometry": { "type": "Point", "coordinates": [ 4314885.362102198414505, 1003564.290947136236355 ] } },
+{ "type": "Feature", "properties": { "id": 5840033287, "category": "shop", "label": "kiosk" }, "geometry": { "type": "Point", "coordinates": [ 4314845.053314581513405, 1002192.908839988522232 ] } },
+{ "type": "Feature", "properties": { "id": 7136786027, "category": "shop", "label": "kiosk" }, "geometry": { "type": "Point", "coordinates": [ 4316233.819621972739697, 1008024.018628235906363 ] } },
+{ "type": "Feature", "properties": { "id": 7136786028, "category": "shop", "label": "kiosk" }, "geometry": { "type": "Point", "coordinates": [ 4316266.425100826658309, 1007960.34730509261135 ] } },
+{ "type": "Feature", "properties": { "id": 7136786029, "category": "shop", "label": "kiosk" }, "geometry": { "type": "Point", "coordinates": [ 4316341.899715583771467, 1007966.659203805960715 ] } },
+{ "type": "Feature", "properties": { "id": 7136786030, "category": "shop", "label": "kiosk" }, "geometry": { "type": "Point", "coordinates": [ 4316290.147284314036369, 1007978.076980215264484 ] } },
+{ "type": "Feature", "properties": { "id": 7136786031, "category": "shop", "label": "kiosk" }, "geometry": { "type": "Point", "coordinates": [ 4316168.018670964986086, 1007881.26831417880021 ] } },
+{ "type": "Feature", "properties": { "id": 7136786032, "category": "shop", "label": "kiosk" }, "geometry": { "type": "Point", "coordinates": [ 4316323.966145616956055, 1007983.509723916184157 ] } },
+{ "type": "Feature", "properties": { "id": 7136786033, "category": "shop", "label": "kiosk" }, "geometry": { "type": "Point", "coordinates": [ 4316149.996045405976474, 1007875.091683387756348 ] } },
+{ "type": "Feature", "properties": { "id": 7136786034, "category": "shop", "label": "kiosk" }, "geometry": { "type": "Point", "coordinates": [ 4316224.446520848199725, 1007917.854726735386066 ] } },
+{ "type": "Feature", "properties": { "id": 7136786043, "category": "shop", "label": "kiosk" }, "geometry": { "type": "Point", "coordinates": [ 4316376.653660609386861, 1007854.00323021505028 ] } },
+{ "type": "Feature", "properties": { "id": 7136786045, "category": "shop", "label": "kiosk" }, "geometry": { "type": "Point", "coordinates": [ 4316359.120840809307992, 1008000.596947420621291 ] } },
+{ "type": "Feature", "properties": { "id": 7136786046, "category": "shop", "label": "kiosk" }, "geometry": { "type": "Point", "coordinates": [ 4316240.977465230040252, 1008033.892257104162127 ] } },
+{ "type": "Feature", "properties": { "id": 7136786049, "category": "shop", "label": "kiosk" }, "geometry": { "type": "Point", "coordinates": [ 4316134.711879319511354, 1007867.314540111925453 ] } },
+{ "type": "Feature", "properties": { "id": 207720626, "category": "shop", "label": "kiosk" }, "geometry": { "type": "Point", "coordinates": [ 4314352.125043395906687, 1009051.086119391955435 ] } },
+{ "type": "Feature", "properties": { "id": 842029548, "category": "shop", "label": "kiosk" }, "geometry": { "type": "Point", "coordinates": [ 4316854.460851304233074, 1008417.384548518341035 ] } },
+{ "type": "Feature", "properties": { "id": 842029549, "category": "shop", "label": "kiosk" }, "geometry": { "type": "Point", "coordinates": [ 4316823.067662287503481, 1008417.345518234418705 ] } }
+]
+}

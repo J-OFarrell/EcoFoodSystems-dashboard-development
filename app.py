@@ -1,9 +1,6 @@
 import os
 import csv
-import uuid
-from datetime import datetime, timedelta
-from collections import deque
-from threading import Lock
+from functools import lru_cache
 import numpy as np
 import xarray as xr
 import rioxarray as rxr
@@ -25,9 +22,9 @@ import random
 from matplotlib.colors import ListedColormap, LinearSegmentedColormap
 import plotly.graph_objects as go
 import plotly.colors as pc
+import plotly.io as pio
 from plotly.subplots import make_subplots
 from lorem_text import lorem
-from flask import jsonify, request, session as flask_session
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -39,7 +36,7 @@ from shared_components import sidebar, footer, city_selector
 from addis_layouts import (
     stakeholders_tab_layout, supply_tab_layout, poverty_tab_layout,
     affordability_tab_layout, sustainability_tab_layout, policies_tab_layout,
-    health_nutrition_tab_layout, footprints_tab_layout
+    health_nutrition_tab_layout, footprints_tab_layout, addis_resilience_tab_layout
 )
 from hanoi_layouts import (
     hanoi_stakeholders_tab_layout, hanoi_supply_tab_layout,
@@ -63,44 +60,83 @@ auth = dash_auth.BasicAuth(
 )
 
 
-ACTIVE_USER_TIMEOUT_SECONDS = int(os.environ.get("ACTIVE_USER_TIMEOUT_SECONDS", "300"))
-USER_HEARTBEAT_LOG_INTERVAL_SECONDS = int(os.environ.get("USER_HEARTBEAT_LOG_INTERVAL_SECONDS", "300"))
-USAGE_LOG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets", "data", "usage", "user_activity_log.csv")
-
-_active_users_lock = Lock()
-_active_users_last_seen = {}
-_active_users_last_log = {}
+def _path_mtime(path):
+    try:
+        return os.path.getmtime(path)
+    except OSError:
+        return 0.0
 
 
-def _utc_now():
-    return datetime.utcnow()
+def _figure_from_json(fig_json):
+    return pio.from_json(fig_json) if fig_json else go.Figure()
 
 
-def _cleanup_stale_active_users(now_utc):
-    cutoff = now_utc - timedelta(seconds=ACTIVE_USER_TIMEOUT_SECONDS)
-    stale_sids = [sid for sid, last_seen in _active_users_last_seen.items() if last_seen < cutoff]
-    for sid in stale_sids:
-        _active_users_last_seen.pop(sid, None)
-        _active_users_last_log.pop(sid, None)
+@lru_cache(maxsize=96)
+def _read_geojson_cached(path):
+    return gpd.read_file(path).to_crs("EPSG:4326")
 
 
-def _append_usage_log(session_id, event):
-    os.makedirs(os.path.dirname(USAGE_LOG_PATH), exist_ok=True)
-    log_exists = os.path.exists(USAGE_LOG_PATH)
-    with open(USAGE_LOG_PATH, "a", newline="", encoding="utf-8") as f:
-        writer = csv.writer(f)
-        if not log_exists:
-            writer.writerow(["timestamp_utc", "event", "session_id"])
-        writer.writerow([_utc_now().isoformat(timespec="seconds") + "Z", event, session_id])
+def _load_food_env_layer(geojson_path, values_csv_path=None, join_key_candidates=None):
+    if not os.path.exists(geojson_path):
+        return None
+
+    gdf = gpd.read_file(geojson_path).to_crs("EPSG:4326")
+
+    if values_csv_path and os.path.exists(values_csv_path):
+        try:
+            candidate_keys = list(join_key_candidates or [])
+            dtype_map = {col: "string" for col in candidate_keys}
+            df_values = pd.read_csv(values_csv_path, dtype=dtype_map, keep_default_na=False)
+            join_key = next(
+                (col for col in candidate_keys if col in gdf.columns and col in df_values.columns),
+                None,
+            )
+            if join_key:
+                gdf[join_key] = gdf[join_key].astype("string").str.strip()
+                df_values[join_key] = df_values[join_key].astype("string").str.strip()
+
+                df_values = df_values[df_values[join_key].notna() & (df_values[join_key] != "")].copy()
+                df_values = df_values.drop_duplicates(subset=[join_key])
+
+                gdf = gdf.merge(df_values, on=join_key, how="left")
+                gdf = gpd.GeoDataFrame(gdf, geometry="geometry", crs="EPSG:4326")
+            else:
+                print(f"[WARN] No common join key found for food environment layer: {geojson_path}")
+        except Exception as exc:
+            print(f"[WARN] Could not merge food environment values from CSV: {exc}")
+
+    return gdf
 
 
-def _get_or_create_session_id():
-    sid = flask_session.get("active_user_sid")
-    if not sid:
-        sid = uuid.uuid4().hex
-        flask_session["active_user_sid"] = sid
-        _append_usage_log(sid, "session_start")
-    return sid
+@lru_cache(maxsize=4)
+def _get_food_env_geojson(city_key):
+    gdf = gdf_food_env if city_key == "addis" else gdf_food_env_hanoi if city_key == "hanoi" else None
+    if gdf is None:
+        return None
+
+    keep_cols = [c for c in ["Dist_Name", "Dist_name", "shapeName", "district", "name", "ma_xa"] if c in gdf.columns]
+    slim_gdf = gdf[keep_cols + ["geometry"]].copy() if keep_cols else gdf[["geometry"]].copy()
+    return slim_gdf.to_json()
+
+
+@lru_cache(maxsize=48)
+def _build_isochrone_union_geojson(isochrones_path_local, selected_isochrones_key):
+    if not selected_isochrones_key:
+        return None
+
+    geoms = []
+    for filename in selected_isochrones_key:
+        path = os.path.join(isochrones_path_local, filename)
+        if os.path.exists(path):
+            gdf = _read_geojson_cached(path)
+            geoms.extend([geom for geom in gdf.geometry if geom is not None and not geom.is_empty])
+
+    if not geoms:
+        return None
+
+    unioned = unary_union(geoms)
+    union_gdf = gpd.GeoDataFrame({"geometry": [unioned]}, crs="EPSG:4326")
+    return union_gdf.to_json()
 
 #colors = {
 #  'eco_green': '#AFC912',
@@ -112,54 +148,16 @@ def _get_or_create_session_id():
 #  'accent_warm': '#E07A5F'
 #}
 
-
-green_gradient = [
-    "#095d40",
-    "#206044",
-    "#3a6649",
-    "#547d5b",
-    "#6f946d",
-    "#8aa97f",
-    "#a5be91",
-    "#b8d099",
-    "#c1d88e",
-    "#d1e7a8"
-]
-
-brand_colors = {    'Black':         '#333333',
-                    "Brown":         "#313715",
-                    "Red":           "#A80050",
-                    "Dark green":    "#939f5c",
-                    "Mid green":     "#bbce8a",
-                    "Light green":   "#E8F0DA",
-                    "White":         "#ffffff"  
+brand_colors = {
+    'Black': '#333333',
+    "Brown": "#313715",
+    "Red": "#A80050",
+    "Orange": "#D9A85C",
+    "Dark green": "#939f5c",
+    "Mid green": "#bbce8a",
+    "Light green": "#E8F0DA",
+    "White": "#ffffff"
 }
-
-greens_pie_palette = [
-    brand_colors['Light green'],   # "#E8F0DA"
-    brand_colors['Mid green'],     # "#bbce8a"
-    brand_colors['Dark green'],    # "#939f5c"
-    "#b7c49a",                     # lighter tint of Dark green
-    "#d6e5b8",                     # lighter tint of Mid green
-    "#e3f6d5",                     # very light green
-    "#c1d88e",                     # soft khaki-green
-    "#d1e7a8",                     # pastel green
-    "#aabf7e",                     # olive green
-    "#8aa97f",                     # muted green
-]
-
-reds_pie_palette = [
-    "#a80050",   # main brand red
-    "#84003d",   # deep accent red
-    "#C97A9A",   # soft pink
-    "#E07A5F",   # warm accent
-    "#F2D16B",   # harvest yellow (for contrast)
-    "#F5F5F5",   # neutral light
-    "#7B5E34",   # earth brown
-    "#C97A9A",   # repeat pink
-    "#E07A5F",   # repeat accent
-    "#F2D16B"    # repeat yellow
-]
 
 plotting_palette_cat = [
     "#a80050",  
@@ -186,7 +184,7 @@ tabs = [
     'Food Flows & Supply Chains',         
     'Sustainability Metrics',       
     'Multidimensional Poverty',                  
-    'Resilience',          
+    'Resilience Indicators',          
     'Food Environments',           
     'Food Losses & Waste',                      
     'Policies & Regulation',                     
@@ -197,7 +195,7 @@ tabs = [
 
 # -------------------------- Loading and Formatting All Data ------------------------- #
 
-homepath = os.getcwd()
+homepath = os.path.dirname(os.path.abspath(__file__))
 data_root = os.path.join(homepath, "assets", "data")
 
 addis_root = os.path.join(data_root, "addis")
@@ -371,16 +369,21 @@ df_lca = df_env  # Alias for compatibility
 
 # -------------------------- Loading Hanoi Data ------------------------- #
 
-# Hanoi MPI Data
-MPI_hanoi = gpd.read_file(os.path.join(hanoi_mpi_dir, "hanoi_districts_MPI.geojson"))
-# Ensure Dist_Name exists and is string
-if 'Dist_Name' in MPI_hanoi.columns:
-    MPI_hanoi['Dist_Name'] = MPI_hanoi['Dist_Name'].astype(str)
+# Hanoi MPI Data (commune level)
+MPI_hanoi = gpd.read_file(os.path.join(hanoi_mpi_dir, "hanoi_communes.geojson"))
+MPI_hanoi['Name'] = MPI_hanoi['Name'].astype(str)
+MPI_hanoi['ma_xa'] = MPI_hanoi['ma_xa'].astype(str)
 
-# Detect numeric columns in the GeoJSON and coerce them to numeric where possible
+# Load long-format MPI CSV and pivot to wide, then merge into GeoDataFrame
+df_mpi_hanoi = pd.read_csv(os.path.join(hanoi_mpi_dir, "hanoi_communes_MPI_long.csv"))
+df_mpi_wide = df_mpi_hanoi.pivot_table(index='Name', columns='Variable', values='Value').reset_index()
+df_mpi_wide.columns.name = None
+MPI_hanoi = MPI_hanoi.merge(df_mpi_wide, on='Name', how='left')
+
+# Detect numeric MPI columns (all columns added from the pivot)
 geo_vars = []
 for _col in MPI_hanoi.columns:
-    if _col in ['geometry', 'Dist_Name']:
+    if _col in ['geometry', 'Name', 'ma_xa']:
         continue
     coerced = pd.to_numeric(MPI_hanoi[_col], errors='coerce')
     if coerced.notna().any():
@@ -388,12 +391,6 @@ for _col in MPI_hanoi.columns:
         geo_vars.append(_col)
 
 geojson_hanoi = json.loads(MPI_hanoi.to_json())
-
-# Hanoi MPI CSV Data (fallback)
-#df_mpi_hanoi = pd.read_csv(os.path.join(hanoi_mpi_dir, "Hanoi_districts_MPI_long.csv"))
-#vars_csv = list(df_mpi_hanoi['Variable'].unique())
-# For Hanoi, derive variables from the same universal list but keep only those present in the Hanoi GeoDataFrame
-#variables_hanoi = [v for v in mpi_vars if v in MPI_hanoi.columns]
 
 # Hanoi Stakeholders Data
 df_sh_hanoi = pd.read_csv(os.path.join(hanoi_stakeholders_dir, "hanoi_stakeholders.csv")).dropna(how='any').astype(str)
@@ -419,14 +416,18 @@ if 'Document Link' in df_policies_hanoi.columns:
 outlets_path_hanoi = os.path.join(hanoi_food_env_dir, "jsons_hanoi_foodoutlets")
 outlets_geojson_files_hanoi = sorted(os.listdir(outlets_path_hanoi))
 
-# Hanoi food-environment choropleth (if present)
+# Hanoi food-environment choropleth (minified base geometry + values CSV when available)
 food_env_path_hanoi = os.path.join(hanoi_food_env_dir, "hanoi_diet_env_mapping.geojson")
+food_env_values_path_hanoi = os.path.join(hanoi_food_env_dir, "hanoi_diet_env_mapping_values.csv")
 gdf_food_env_hanoi = None
-if os.path.exists(food_env_path_hanoi):
-    try:
-        gdf_food_env_hanoi = gpd.read_file(food_env_path_hanoi).to_crs('EPSG:4326')
-    except Exception as e:
-        print(f"Error loading Hanoi food environment geojson: {e}")
+try:
+    gdf_food_env_hanoi = _load_food_env_layer(
+        food_env_path_hanoi,
+        food_env_values_path_hanoi,
+        join_key_candidates=["ma_xa", "shapeID", "Dist_Name", "Dist_name"],
+    )
+except Exception as e:
+    print(f"Error loading Hanoi food environment layer: {e}")
 
 # Loading GeoJSON files for Isochrones (30-minute accessibility polygons)
 isochrones_path_hanoi = os.path.join(hanoi_food_env_dir, "isochrones_hanoi")
@@ -480,65 +481,94 @@ atlas_records_hanoi = _load_indicator_atlas_records(atlas_csv_path)
 
 # ── District climate indicators ───────────────────────────────────────────────
 _climate_csv  = os.path.join(hanoi_climate_dir, "vietnam_climate_resilience_quarterly_v1.csv")
-_districts_path = os.path.join(hanoi_climate_dir, "resilience_districts_base.geojson")
-
-district_climate_df = pd.read_csv(_climate_csv).reset_index()
-district_climate_df["quarter"] = district_climate_df["quarter"].astype(str)
-
-_resilience_gdf      = gpd.read_file(_districts_path).to_crs("EPSG:4326")
-
-# Prefer shapeID for district joins when available; shapeName can be ambiguous.
-if ("shapeID" in _resilience_gdf.columns) and ("shapeID" in district_climate_df.columns):
-    DISTRICT_JOIN_KEY = "shapeID"
-    DISTRICT_FEATUREIDKEY = "properties.shapeID"
-
-    districts_unique = (
-        _resilience_gdf[["shapeID", "shapeName", "geometry"]]
-        .dissolve(by="shapeID", as_index=False)
-        .reset_index(drop=True)
-    )
-else:
-    DISTRICT_JOIN_KEY = "shapeName"
-    DISTRICT_FEATUREIDKEY = "properties.shapeName"
-    districts_unique = (
-        _resilience_gdf[["shapeName", "geometry"]]
-        .dissolve(by="shapeName", as_index=False)
-        .reset_index(drop=True)
-    )
-
-resilience_base_geojson = json.loads(districts_unique.to_json())
+_districts_path = os.path.join(hanoi_climate_dir, "resilience_districts_base_precision_200m_min.geojson")
 
 _lulc_stats_path = os.path.join(hanoi_resilience_dir, "lulc_stats_gdf.geojson")
-lulc_stats_gdf = None
-lulc_indicator_options = []
-lulc_map_center = {"lat": 21.03, "lon": 105.85}
+_region_quarterly_path = os.path.join(hanoi_climate_dir, "regional_quarterly_climate.csv")
+_slopes_path = os.path.join(hanoi_climate_dir, "regional_indicator_slopes.csv")
 
-if os.path.exists(_lulc_stats_path):
-    try:
-        lulc_stats_gdf = gpd.read_file(_lulc_stats_path).to_crs("EPSG:4326")
-        lulc_stats_gdf["geometry"] = lulc_stats_gdf["geometry"].buffer(0)
-        lulc_stats_gdf = lulc_stats_gdf[lulc_stats_gdf["geometry"].is_valid & ~lulc_stats_gdf["geometry"].is_empty].copy()
-        lulc_stats_gdf["__rid"] = lulc_stats_gdf.index.astype(str)
 
-        if not lulc_stats_gdf.empty:
-            minx, miny, maxx, maxy = lulc_stats_gdf.total_bounds
-            lulc_map_center = {
-                "lat": float((miny + maxy) / 2.0),
-                "lon": float((minx + maxx) / 2.0),
-            }
+@lru_cache(maxsize=1)
+def _get_resilience_context():
+    district_climate_df = pd.read_csv(_climate_csv).reset_index()
+    district_climate_df["quarter"] = district_climate_df["quarter"].astype(str)
 
-        excluded_lulc_cols = {"Dis_code", "Dist_name", "Dist_Name", "geometry", "__rid"}
-        lulc_columns = []
-        for c in lulc_stats_gdf.columns:
-            if c in excluded_lulc_cols:
-                continue
-            numeric_vals = pd.to_numeric(lulc_stats_gdf[c], errors="coerce")
-            if numeric_vals.notna().any():
-                lulc_columns.append(c)
+    resilience_gdf = _read_geojson_cached(_districts_path).copy()
 
-        lulc_indicator_options = [{"label": c, "value": c} for c in lulc_columns]
-    except Exception as exc:
-        print(f"[WARN] Could not load LULC stats geojson: {exc}")
+    # Prefer shapeID for district joins when available; shapeName can be ambiguous.
+    if ("shapeID" in resilience_gdf.columns) and ("shapeID" in district_climate_df.columns):
+        join_key = "shapeID"
+        featureidkey = "properties.shapeID"
+        districts_unique = (
+            resilience_gdf[["shapeID", "shapeName", "geometry"]]
+            .dissolve(by="shapeID", as_index=False)
+            .reset_index(drop=True)
+        )
+    else:
+        join_key = "shapeName"
+        featureidkey = "properties.shapeName"
+        districts_unique = (
+            resilience_gdf[["shapeName", "geometry"]]
+            .dissolve(by="shapeName", as_index=False)
+            .reset_index(drop=True)
+        )
+
+    return {
+        "district_climate_df": district_climate_df,
+        "districts_unique": districts_unique,
+        "resilience_base_geojson": json.loads(districts_unique.to_json()),
+        "join_key": join_key,
+        "featureidkey": featureidkey,
+        "all_quarters": tuple(sorted(district_climate_df["quarter"].unique())),
+    }
+
+
+@lru_cache(maxsize=1)
+def _get_lulc_context():
+    lulc_stats_gdf = None
+    indicator_options = []
+    map_center = {"lat": 21.03, "lon": 105.85}
+
+    if os.path.exists(_lulc_stats_path):
+        try:
+            lulc_stats_gdf = _read_geojson_cached(_lulc_stats_path).copy()
+            lulc_stats_gdf["geometry"] = lulc_stats_gdf["geometry"].buffer(0)
+            lulc_stats_gdf = lulc_stats_gdf[lulc_stats_gdf["geometry"].is_valid & ~lulc_stats_gdf["geometry"].is_empty].copy()
+            lulc_stats_gdf["__rid"] = lulc_stats_gdf.index.astype(str)
+
+            if not lulc_stats_gdf.empty:
+                minx, miny, maxx, maxy = lulc_stats_gdf.total_bounds
+                map_center = {
+                    "lat": float((miny + maxy) / 2.0),
+                    "lon": float((minx + maxx) / 2.0),
+                }
+
+            excluded_lulc_cols = {"Dis_code", "Dist_name", "Dist_Name", "geometry", "__rid"}
+            lulc_columns = []
+            for c in lulc_stats_gdf.columns:
+                if c in excluded_lulc_cols:
+                    continue
+                numeric_vals = pd.to_numeric(lulc_stats_gdf[c], errors="coerce")
+                if numeric_vals.notna().any():
+                    lulc_columns.append(c)
+
+            indicator_options = [{"label": c, "value": c} for c in lulc_columns]
+        except Exception as exc:
+            print(f"[WARN] Could not load LULC stats geojson: {exc}")
+
+    return {
+        "gdf": lulc_stats_gdf,
+        "indicator_options": indicator_options,
+        "map_center": map_center,
+    }
+
+
+@lru_cache(maxsize=1)
+def _get_region_quarterly_context():
+    return {
+        "region_quarterly": pd.read_csv(_region_quarterly_path),
+        "slopes_df": pd.read_csv(_slopes_path),
+    }
 
 # Paths for cached EMDAT parquet files (resilience)
 EMDAT_COUNTS_PQ = os.path.join(hanoi_resilience_dir, "emdat_counts.parquet")
@@ -567,7 +597,25 @@ def _load_emdat_cached():
 
     return None, None
 
+@lru_cache(maxsize=8)
+def _build_resilience_figure_cached(size_max, counts_pq_mtime, totals_pq_mtime, counts_csv_mtime, totals_csv_mtime):
+    df_counts, df_totals = _load_emdat_cached()
+    fig = build_resilience_figure_from_cache(df_counts=df_counts, df_totals=df_totals, size_max=size_max)
+    return fig.to_json()
+
+
 def build_resilience_figure_from_cache(df_counts=None, df_totals=None, size_max=40):
+    if df_counts is None and df_totals is None:
+        return _figure_from_json(
+            _build_resilience_figure_cached(
+                size_max,
+                _path_mtime(EMDAT_COUNTS_PQ),
+                _path_mtime(EMDAT_TOTALS_PQ),
+                _path_mtime(EMDAT_COUNTS_CSV),
+                _path_mtime(EMDAT_TOTALS_CSV),
+            )
+        )
+
     if df_counts is None or df_totals is None:
         df_counts, df_totals = _load_emdat_cached()
         if df_counts is None or df_totals is None:
@@ -649,29 +697,8 @@ def build_resilience_figure_from_cache(df_counts=None, df_totals=None, size_max=
     Input('selected-city', 'data')
 )
 def update_resilience_emdat(selected_city):
-    df_counts, df_totals = _load_emdat_cached()
-    fig = build_resilience_figure_from_cache(df_counts, df_totals, size_max=20)
-    return fig
+    return build_resilience_figure_from_cache(size_max=20)
 
-regions_gdf = gpd.read_file(
-    os.path.join(hanoi_climate_dir, "vnm_regions.geojson")
-).to_crs("EPSG:4326").reset_index(drop=True)
-
-# Stable id for choropleth matching
-regions_gdf["__rid"] = regions_gdf.index.astype(str)
-
-# Robust label column for hover + selection matching
-for _c in ["region", "Region", "REGION", "name", "NAME_1", "shapeName"]:
-    if _c in regions_gdf.columns:
-        REGION_LABEL_COL = _c
-        break
-else:
-    REGION_LABEL_COL = "__rid"
-
-regions_geojson = json.loads(regions_gdf.to_json())
-
-# All quarters available (shared across all three indicators)
-all_quarters = sorted(district_climate_df["quarter"].unique())
 
 district_indicator_cfg = {
     "grace_trend":                   {"col": "grace_trend",                 "label": "Terrestrial Water Storage Anomaly (mm)",  "colorscale": "RdYlBu",   "diverging": True, "vmin": "-30", "vmax": "30" },
@@ -689,8 +716,6 @@ district_indicator_cfg = {
     "class_-1_months_SPEI12":        {"col": "class_-1_months_SPEI12",      "label": "SPEI-12 Extreme Drought Frequency",       "colorscale": "YlOrRd",   "diverging": False, "vmin": "0", "vmax": "50"},
 }
 
-region_quarterly = pd.read_csv(os.path.join(hanoi_climate_dir, "regional_quarterly_climate.csv"))
-slopes_df = pd.read_csv(os.path.join(hanoi_climate_dir, "regional_indicator_slopes.csv"))
 
 # -------------------------- Defining Custom Styles ------------------------- #
 
@@ -760,7 +785,7 @@ ATLAS_SECTIONS = [
     ("Food Flows & Supply Chains", "tab-2-supply"),
     ("Sustainability Metrics", "tab-3-sustainability"),
     ("Multidimensional Poverty", "tab-4-poverty"),
-    ("Resilience", "tab-6-resilience"),
+    ("Resilience Indicators", "tab-6-resilience"),
     ("Food Environments", "tab-7-food-environments"),
     ("Food Losses & Waste", "tab-8-losses"),
     ("Policies & Regulation", "tab-9-policies"),
@@ -778,7 +803,7 @@ ATLAS_CITY_TABS = {
     },
     "addis": {
         "tab-1-stakeholders", "tab-2-supply", "tab-3-sustainability", "tab-4-poverty",
-        "tab-7-food-environments", "tab-9-policies", "tab-10-nutrition", "tab-11-footprints",
+        "tab-6-resilience", "tab-7-food-environments", "tab-9-policies", "tab-10-nutrition", "tab-11-footprints",
         "tab-home",
     },
 }
@@ -804,6 +829,12 @@ ATLAS_UNAVAILABLE_HANOI_INDICATORS = {
     _normalize_indicator_name('Prevalence of obesity and overweight for women'),
     _normalize_indicator_name('Percent access to unhealthy food'),
     _normalize_indicator_name('Percent access to healthy food'),
+    _normalize_indicator_name('Food price resilience indicator'),
+}
+
+ATLAS_UNAVAILABLE_ADDIS_INDICATORS = {
+    _normalize_indicator_name('Food Expenditure as a portion of Total Expenditure'),
+    _normalize_indicator_name('Food Expenditure as a portion of Household Income'),
 }
 
 
@@ -816,6 +847,9 @@ def _is_indicator_available_for_city(indicator_name, city, target_tab):
         return False
 
     if city == 'hanoi' and normalized_name in ATLAS_UNAVAILABLE_HANOI_INDICATORS:
+        return False
+
+    if city == 'addis' and normalized_name in ATLAS_UNAVAILABLE_ADDIS_INDICATORS:
         return False
 
     return True
@@ -835,10 +869,12 @@ def _atlas_target_for_record(rec):
     if 'resilience' in domain or 'resilience' in theme:
         resilience_text = f"{domain} {theme} {name}"
         if any(k in resilience_text for k in ['Land-use & Land-cover distribution']):
-            return "Resilience", "tab-6-resilience", "Land-use & Land-cover"
+            return "Resilience Indicators", "tab-6-resilience", "Land-use & Land-cover"
         if any(k in resilience_text for k in  ['Agricultural climate resilience indicator' , 'Water storage anomalies', 'Natural disasters database']):
-            return "Resilience", "tab-6-resilience", "Biophysical shocks"
-        return "Resilience", "tab-6-resilience", "Resilience Indicator Trends"
+            return "Resilience Indicators", "tab-6-resilience", "Biophysical shocks"
+        if any(k in resilience_text for k in ['food price resilience indicator']):
+            return "Resilience Indicators", "tab-6-resilience", "Socio-Economic Shocks"
+        return "Resilience Indicators", "tab-6-resilience", "Resilience Indicator Trends"
     if 'food environments' in domain or 'afford' in name or 'afford' in domain or 'dietary mapping' in domain:
         return "Food Environments", "tab-7-food-environments", None
     if 'loss' in domain or 'waste' in domain:
@@ -992,9 +1028,9 @@ def landing_page_layout(background_image=None, tab_backgrounds=None, selected_ci
         tab_backgrounds = hanoi_config.TAB_BACKGROUNDS if selected_city == 'hanoi' else addis_config.TAB_BACKGROUNDS
     
     tab_labels = [
-        "Food Systems Stakeholders", "Food Flows, Supply & Value Chains", "Sustainability Metrics / Indicators", "Multidimensional Poverty",
-        "Labour, skills & green jobs", "Resilience to Food System Shocks", "Dietary Mapping & Affordability", "Food Losses & Waste",
-        "Food System Policies", "Health & Nutrition", "Environmental Footprints of Food & Diets", "Behaviour Change Tool (AI Chatbot & Game)"
+        "Food Systems Stakeholders", "Food Flows & Supply Chains", "Sustainability Metrics", "Multidimensional Poverty",
+        "Labour, skills & green jobs", "Resilience Indicators", "Food Environments", "Food Losses & Waste",
+        "Policies & Regulations", "Nutrition & Health", "Environmental Footprints", "Behaviour Change Tool (AI Chatbot & Game)"
     ]
 
     tab_ids = [
@@ -1022,14 +1058,14 @@ def landing_page_layout(background_image=None, tab_backgrounds=None, selected_ci
                                 "width": "100%",
                                 "height": "100%",
                                 "fontWeight": "bold",
-                                "fontSize": "clamp(1.25em, 1.3em, 2.25em)",
+                                "fontSize": "clamp(1.5em, 1.5em, 2.25em)",
                                 "color": brand_colors['Brown'],
                                 "backgroundColor": background_colours[bg_key],
                                 "borderRadius": "10px",
                                 "boxShadow": "0 4px 8px rgba(0,0,0,0.08)",
                                 "border": f"2px solid {brand_colors['White']}",
                                 "whiteSpace": "normal",
-                                "padding": "18px 8px",
+                                "padding": "18px 12px",
                 }), 
             ], style={
                 "height": "25vh",
@@ -1281,8 +1317,6 @@ app.layout = html.Div([
     dcc.Store(id='atlas-open-tab', data=None),
     dcc.Store(id='sh-table-page-size-store', data=13),
     dcc.Interval(id='resize-interval', interval=1000, n_intervals=0),
-    dcc.Interval(id='active-user-heartbeat', interval=30 * 1000, n_intervals=0),
-    html.Div(id='active-user-heartbeat-ping', style={'display': 'none'}),
     html.Div(id="tab-content", children=landing_page_layout(selected_city='hanoi'), style={"width": "100%",
                                                                        "height": "100%"})
     # Parent container for full page
@@ -1322,74 +1356,6 @@ app.clientside_callback(
 def store_selected_city(city):
     return city
 
-
-@app.callback(
-    Output('active-user-heartbeat-ping', 'children'),
-    Input('active-user-heartbeat', 'n_intervals'),
-    prevent_initial_call=False,
-)
-def track_active_users(_n_intervals):
-    now_utc = _utc_now()
-    sid = _get_or_create_session_id()
-
-    should_log_heartbeat = False
-    with _active_users_lock:
-        _active_users_last_seen[sid] = now_utc
-        _cleanup_stale_active_users(now_utc)
-
-        last_logged = _active_users_last_log.get(sid)
-        if (
-            last_logged is None
-            or (now_utc - last_logged).total_seconds() >= USER_HEARTBEAT_LOG_INTERVAL_SECONDS
-        ):
-            _active_users_last_log[sid] = now_utc
-            should_log_heartbeat = True
-
-        active_count = len(_active_users_last_seen)
-
-    if should_log_heartbeat:
-        _append_usage_log(sid, "heartbeat")
-
-    return f"active_users:{active_count}"
-
-
-@app.server.route('/api/usage/active-users', methods=['GET'])
-def usage_active_users():
-    now_utc = _utc_now()
-    with _active_users_lock:
-        _cleanup_stale_active_users(now_utc)
-        active_count = len(_active_users_last_seen)
-
-    return jsonify({
-        "active_users": active_count,
-        "timeout_seconds": ACTIVE_USER_TIMEOUT_SECONDS,
-        "as_of_utc": now_utc.isoformat(timespec="seconds") + "Z",
-    })
-
-
-@app.server.route('/api/usage/timelog', methods=['GET'])
-def usage_timelog():
-    try:
-        limit = int(request.args.get('limit', 200))
-    except (TypeError, ValueError):
-        limit = 200
-    limit = max(1, min(limit, 5000))
-
-    if not os.path.exists(USAGE_LOG_PATH):
-        return jsonify({"entries": [], "count": 0, "log_path": USAGE_LOG_PATH})
-
-    with open(USAGE_LOG_PATH, 'r', encoding='utf-8') as f:
-        tail_lines = deque(f, maxlen=limit + 1)
-
-    if not tail_lines:
-        return jsonify({"entries": [], "count": 0, "log_path": USAGE_LOG_PATH})
-
-    rows = list(csv.DictReader(tail_lines))
-    return jsonify({
-        "entries": rows,
-        "count": len(rows),
-        "log_path": USAGE_LOG_PATH,
-    })
 
 # Linking the dropdown to the bar chart for the MPI page    
 @app.callback(
@@ -1640,6 +1606,7 @@ def _build_affordability_figure(
     metric_direction_local=None,
     center_default=None,
     zoom_default=11,
+    city_key=None,
 ):
     # Normalize selection
     if selected_outlets and "SELECT_ALL" in selected_outlets:
@@ -1689,39 +1656,45 @@ def _build_affordability_figure(
             else:
                 colorscale = FOOD_ENV_NEUTRAL_BONE_SCALE
 
-            geojson_data = json.loads(gdf.to_json())
+            hover_label_col = next(
+                (c for c in ["Dist_Name", "Dist_name", "shapeName", "district", "name", "ma_xa"] if c in gdf.columns),
+                None,
+            )
+            hover_text = gdf[hover_label_col].astype(str) if hover_label_col else gdf.index.astype(str)
+
+            geojson_cols = [hover_label_col, "geometry"] if hover_label_col else ["geometry"]
+            if city_key in {"addis", "hanoi"}:
+                cached_geojson = _get_food_env_geojson(city_key)
+                geojson_data = json.loads(cached_geojson) if cached_geojson else json.loads(gdf[geojson_cols].to_json())
+            else:
+                geojson_data = json.loads(gdf[geojson_cols].to_json())
+
             fig.add_trace(go.Choroplethmapbox(
                 geojson=geojson_data,
                 locations=gdf.index,
                 z=gdf[selected_metric],
                 colorscale=colorscale,
                 marker=dict(opacity=0.7, line=dict(color='#222', width=1)),
-                hovertemplate='<b>' + metric_label + '</b>: %{z:.2f}<extra></extra>',
-                text=gdf.get('Dist_Name', gdf.index),
+                hovertemplate='<b>%{text}</b><br>' + metric_label + ': %{z:.2f}<extra></extra>',
+                text=hover_text,
                 showscale=False
             ))
 
     # Isochrones: union selected isochrone polygons into a single layer with fixed opacity
     if selected_isochrones:
         try:
-            geoms = []
-            for filename in selected_isochrones:
-                path = os.path.join(isochrones_path_local, filename)
-                if os.path.exists(path):
-                    g = gpd.read_file(path).to_crs('EPSG:4326')
-                    # collect valid geometries
-                    geoms.extend([geom for geom in g.geometry if geom is not None and not geom.is_empty])
-
-            if geoms:
-                unioned = unary_union(geoms)
-                union_gdf = gpd.GeoDataFrame({'geometry': [unioned]}, crs='EPSG:4326')
-                geojson_data = json.loads(union_gdf.to_json())
+            union_geojson = _build_isochrone_union_geojson(
+                isochrones_path_local,
+                tuple(sorted(selected_isochrones)),
+            )
+            if union_geojson:
+                geojson_data = json.loads(union_geojson)
                 # single uniform color (light orange) with requested alpha (0.6)
                 iso_color = '#83dfe9'
                 fig.add_trace(go.Choroplethmapbox(
                     geojson=geojson_data,
-                    locations=union_gdf.index.tolist(),
-                    z=[1] * len(union_gdf),
+                    locations=[0],
+                    z=[1],
                     colorscale=[[0, iso_color], [1, iso_color]],
                     marker=dict(opacity=0.6, line=dict(width=0)),
                     hovertemplate='<b>Isochrone (combined)</b><extra></extra>',
@@ -1737,7 +1710,7 @@ def _build_affordability_figure(
         marker_palette = pc.sample_colorscale("Spectral", [n / max(num_outlets - 1, 1) for n in range(num_outlets)])
         for i, filename in enumerate(selected_outlets):
             try:
-                outlet_gdf = gpd.read_file(os.path.join(outlets_path_local, filename)).to_crs('EPSG:4326')
+                outlet_gdf = _read_geojson_cached(os.path.join(outlets_path_local, filename)).copy()
                 marker_color = marker_palette[i]
                 fig.add_trace(go.Scattermapbox(
                     lat=outlet_gdf.geometry.y,
@@ -1798,6 +1771,7 @@ def update_affordability_map(selected_outlets, selected_metric, relayout_data):
         metric_direction_local=metric_direction,
         center_default={"lat": 9.0192, "lon":  38.752},
         zoom_default=11,
+        city_key="addis",
     )
 
 
@@ -2176,7 +2150,8 @@ def render_tab_content(n_home, n1, n2, n3, n4, n5, n6, n7, n8, n9, n10, n11, n12
         elif tab_id == "tab-4-poverty":
             return hanoi_poverty_tab_layout()
         elif tab_id == "tab-6-resilience":
-            return hanoi_resilience_tab_layout(all_quarters, default_view=atlas_subview or 'Biophysical shocks')
+            resilience_ctx = _get_resilience_context()
+            return hanoi_resilience_tab_layout(list(resilience_ctx["all_quarters"]), default_view=atlas_subview or 'Biophysical shocks')
         elif tab_id == "tab-7-food-environments":
             return hanoi_affordability_tab_layout()
         elif tab_id == "tab-9-policies":
@@ -2220,6 +2195,9 @@ def render_tab_content(n_home, n1, n2, n3, n4, n5, n6, n7, n8, n9, n10, n11, n12
     
     elif tab_id == "tab-11-footprints":
         return footprints_tab_layout()
+    
+    elif tab_id == "tab-6-resilience":
+        return addis_resilience_tab_layout(default_view=atlas_subview)
     
     elif tab_id == "tab-home":
         return landing_page_layout()
@@ -2265,15 +2243,15 @@ def open_atlas_target_tab(_n_clicks):
 def update_bar_hanoi(selected_variable):
     # If the selected variable exists as a column in the GeoDataFrame, use it directly
 
-    df_plot = MPI_hanoi[['Dist_Name', selected_variable]].dropna(subset=[selected_variable]).copy()
+    df_plot = MPI_hanoi[['Name', selected_variable]].dropna(subset=[selected_variable]).copy()
     df_plot = df_plot.sort_values(selected_variable, ascending=False)
     fig = px.bar(
         df_plot,
         x=selected_variable,
-        y='Dist_Name',
+        y='Name',
         orientation='h',
-        hover_data=['Dist_Name'],
-        labels={'Dist_Name': "District", selected_variable: 'Percentage of Deprived Households'},
+        hover_data=['Name'],
+        labels={'Name': "Commune", selected_variable: 'Percentage of Deprived Households'},
         color_discrete_sequence=[brand_colors['Red']]
     )
 
@@ -2309,22 +2287,22 @@ def update_map_on_bar_click_hanoi(clickData, selected_variable):
 
     if clickData and 'points' in clickData:
         selected_dist = clickData['points'][0]['y']
-        match = MPI_hanoi[MPI_hanoi['Dist_Name'] == selected_dist]
+        match = MPI_hanoi[MPI_hanoi['Name'] == selected_dist]
         if not match.empty:
             center = {
                 "lat": match.geometry.centroid.y.values[0],
                 "lon": match.geometry.centroid.x.values[0]
             }
             zoom = 10
-            MPI_display.loc[MPI_display['Dist_Name'] == selected_dist, 'opacity'] = 1
-            MPI_display.loc[MPI_display['Dist_Name'] == selected_dist, 'line_width'] = 2
+            MPI_display.loc[MPI_display['Name'] == selected_dist, 'opacity'] = 1
+            MPI_display.loc[MPI_display['Name'] == selected_dist, 'line_width'] = 2
 
     # Choose choropleth column: prefer selected variable if present in GeoJSON, else fall back to 'Normalized'
     choropleth_col = selected_variable if selected_variable in MPI_hanoi.columns else ('Normalized' if 'Normalized' in MPI_hanoi.columns else None)
 
     if choropleth_col is not None:
         color_kwargs = dict(color=choropleth_col)
-        labels = {choropleth_col: choropleth_col, 'Dist_Name': 'District Name'}
+        labels = {choropleth_col: choropleth_col, 'Name': 'Commune Name'}
     else:
         # No choropleth column available; create empty figure
         empty_fig = go.Figure()
@@ -2334,8 +2312,8 @@ def update_map_on_bar_click_hanoi(clickData, selected_variable):
     fig = px.choropleth_mapbox(
         MPI_hanoi,
         geojson=geojson_hanoi,
-        locations="Dist_Name",
-        featureidkey="properties.Dist_Name",
+        locations="ma_xa",
+        featureidkey="properties.ma_xa",
         color=choropleth_col,
         color_continuous_scale="YlOrRd",
         opacity=0.7,
@@ -2383,6 +2361,7 @@ def update_affordability_map_hanoi(selected_outlets, selected_metric, relayout_d
         metric_direction_local=metric_direction if gdf_food_env_hanoi is not None else None,
         center_default={"lat": MPI_hanoi.geometry.centroid.y.mean(), "lon": MPI_hanoi.geometry.centroid.x.mean()},
         zoom_default=10,
+        city_key="hanoi",
     )
 
 # Hanoi Sankey diagram
@@ -2634,17 +2613,19 @@ def update_diet_dumbbell_hanoi(year_start):
 
 # ── Drought Indicator callback ────────────────────────────────────────────────────────
 
-@app.callback(
-    Output("drought-map-container", "children"),
-    Output("drought-slider-label", "children"),
-    Output("region-kpi-cards", "children"),
-    Output("date-slider-card", "style"),
-    Input("drought-date-slider", "value"),
-    Input("climate-indicator-select", "value"),
-)
-def update_drought_map(slider_idx, indicator):
-    triggered = [t["prop_id"] for t in dash.callback_context.triggered]
-    print(f"[DEBUG] triggered={triggered}, slider_idx={slider_idx}, indicator={indicator!r}")
+@lru_cache(maxsize=64)
+def _build_drought_map_cached(slider_idx, indicator):
+    resilience_ctx = _get_resilience_context()
+    district_climate_df = resilience_ctx["district_climate_df"]
+    districts_unique = resilience_ctx["districts_unique"]
+    resilience_base_geojson = resilience_ctx["resilience_base_geojson"]
+    district_join_key = resilience_ctx["join_key"]
+    district_featureidkey = resilience_ctx["featureidkey"]
+    all_quarters = resilience_ctx["all_quarters"]
+
+    region_ctx = _get_region_quarterly_context()
+    region_quarterly = region_ctx["region_quarterly"]
+    slopes_df = region_ctx["slopes_df"]
 
     _map_layout = dict(
         mapbox=dict(style="carto-positron", center={"lat": 16.0, "lon": 106.0}, zoom=5),
@@ -2653,39 +2634,38 @@ def update_drought_map(slider_idx, indicator):
         coloraxis_showscale=False,
     )
 
-    quarter = all_quarters[slider_idx]
-    cfg = district_indicator_cfg.get(indicator)
-    print(f"[DEBUG] quarter={quarter}, cfg={cfg}")
+    if not all_quarters:
+        empty_fig = go.Figure().update_layout(**_map_layout)
+        return empty_fig.to_json(), "", [], {"display": "block"}
 
-    # If no config found, return empty map and ensure slider is visible by default
+    safe_idx = max(0, min(int(slider_idx), len(all_quarters) - 1))
+    quarter = all_quarters[safe_idx]
+    cfg = district_indicator_cfg.get(indicator)
+
     if cfg is None:
         empty_fig = go.Figure().update_layout(**_map_layout)
-        return dcc.Graph(figure=empty_fig, config={"displayModeBar": False, "scrollZoom": True}, style={"height": "100%", "width": "100%"}), quarter, dbc.Row([]), {"display": "block"}
+        return empty_fig.to_json(), quarter, [], {"display": "block"}
 
     col = cfg["col"]
-    keep_cols = [DISTRICT_JOIN_KEY, col]
-    if ("shapeName" in district_climate_df.columns) and ("shapeName" != DISTRICT_JOIN_KEY):
+    keep_cols = [district_join_key, col]
+    if ("shapeName" in district_climate_df.columns) and ("shapeName" != district_join_key):
         keep_cols.append("shapeName")
 
-    # If indicator is a precomputed SPEI-months field (no time dimension), load from CSV
-    if isinstance(indicator, str) and (indicator.startswith("class_") or indicator.startswith('drought_resistance')):
-        # load precomputed SPEI event months per polygon CSV (falls back to district_climate_df if missing)
+    if isinstance(indicator, str) and (indicator.startswith("class_") or indicator.startswith("drought_resistance")):
         spei_csv = os.path.join(hanoi_climate_dir, "static_climate_composites.csv")
         spei_df = pd.read_csv(spei_csv)
         df = spei_df[keep_cols].dropna(subset=[col])
-        print(f"[DEBUG] Loaded SPEI months from CSV: {len(df)} rows, columns={df.columns.tolist()}" )
-
         slider_style = {"display": "none"}
-        plot_gdf = districts_unique.merge(df, on=DISTRICT_JOIN_KEY, how="left")
+        plot_gdf = districts_unique.merge(df, on=district_join_key, how="left")
     else:
         df = (
             district_climate_df[district_climate_df["quarter"] == quarter][keep_cols]
             .dropna(subset=[col])
         )
-        plot_gdf = districts_unique.merge(df, on=DISTRICT_JOIN_KEY, how="left")
+        plot_gdf = districts_unique.merge(df, on=district_join_key, how="left")
         slider_style = {"display": "block"}
+
     overlay = plot_gdf[plot_gdf[col].notna()].copy()
-    print(f"[DEBUG] col={col!r}, df rows={len(df)}, overlay rows={len(overlay)}")
 
     hover_label_col = None
     explicit_name_candidates = [
@@ -2712,9 +2692,8 @@ def update_drought_map(slider_idx, indicator):
                 break
 
     if hover_label_col is None:
-        hover_label_col = DISTRICT_JOIN_KEY
+        hover_label_col = district_join_key
 
-    # 1) District indicator fill
     fig = go.Figure()
     if not overlay.empty:
         zvals = overlay[col].to_numpy(dtype=float)
@@ -2751,10 +2730,10 @@ def update_drought_map(slider_idx, indicator):
 
         fig.add_trace(go.Choroplethmapbox(
             geojson=resilience_base_geojson,
-            featureidkey=DISTRICT_FEATUREIDKEY,
-            locations=overlay[DISTRICT_JOIN_KEY],
+            featureidkey=district_featureidkey,
+            locations=overlay[district_join_key],
             z=overlay[col],
-            text=overlay[hover_label_col].astype(str) if hover_label_col else overlay[DISTRICT_JOIN_KEY].astype(str),
+            text=overlay[hover_label_col].astype(str) if hover_label_col else overlay[district_join_key].astype(str),
             colorscale=cfg["colorscale"],
             zmin=zmin, zmax=zmax,
             marker=dict(opacity=0.78, line=dict(color="black", width=0.4)),
@@ -2767,46 +2746,68 @@ def update_drought_map(slider_idx, indicator):
             ),
         ))
 
-    # 2) Region boundaries — Scattermapbox lines (avoids choropleth layer interference)
-    #_lons, _lats = [], []
-    #for _, _row in regions_gdf.iterrows():
-    #    _geom = _row.geometry
-    #    _polys = list(_geom.geoms) if _geom.geom_type == "MultiPolygon" else [_geom]
-    #    for _poly in _polys:
-    #        _xs, _ys = _poly.exterior.coords.xy
-    #        _lons.extend(list(_xs) + [None])
-    #        _lats.extend(list(_ys) + [None])
-    #fig.add_trace(go.Scattermapbox(
-    #    lon=_lons, lat=_lats,
-    #    mode="lines",
-    #    line=dict(color="#4a4a4a", width=1.2),
-    #    hoverinfo="skip",
-    #    showlegend=False,
-    #))
-
-    # Cards
-    cards = []
+    cards_payload = []
     if col in region_quarterly.columns:
         for region in sorted(region_quarterly["region"].unique()):
             sub = region_quarterly[region_quarterly["region"] == region].sort_values("quarter")
-            all_vals = sub[col].tolist()
-            all_qtrs = sub["quarter"].tolist()
+            all_vals = tuple(None if pd.isna(v) else float(v) for v in sub[col].tolist())
+            all_qtrs = tuple(sub["quarter"].tolist())
             q_row = sub[sub["quarter"] == quarter]
             q_val = float(q_row[col].iloc[0]) if not q_row.empty else None
             slope_row = slopes_df[(slopes_df["region"] == region) & (slopes_df["indicator"] == col)]
             slope = float(slope_row["slope"].iloc[0]) if not slope_row.empty else 0.0
-
-            cards.append(
-                dbc.Col(
-                    make_region_kpi_card(region, q_val, all_vals, all_qtrs, slope, col, cfg=cfg),
-                    md=3,
-                    style={"display": "flex"},
-                )
-            )
+            cards_payload.append({
+                "region": region,
+                "quarter_value": q_val,
+                "all_values": all_vals,
+                "all_quarters": all_qtrs,
+                "slope": slope,
+                "indicator_label": col,
+            })
 
     fig.update_layout(**_map_layout)
-    print(f"[DEBUG] Returning figure: traces={len(fig.data)}, colorscale={cfg['colorscale']}, col={col!r}")
-    return dcc.Graph(figure=fig, config={"displayModeBar": False, "scrollZoom": True}, style={"height": "100%", "width": "100%"}), quarter, dbc.Row(cards), slider_style
+    return fig.to_json(), quarter, cards_payload, slider_style
+
+
+@app.callback(
+    Output("drought-map-container", "children"),
+    Output("drought-slider-label", "children"),
+    Output("region-kpi-cards", "children"),
+    Output("date-slider-card", "style"),
+    Input("drought-date-slider", "value"),
+    Input("climate-indicator-select", "value"),
+)
+def update_drought_map(slider_idx, indicator):
+    fig_json, quarter, cards_payload, slider_style = _build_drought_map_cached(int(slider_idx or 0), indicator or "")
+    cfg = district_indicator_cfg.get(indicator or "")
+
+    cards = [
+        dbc.Col(
+            make_region_kpi_card(
+                payload["region"],
+                payload["quarter_value"],
+                payload["all_values"],
+                payload["all_quarters"],
+                payload["slope"],
+                payload["indicator_label"],
+                cfg=cfg,
+            ),
+            md=3,
+            style={"display": "flex"},
+        )
+        for payload in cards_payload
+    ]
+
+    return (
+        dcc.Graph(
+            figure=_figure_from_json(fig_json),
+            config={"displayModeBar": False, "scrollZoom": True},
+            style={"height": "100%", "width": "100%"},
+        ),
+        quarter,
+        dbc.Row(cards),
+        slider_style,
+    )
 
 
 @app.callback(
@@ -2833,7 +2834,7 @@ def update_resilience_view_layout(view_selection, spatial_data):
         return render_temporal_resilience_layout()
 
     if view_selection == "Land-use & Land-cover":
-        return render_lulc_resilience_layout(lulc_indicator_options)
+        return render_lulc_resilience_layout(_get_lulc_context()["indicator_options"])
 
     spatial_data = spatial_data or {}
     climate_indicator_options = spatial_data.get("climate_indicator_options", [])
@@ -2856,32 +2857,20 @@ def update_resilience_view_layout(view_selection, spatial_data):
     )
 
 
-@app.callback(
-    Output("lulc-map-container", "children"),
-    Input("lulc-indicator-select", "value"),
-)
-def update_lulc_map(indicator):
+@lru_cache(maxsize=32)
+def _build_lulc_map_cached(indicator):
+    lulc_ctx = _get_lulc_context()
+    lulc_stats_gdf = lulc_ctx["gdf"]
+    lulc_map_center = lulc_ctx["map_center"]
+
     map_layout = dict(
         mapbox=dict(style="carto-positron", center=lulc_map_center, zoom=9),
         margin=dict(l=0, r=0, t=0, b=0),
         showlegend=False,
     )
 
-    if lulc_stats_gdf is None or not indicator:
-        empty_fig = go.Figure().update_layout(**map_layout)
-        return dcc.Graph(
-            figure=empty_fig,
-            config={"displayModeBar": False, "scrollZoom": True},
-            style={"height": "100%", "width": "100%"},
-        )
-
-    if indicator not in lulc_stats_gdf.columns:
-        empty_fig = go.Figure().update_layout(**map_layout)
-        return dcc.Graph(
-            figure=empty_fig,
-            config={"displayModeBar": False, "scrollZoom": True},
-            style={"height": "100%", "width": "100%"},
-        )
+    if lulc_stats_gdf is None or not indicator or indicator not in lulc_stats_gdf.columns:
+        return go.Figure().update_layout(**map_layout).to_json()
 
     plot_gdf = lulc_stats_gdf.copy()
     plot_gdf["__rid"] = plot_gdf["__rid"].astype(str)
@@ -2971,9 +2960,16 @@ def update_lulc_map(indicator):
         ))
 
     fig.update_layout(**map_layout)
+    return fig.to_json()
 
+
+@app.callback(
+    Output("lulc-map-container", "children"),
+    Input("lulc-indicator-select", "value"),
+)
+def update_lulc_map(indicator):
     return dcc.Graph(
-        figure=fig,
+        figure=_figure_from_json(_build_lulc_map_cached(indicator or "")),
         config={"displayModeBar": False, "scrollZoom": True},
         style={"height": "100%", "width": "100%"},
     )

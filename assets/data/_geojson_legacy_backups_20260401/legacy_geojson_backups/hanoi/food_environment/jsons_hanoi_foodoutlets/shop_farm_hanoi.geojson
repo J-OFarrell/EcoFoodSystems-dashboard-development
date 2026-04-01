@@ -1,0 +1,23 @@
+{
+"type": "FeatureCollection",
+"name": "shop_farm_hanoi",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:EPSG::3857" } },
+"features": [
+{ "type": "Feature", "properties": { "id": 11169202606, "category": "shop", "label": "farm" }, "geometry": { "type": "Point", "coordinates": [ 11775602.894665390253067, 2399633.624612860381603 ] } },
+{ "type": "Feature", "properties": { "id": 11212149506, "category": "shop", "label": "farm" }, "geometry": { "type": "Point", "coordinates": [ 11781558.676665965467691, 2393019.768629649654031 ] } },
+{ "type": "Feature", "properties": { "id": 11212149511, "category": "shop", "label": "farm" }, "geometry": { "type": "Point", "coordinates": [ 11781543.270048439502716, 2393006.711092024110258 ] } },
+{ "type": "Feature", "properties": { "id": 11212500525, "category": "shop", "label": "farm" }, "geometry": { "type": "Point", "coordinates": [ 11781434.93392, 2392956.365132553502917 ] } },
+{ "type": "Feature", "properties": { "id": 11263842273, "category": "shop", "label": "farm" }, "geometry": { "type": "Point", "coordinates": [ 11781244.644382437691092, 2393708.158891118597239 ] } },
+{ "type": "Feature", "properties": { "id": 11281683530, "category": "shop", "label": "farm" }, "geometry": { "type": "Point", "coordinates": [ 11781107.365186391398311, 2393841.506505230907351 ] } },
+{ "type": "Feature", "properties": { "id": 11301620136, "category": "shop", "label": "farm" }, "geometry": { "type": "Point", "coordinates": [ 11781401.615996405482292, 2393643.345776719972491 ] } },
+{ "type": "Feature", "properties": { "id": 899221500, "category": "shop", "label": "farm" }, "geometry": { "type": "Point", "coordinates": [ 11788602.876533802598715, 2395205.058415247593075 ] } },
+{ "type": "Feature", "properties": { "id": 904729847, "category": "shop", "label": "farm" }, "geometry": { "type": "Point", "coordinates": [ 11782984.828498985618353, 2393280.72309262631461 ] } },
+{ "type": "Feature", "properties": { "id": 904729854, "category": "shop", "label": "farm" }, "geometry": { "type": "Point", "coordinates": [ 11782972.892795845866203, 2393276.797895658761263 ] } },
+{ "type": "Feature", "properties": { "id": 933680057, "category": "shop", "label": "farm" }, "geometry": { "type": "Point", "coordinates": [ 11774961.506993971765041, 2400730.616166286636144 ] } },
+{ "type": "Feature", "properties": { "id": 933968157, "category": "shop", "label": "farm" }, "geometry": { "type": "Point", "coordinates": [ 11774951.577295392751694, 2400729.769145281985402 ] } },
+{ "type": "Feature", "properties": { "id": 933968159, "category": "shop", "label": "farm" }, "geometry": { "type": "Point", "coordinates": [ 11774939.492729362100363, 2400728.288573920261115 ] } },
+{ "type": "Feature", "properties": { "id": 1051905925, "category": "shop", "label": "farm" }, "geometry": { "type": "Point", "coordinates": [ 11781732.834309553727508, 2404809.31967378873378 ] } },
+{ "type": "Feature", "properties": { "id": 1219690241, "category": "shop", "label": "farm" }, "geometry": { "type": "Point", "coordinates": [ 11781408.493873946368694, 2393619.592270026914775 ] } },
+{ "type": "Feature", "properties": { "id": 1234095164, "category": "shop", "label": "farm" }, "geometry": { "type": "Point", "coordinates": [ 11783874.935098407790065, 2395328.267380203586072 ] } }
+]
+}

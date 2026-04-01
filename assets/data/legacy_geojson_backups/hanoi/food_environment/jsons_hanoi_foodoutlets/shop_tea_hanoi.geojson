@@ -1,0 +1,21 @@
+{
+"type": "FeatureCollection",
+"name": "shop_tea_hanoi",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:EPSG::3857" } },
+"features": [
+{ "type": "Feature", "properties": { "id": 3471350593, "category": "shop", "label": "tea" }, "geometry": { "type": "Point", "coordinates": [ 11777518.703101942315698, 2397198.542039574123919 ] } },
+{ "type": "Feature", "properties": { "id": 4754042535, "category": "shop", "label": "tea" }, "geometry": { "type": "Point", "coordinates": [ 11782540.982116624712944, 2395738.318243796471506 ] } },
+{ "type": "Feature", "properties": { "id": 5474549521, "category": "shop", "label": "tea" }, "geometry": { "type": "Point", "coordinates": [ 11782932.136543372645974, 2395915.439869179390371 ] } },
+{ "type": "Feature", "properties": { "id": 5474557523, "category": "shop", "label": "tea" }, "geometry": { "type": "Point", "coordinates": [ 11783102.767058862373233, 2396065.060178800486028 ] } },
+{ "type": "Feature", "properties": { "id": 5736138024, "category": "shop", "label": "tea" }, "geometry": { "type": "Point", "coordinates": [ 11774088.81600721552968, 2360367.767313540447503 ] } },
+{ "type": "Feature", "properties": { "id": 6850836187, "category": "shop", "label": "tea" }, "geometry": { "type": "Point", "coordinates": [ 11783116.025210212916136, 2396062.627124230377376 ] } },
+{ "type": "Feature", "properties": { "id": 7621655185, "category": "shop", "label": "tea" }, "geometry": { "type": "Point", "coordinates": [ 11783550.894800998270512, 2395902.821490146685392 ] } },
+{ "type": "Feature", "properties": { "id": 8356652524, "category": "shop", "label": "tea" }, "geometry": { "type": "Point", "coordinates": [ 11775029.866454584524035, 2400420.631024895701557 ] } },
+{ "type": "Feature", "properties": { "id": 9797641935, "category": "shop", "label": "tea" }, "geometry": { "type": "Point", "coordinates": [ 11781693.874187532812357, 2395192.4856026340276 ] } },
+{ "type": "Feature", "properties": { "id": 10248628284, "category": "shop", "label": "tea" }, "geometry": { "type": "Point", "coordinates": [ 11775596.349079333245754, 2396849.379839927423745 ] } },
+{ "type": "Feature", "properties": { "id": 11397904123, "category": "shop", "label": "tea" }, "geometry": { "type": "Point", "coordinates": [ 11776894.924335282295942, 2395708.31114579224959 ] } },
+{ "type": "Feature", "properties": { "id": 11578196213, "category": "shop", "label": "tea" }, "geometry": { "type": "Point", "coordinates": [ 11775588.033513370901346, 2396882.585377903655171 ] } },
+{ "type": "Feature", "properties": { "id": 13018793701, "category": "shop", "label": "tea" }, "geometry": { "type": "Point", "coordinates": [ 11782806.757400892674923, 2395727.727497538551688 ] } },
+{ "type": "Feature", "properties": { "id": 899221541, "category": "shop", "label": "tea" }, "geometry": { "type": "Point", "coordinates": [ 11788661.493278151378036, 2395124.389144367072731 ] } }
+]
+}

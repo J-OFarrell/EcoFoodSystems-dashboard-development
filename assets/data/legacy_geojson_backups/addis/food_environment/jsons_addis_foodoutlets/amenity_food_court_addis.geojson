@@ -1,0 +1,10 @@
+{
+"type": "FeatureCollection",
+"name": "amenity_food_court_addis",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:EPSG::3857" } },
+"features": [
+{ "type": "Feature", "properties": { "id": 6718704326, "category": "amenity", "label": "food_court" }, "geometry": { "type": "Point", "coordinates": [ 4310255.885042729787529, 1000390.209583692019805 ] } },
+{ "type": "Feature", "properties": { "id": 157708375, "category": "amenity", "label": "food_court" }, "geometry": { "type": "Point", "coordinates": [ 4316855.940873731859028, 1005528.196654518600553 ] } },
+{ "type": "Feature", "properties": { "id": 921609890, "category": "amenity", "label": "food_court" }, "geometry": { "type": "Point", "coordinates": [ 4308990.391635376028717, 1004668.269404642749578 ] } }
+]
+}

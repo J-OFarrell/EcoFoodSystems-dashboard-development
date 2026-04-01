@@ -666,6 +666,7 @@ def hanoi_affordability_tab_layout():
     isochrones_geojson_files_hanoi = main.isochrones_geojson_files_hanoi
     data_labels_food_env = getattr(main, 'data_labels_food_env_hanoi', getattr(main, 'data_labels_food_env', []))
     cols_food_env = getattr(main, 'cols_food_env_hanoi', getattr(main, 'cols_food_env', []))
+    df_affordability_hanoi = main.df_affordability_hanoi
     
     return html.Div([
         city_selector(selected_city='hanoi', visible=False),  # Hidden but present for callback
@@ -708,6 +709,7 @@ def hanoi_affordability_tab_layout():
                             "backgroundColor": brand_colors['White'],
                             "border-radius": "10px"}),
 
+
                 # Food outlets selector first (ensure high z-index so dropdown menus render above others)
                 dbc.Card([
                     dbc.CardBody([
@@ -732,7 +734,7 @@ def hanoi_affordability_tab_layout():
                     ])
                 ], style={"height": "auto", "padding":"6px", "box-shadow": "0 2px 6px rgba(0,0,0,0.1)",
                             "backgroundColor": brand_colors['White'], "border-radius": "10px",
-                            "zIndex": "5000", "position": "relative"}),
+                            "zIndex": "5000", "position": "relative", "margin-top": "4px"}),
 
                 # Choropleth metric selector below outlets
                 dbc.Card([
@@ -745,17 +747,42 @@ def hanoi_affordability_tab_layout():
                                     id="choropleth-select-hanoi",
                                     options=[{"label": label, "value": col} for label, col in zip(data_labels_food_env, cols_food_env)],
                                     multi=False,
-                                    value='ratio_obesogenic' if 'ratio_obesogenic' in cols_food_env else (cols_food_env[0] if cols_food_env else None),
+                                    #value='ratio_obesogenic' if 'ratio_obesogenic' in cols_food_env else (cols_food_env[0] if cols_food_env else None),
                                     placeholder="Select metric to display",
                                     style={'zIndex': '1900', 'position': 'relative'})
                                 ],
                                 style={'margin': '2px 0px', 'justifyContent': 'end', 'alignItems': 'center', 'textAlign': 'center'})
                     ])
                 ], style={"height": "auto", "padding":"6px", "box-shadow": "0 2px 6px rgba(0,0,0,0.1)",
-                            "backgroundColor": brand_colors['White'], "border-radius": "10px"}),
+                            "backgroundColor": brand_colors['White'], "border-radius": "10px", "margin-top": "4px"}),
+                                
+                html.H5(" ", style={
+                        "color": brand_colors['Brown'],
+                        "fontWeight": "bold",
+                        "marginTop": "20px",
+                        "marginBottom": "15px",
+                        "borderBottom": f"3px solid {brand_colors['Mid green']}",
+                        "paddingBottom": "10px"
+                    }),
+                
+                dbc.Row([
+                    dbc.Col([create_nutrition_kpi_card_hanoi(
+                    df_affordability_hanoi[(df_affordability_hanoi['Cat'] == 'foodExp_totalExp') & (df_affordability_hanoi['Reg'] == 'Hanoi')][['Year', 'value']],
+                    "Food Expenditure from Total Expenses",
+                    df_affordability_hanoi[(df_affordability_hanoi['Cat'] == 'foodExp_totalExp') & (df_affordability_hanoi['Reg'] == 'Hanoi')]['value'].dropna().values[-1],
+                    df_affordability_hanoi[(df_affordability_hanoi['Cat'] == 'foodExp_totalExp') & (df_affordability_hanoi['Reg'] == 'Vietnam')]['value'].dropna().values[-1],
+                    lower_is_better=True)], width=12, lg=6),
+                
+                    dbc.Col([create_nutrition_kpi_card_hanoi(
+                    df_affordability_hanoi[(df_affordability_hanoi['Cat'] == 'foodExp_totalInc') & (df_affordability_hanoi['Reg'] == 'Hanoi')][['Year', 'value']],
+                    "Food Expenditure from Household Income",
+                    df_affordability_hanoi[(df_affordability_hanoi['Cat'] == 'foodExp_totalInc') & (df_affordability_hanoi['Reg'] == 'Hanoi')]['value'].dropna().values[-1],
+                    df_affordability_hanoi[(df_affordability_hanoi['Cat'] == 'foodExp_totalInc') & (df_affordability_hanoi['Reg'] == 'Vietnam')]['value'].dropna().values[-1],
+                    lower_is_better=True)], width=12, lg=6)
+                ]),
                 
             ], style={
-                    "width": "min(30%)",
+                    "width": "min(40%)",
                     "height": "100%",
                     "padding": "10px",
                     "backgroundColor": brand_colors['Light green'],

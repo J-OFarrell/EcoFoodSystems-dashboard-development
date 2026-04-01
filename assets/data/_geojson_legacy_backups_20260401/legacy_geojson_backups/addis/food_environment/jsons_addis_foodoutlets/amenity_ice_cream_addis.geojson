@@ -1,0 +1,15 @@
+{
+"type": "FeatureCollection",
+"name": "amenity_ice_cream_addis",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:EPSG::3857" } },
+"features": [
+{ "type": "Feature", "properties": { "id": 1693014165, "category": "amenity", "label": "ice_cream" }, "geometry": { "type": "Point", "coordinates": [ 4317394.102674511261284, 1004666.413504814147018 ] } },
+{ "type": "Feature", "properties": { "id": 3195393410, "category": "amenity", "label": "ice_cream" }, "geometry": { "type": "Point", "coordinates": [ 4313066.123323909007013, 1004565.792068916838616 ] } },
+{ "type": "Feature", "properties": { "id": 3376460582, "category": "amenity", "label": "ice_cream" }, "geometry": { "type": "Point", "coordinates": [ 4316179.529106313362718, 1009700.270537815755233 ] } },
+{ "type": "Feature", "properties": { "id": 4097324409, "category": "amenity", "label": "ice_cream" }, "geometry": { "type": "Point", "coordinates": [ 4315828.115737777203321, 1006483.660410300362855 ] } },
+{ "type": "Feature", "properties": { "id": 4572533037, "category": "amenity", "label": "ice_cream" }, "geometry": { "type": "Point", "coordinates": [ 4327685.478278859518468, 1008693.255460169515572 ] } },
+{ "type": "Feature", "properties": { "id": 6306527787, "category": "amenity", "label": "ice_cream" }, "geometry": { "type": "Point", "coordinates": [ 4318314.102606171742082, 1005074.277732263086364 ] } },
+{ "type": "Feature", "properties": { "id": 7173774808, "category": "amenity", "label": "ice_cream" }, "geometry": { "type": "Point", "coordinates": [ 4317058.429881973192096, 1006998.966388099826872 ] } },
+{ "type": "Feature", "properties": { "id": 9132004043, "category": "amenity", "label": "ice_cream" }, "geometry": { "type": "Point", "coordinates": [ 4316904.152199683710933, 1005781.752467189566232 ] } }
+]
+}

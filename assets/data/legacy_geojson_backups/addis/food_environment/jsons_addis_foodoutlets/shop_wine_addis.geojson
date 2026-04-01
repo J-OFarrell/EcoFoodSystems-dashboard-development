@@ -1,0 +1,8 @@
+{
+"type": "FeatureCollection",
+"name": "shop_wine_addis",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:EPSG::3857" } },
+"features": [
+{ "type": "Feature", "properties": { "id": 4791588621, "category": "shop", "label": "wine" }, "geometry": { "type": "Point", "coordinates": [ 4316351.40640009753406, 1005528.941433386527933 ] } }
+]
+}

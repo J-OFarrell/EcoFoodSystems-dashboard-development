@@ -1,0 +1,9 @@
+commodity,group,garch_persistence,shock_frequency,ufpri_score,ufpri_rank_in_group,note
+Wheat,Cereal,0.943,1.18,0.482,1,Lower persistence likely reflects import substitution stabilisation effect
+Teff,Cereal,0.999,0.57,0.478,2,Lowest shock frequency of all cereals; highland geography insulates from cross-border volatility
+Maize,Cereal,0.999,4.76,0.315,3,Exposed to global price transmission; visible 2008 and 2022 volatility spikes
+Sorghum,Cereal,0.999,12.89,0,4,Most fragile cereal; drought-exposed rain-fed crop; key safety-net staple for poorest households
+Lentils,Pulse,0.712,0,0.268,1,Lowest persistence of all 8 commodities; shock frequency unreliable (thin data)
+Chickpeas,Pulse,0.89,0,0.041,2,Shock frequency unreliable (thin data)
+Peas,Pulse,0.9,0,0.035,3,Shock frequency unreliable (thin data)
+Beans,Pulse,0.973,0,0,4,Highest pulse persistence; approaches cereal-level fragility; shock frequency unreliable (thin data)

@@ -1,0 +1,23 @@
+{
+"type": "FeatureCollection",
+"name": "shop_greengrocer_hanoi",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:EPSG::3857" } },
+"features": [
+{ "type": "Feature", "properties": { "id": 5173931321, "category": "shop", "label": "greengrocer" }, "geometry": { "type": "Point", "coordinates": [ 11768598.126839173957705, 2380103.172259782906622 ] } },
+{ "type": "Feature", "properties": { "id": 5253678122, "category": "shop", "label": "greengrocer" }, "geometry": { "type": "Point", "coordinates": [ 11783277.059985596686602, 2396593.756526498124003 ] } },
+{ "type": "Feature", "properties": { "id": 5254163722, "category": "shop", "label": "greengrocer" }, "geometry": { "type": "Point", "coordinates": [ 11783303.275725675746799, 2396561.279079761821777 ] } },
+{ "type": "Feature", "properties": { "id": 6358070152, "category": "shop", "label": "greengrocer" }, "geometry": { "type": "Point", "coordinates": [ 11788687.087050607427955, 2394890.732631908264011 ] } },
+{ "type": "Feature", "properties": { "id": 6927757885, "category": "shop", "label": "greengrocer" }, "geometry": { "type": "Point", "coordinates": [ 11780485.946392936632037, 2392558.062305744271725 ] } },
+{ "type": "Feature", "properties": { "id": 7176870634, "category": "shop", "label": "greengrocer" }, "geometry": { "type": "Point", "coordinates": [ 11783530.111452067270875, 2395810.736218414735049 ] } },
+{ "type": "Feature", "properties": { "id": 7176894743, "category": "shop", "label": "greengrocer" }, "geometry": { "type": "Point", "coordinates": [ 11783510.419034145772457, 2395770.36483088042587 ] } },
+{ "type": "Feature", "properties": { "id": 8334828432, "category": "shop", "label": "greengrocer" }, "geometry": { "type": "Point", "coordinates": [ 11774549.656435199081898, 2400271.749428849667311 ] } },
+{ "type": "Feature", "properties": { "id": 9811836142, "category": "shop", "label": "greengrocer" }, "geometry": { "type": "Point", "coordinates": [ 11770678.432087270542979, 2392816.668362064287066 ] } },
+{ "type": "Feature", "properties": { "id": 10846733400, "category": "shop", "label": "greengrocer" }, "geometry": { "type": "Point", "coordinates": [ 11778394.264292880892754, 2397669.493688752409071 ] } },
+{ "type": "Feature", "properties": { "id": 11168751397, "category": "shop", "label": "greengrocer" }, "geometry": { "type": "Point", "coordinates": [ 11778146.222203493118286, 2397361.377014350611717 ] } },
+{ "type": "Feature", "properties": { "id": 11219294713, "category": "shop", "label": "greengrocer" }, "geometry": { "type": "Point", "coordinates": [ 11775578.382113518193364, 2397728.30984768178314 ] } },
+{ "type": "Feature", "properties": { "id": 11563562480, "category": "shop", "label": "greengrocer" }, "geometry": { "type": "Point", "coordinates": [ 11776074.154597716405988, 2397250.653362990822643 ] } },
+{ "type": "Feature", "properties": { "id": 11846899574, "category": "shop", "label": "greengrocer" }, "geometry": { "type": "Point", "coordinates": [ 11776240.911194924265146, 2395871.49026072723791 ] } },
+{ "type": "Feature", "properties": { "id": 12074497269, "category": "shop", "label": "greengrocer" }, "geometry": { "type": "Point", "coordinates": [ 11782848.691453073173761, 2396232.393113486468792 ] } },
+{ "type": "Feature", "properties": { "id": 13039615008, "category": "shop", "label": "greengrocer" }, "geometry": { "type": "Point", "coordinates": [ 11784631.473098129034042, 2392955.268064440693706 ] } }
+]
+}

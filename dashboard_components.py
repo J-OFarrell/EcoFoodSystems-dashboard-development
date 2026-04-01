@@ -6,11 +6,13 @@ brand_colors = {
     'Black': '#333333',
     "Brown": "#313715",
     "Red": "#A80050",
+    "Orange": "#D9A85C",
     "Dark green": "#939f5c",
     "Mid green": "#bbce8a",
     "Light green": "#E8F0DA",
-    "White": "#ffffff"  
+    "White": "#ffffff"
 }
+
 kpi_card_style_2 = {
                 "textAlign": "center",
                 "backgroundColor": brand_colors['White'],
@@ -206,6 +208,117 @@ def create_nutrition_kpi_card_hanoi(timeseries, outcome_name, hanoi_value, natio
                 ),
             ], style={"marginTop": "10px", "display": "flex", "justifyContent": "center"})
 
+        ])
+    ], style=kpi_card_style_2)
+
+
+def create_price_volatility_kpi_card(timeseries_df, commodity_name, current_volatility, ufpri_score, shock_frequency):
+    """
+    Create a KPI card for commodity price volatility with UFPRI resilience score.
+    
+    Parameters:
+    - timeseries_df: DataFrame with columns ['date', 'rolling_volatility'] 
+    - commodity_name: Name of the commodity
+    - current_volatility: Current volatility value (e.g., 0.075888)
+    - ufpri_score: UFPRI resilience score (0-1 scale)
+    - shock_frequency: Shock frequency indicator (number of months exceeding threshold)
+    """
+    import plotly.graph_objects as go
+    
+    # Determine color based on UFPRI score (0=least resilient, 1=most resilient)
+    if ufpri_score <= 0.2:
+        color = brand_colors['Red']
+        status = "Low Resilience"
+    elif ufpri_score <= 0.4:
+        color = brand_colors['Orange']
+        status = "Moderate Resilience"
+    elif ufpri_score <= 0.7:
+        color = brand_colors['Dark green']
+        status = "High Resilience"
+    else:
+        color = brand_colors['Dark green']
+        status = "Very High Resilience"
+    
+    # Create sparkline
+    sparkline = go.Figure()
+    
+    timeseries_clean = timeseries_df.dropna(subset=['rolling_volatility'])
+    
+    sparkline.add_trace(go.Scatter(
+        x=timeseries_clean['date'], 
+        y=timeseries_clean['rolling_volatility'],
+        mode="lines",
+        marker={"size": 3, "color": color},
+        line={"color": color, "width": 2},
+        hovertemplate="%{x}: %{y:.4f}<extra></extra>"
+    ))
+    
+    sparkline.update_layout(
+        height=80,
+        margin=dict(l=0, r=0, t=0, b=0),
+        showlegend=False,
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        xaxis=dict(visible=False),
+        yaxis=dict(visible=False),
+    )
+    
+    return dbc.Card([
+        dbc.CardBody([
+            html.H5(commodity_name, style={
+                "fontWeight": "bold",
+                "fontSize": "1em",
+                "color": brand_colors['Brown'],
+                "marginBottom": "10px"
+            }),
+            
+            # UFPRI Score
+            html.Div([
+                html.Span("UFPRI Score: ", style={"fontSize": "0.85em", "color": "#666"}),
+                html.Span(f"{ufpri_score:.3f}", style={
+                    "fontSize": "1.3em",
+                    "fontWeight": "bold",
+                    "color": color
+                })
+            ], style={"marginBottom": "5px"}),
+            
+            # Resilience Status
+            html.Div([
+                html.Span(status, style={
+                    "fontSize": "0.85em",
+                    "fontWeight": "bold",
+                    "color": color
+                })
+            ], style={"marginBottom": "8px"}),
+            
+            # Shock Frequency
+            html.Div([
+                html.Span("Shock Frequency: ", style={"fontSize": "0.8em", "color": "#666"}),
+                html.Span(f"{shock_frequency:.2f}" if shock_frequency else "N/A", style={
+                    "fontSize": "1.1em",
+                    "fontWeight": "bold",
+                    "color": "#555"
+                })
+            ], style={"marginBottom": "8px", "fontSize": "0.9em"}),
+            
+            # Current Volatility
+            html.Div([
+                html.Span("Current Volatility: ", style={"fontSize": "0.8em", "color": "#666"}),
+                html.Span(f"{current_volatility:.4f}", style={
+                    "fontSize": "1.1em",
+                    "fontWeight": "bold",
+                    "color": "#555"
+                })
+            ], style={"marginBottom": "10px", "fontSize": "0.9em"}),
+            
+            # Sparkline
+            html.Div([
+                dcc.Graph(
+                    figure=sparkline,
+                    config={"displayModeBar": False},
+                    style={"height": "80px", "width": "100%"},
+                ),
+            ], style={"marginTop": "10px"})
         ])
     ], style=kpi_card_style_2)
 
