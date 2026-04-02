@@ -438,8 +438,7 @@ isochrones_geojson_files_hanoi = sorted(os.listdir(isochrones_path_hanoi)) if os
 df_affordability_hanoi = pd.read_csv(os.path.join(hanoi_affordability_dir, 'hanoi_affordability_cleaned.csv'))
 
 # Hanoi dietary data
-df_diet_hanoi = pd.read_csv(os.path.join(hanoi_nutrition_dir, 'hanoi_health_nutrition_cleaned.csv'))
-df_diet_2_hanoi = pd.read_csv(os.path.join(hanoi_nutrition_dir, 'hanoi_health_nutrition_cleaned_2.csv'))
+df_diet_2_hanoi = pd.read_csv(os.path.join(hanoi_nutrition_dir, 'hanoi_health_nutrition_cleaned.csv'))
 
 
 def _load_indicator_atlas_records(csv_path):
@@ -2450,7 +2449,7 @@ def update_sankey_hanoi(value):
     target_indices = df_sankey_final['target'].apply(lambda x: labels.index(x))
     weights = df_sankey_final['supply']
 
-    node_colors = [brand_colors['Red'] for l in labels]
+    node_colors = [brand_colors['Dark green'] for l in labels]
     link_colors = ["rgba(209, 231, 168, 0.5)" for link in df_sankey_final['source']]
 
     # KPIs
@@ -2462,7 +2461,7 @@ def update_sankey_hanoi(value):
     urban_share = urban_only/total *100
 
     fig = go.Figure(go.Sankey(
-        node=dict(label=labels, color=node_colors, pad=15, thickness=20),
+        node=dict(label=labels, pad=15, thickness=20, color=node_colors),
         link=dict(source=source_indices, target=target_indices, value=weights, color=link_colors, 
                   hovertemplate='From %{source.label} → %{target.label}<br>Flow: %{value}<extra></extra>')
     ))
@@ -2479,7 +2478,7 @@ def update_sankey_hanoi(value):
     urban_fig = go.Figure(go.Pie(
         values=[urban_share, 100-urban_share],
         hole=0.6,
-        marker=dict(colors=[brand_colors['Red'], brand_colors['Light green']]),
+        marker=dict(colors=[brand_colors['Dark green'], brand_colors['Light green']]),
         textinfo="none",
         labels=["Urban", "Rural"],
         hoverinfo="label+percent",
@@ -2579,100 +2578,6 @@ def update_health_trend_hanoi(selected_variable):
     fig.update_yaxes(title_text=selected_variable)
     return fig
 
-
-# Hanoi diet dumbbell
-@app.callback(
-    Output('diet-dumbbell-hanoi', 'figure'),
-    Input('dumbbell-slider-hanoi', 'value')
-)
-def update_diet_dumbbell_hanoi(year_start):
-    categories = df_diet_hanoi['Cat'].unique()
-  
-    line_x, line_y, x_start, x_2023, y_labels = [], [], [], [], []
-
-    for cat in categories:
-        val_start = df_diet_hanoi.loc[(df_diet_hanoi.Year == year_start) & (df_diet_hanoi.Cat == cat), "value"].values[0]
-        val_2023 = df_diet_hanoi.loc[(df_diet_hanoi.Year == 2023) & (df_diet_hanoi.Cat == cat), "value"].values[0]
-        line_x.extend([val_start, val_2023, None])
-        line_y.extend([cat, cat, None])
-        x_start.append(val_start)
-        x_2023.append(val_2023)
-        y_labels.append(cat)
-
-    fig = go.Figure()
-
-    # Line connecting start year and 2023
-    fig.add_trace(go.Scatter(
-        x=line_x,
-        y=line_y,
-        mode="lines",
-        line=dict(color="grey"),
-        showlegend=False
-    ))
-
-    # Start year markers
-    fig.add_trace(go.Scatter(
-        x=x_start,
-        y=y_labels,
-        mode="markers",
-        name=str(year_start),
-        marker=dict(
-            color=brand_colors['Red'],
-            size=8,
-            symbol="circle",
-            line=dict(color=brand_colors['Brown'], width=2)
-        )
-    ))
-
-    # 2023 markers
-    fig.add_trace(go.Scatter(
-        x=x_2023,
-        y=y_labels,
-        mode="markers",
-        name="2023",
-        marker=dict(
-            color=brand_colors['Light green'],
-            size=8,
-            symbol="circle",
-            line=dict(color=brand_colors['Brown'], width=2)
-        )
-    ))
-
-    # Add arrows
-    for x0, x1, y in zip(x_start, x_2023, y_labels):
-        if pd.notnull(x0) and pd.notnull(x1):
-            fig.add_annotation(
-                x=x1, y=y,
-                ax=x0, ay=y,
-                xref="x", yref="y",
-                axref="x", ayref="y",
-                showarrow=True,
-                arrowhead=3,
-                arrowsize=1,
-                arrowwidth=2,
-                arrowcolor=brand_colors['Brown'],
-            )
-
-    fig.update_layout(
-        yaxis=dict(
-            tickfont=dict(size=12),
-            automargin=True,
-            ticklabelposition="outside right",
-            showgrid=True,
-            gridcolor='#949494',  
-            gridwidth=0.7                  
-        ),
-        xaxis=dict(
-            showgrid=True,               
-            gridcolor="#949494",
-            gridwidth=0.7
-        ),
-        margin=dict(l=120, r=20, t=40, b=20),
-        paper_bgcolor=brand_colors['White'],
-        plot_bgcolor=brand_colors['White']
-    )
-
-    return fig
 
 # ── Drought Indicator callback ────────────────────────────────────────────────────────
 

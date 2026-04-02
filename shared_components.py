@@ -155,14 +155,16 @@ def city_selector(selected_city='addis', visible=True):
 
 footer = html.Footer([
     html.Div([
-        html.Img(src="/assets/logos/DeSIRA.png", style={'height': '60px', 'margin': '0 30px'}),
-        html.Img(src="/assets/logos/IFAD.png", style={'height': '65px', 'margin': '0 30px'}),
-        html.Img(src="/assets/logos/Rikolto.png", style={'height': '40px', 'margin': '0 30px'}),
+        html.Img(src="/assets/logos/EcoFoodSystems.svg", style={'height': '45px', 'margin': '0 30px'}),
+        html.Img(src="/assets/logos/WUR.png", style={'height': '50px', 'margin': '0px 30px'}),
+        html.Img(src="/assets/logos/DeSIRA.png", style={'height': '50px', 'margin': '0 30px'}),
+        html.Img(src="/assets/logos/IFAD.png", style={'height': '50px', 'margin': '0 30px'}),
+        html.Img(src="/assets/logos/Rikolto.png", style={'height': '30px', 'margin': '0 30px'}),
         html.Img(src="/assets/logos/RyanInstitute.png", style={'height': '60px', 'margin': '0 30px'})
     ], style={
         "display": "flex",
         "justifyContent": "center",
-        "alignItems": "baseline",
+        "alignItems": "flex-end",
         "margin": "20px 0px",
     })
 ])

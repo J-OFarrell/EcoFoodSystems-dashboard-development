@@ -170,20 +170,62 @@ def hanoi_supply_tab_layout():
 
         # Left Panel
         html.Div([
-            #dbc.Card([
-            #    dbc.CardBody([
-            #        html.H2('Rice Flow Estimations', 
-            #                style=header_style),
-            #    ])
-            #], style={"height": "auto",
-            #          "width":"100%",
-            #          "padding":"1px" ,
-            #          "box-shadow": "0 2px 6px rgba(0,0,0,0.1)",
-            #          "backgroundColor": brand_colors['Mid green'],
-            #          "border-radius": "10px",
-            #          'margin':"0px 0px 10px 0px",
-            #          "justifyContent": "center"
-            #}),
+            # Intro card
+            dbc.Card([
+                dbc.CardBody([
+                    html.H2("Food Flows & Supply Chains", style=header_style),
+                    html.P(
+                        "This analysis maps the flow of food commodities into and across Hà Nội, "
+                        "tracing supply routes from producing provinces and international sources. "
+                        "Understanding where food comes from—and in what quantities—reveals the city's "
+                        "dependence on external supply chains and highlights vulnerabilities to disruption. "
+                        "It supports evidence-based planning for food system resilience, local sourcing "
+                        "strategies, and equitable distribution across urban and peri-urban populations.",
+                        style={
+                            "margin": "6px 4px 0 4px",
+                            "fontSize": "clamp(0.6em, 0.8em, 1.0em)",
+                            "whiteSpace": "normal",
+                        }
+                    ),
+                ])
+            ], style={
+                "flex": "0 0 auto",
+                "width": "100%",
+                "padding": "6px",
+                "marginBottom": "8px",
+                "boxShadow": "0 2px 6px rgba(0,0,0,0.1)",
+                "backgroundColor": brand_colors['White'],
+                "borderRadius": "10px",
+            }),
+
+            # Commodity selector
+            dbc.Card([
+                dbc.CardBody([
+                    html.H6("Commodity", style={
+                        "fontWeight": "bold",
+                        "color": brand_colors['Brown'],
+                        "fontSize": "clamp(0.7em, 0.85em, 1em)",
+                        "marginBottom": "6px",
+                    }),
+                    dcc.Dropdown(
+                        id="supply-commodity-dropdown-hanoi",
+                        options=[
+                            {"label": "Rice", "value": "rice"},
+                            {"label": "Other commodities (coming soon)", "value": "coming_soon", "disabled": True},
+                        ],
+                        value="rice",
+                        clearable=False,
+                        style={"fontSize": "clamp(0.75em, 0.9em, 1em)"},
+                    ),
+                ], style={"padding": "8px 10px"}),
+            ], style={
+                "flex": "0 0 auto",
+                "width": "100%",
+                "marginBottom": "8px",
+                "boxShadow": "0 2px 6px rgba(0,0,0,0.1)",
+                "backgroundColor": brand_colors['White'],
+                "borderRadius": "10px",
+            }),
 
             dbc.Card([
                 dbc.CardBody([
@@ -560,7 +602,7 @@ def hanoi_health_nutrition_tab_layout():
     
     labels = df_diet_2_hanoi['Cat'].unique()
     
-    tile_width, lg = 12, 4
+    tile_width, lg = 12, 3
     years = list(range(2010, 2024))
 
     return html.Div([
@@ -606,9 +648,7 @@ def hanoi_health_nutrition_tab_layout():
                                         df_diet_2_hanoi[(df_diet_2_hanoi['Cat'] == labels[2]) & (df_diet_2_hanoi['Reg'] == 'Hanoi')]['value'].dropna().values[-1], 
                                         df_diet_2_hanoi[(df_diet_2_hanoi['Cat'] == labels[2]) & (df_diet_2_hanoi['Reg'] == 'Vietnam')]['value'].dropna().values[-1], 
                                         lower_is_better=True)], width=tile_width, lg=lg),
-                    ]),
 
-            dbc.Row([
                         dbc.Col([create_nutrition_kpi_card_hanoi(
                                         df_diet_2_hanoi[(df_diet_2_hanoi['Cat'] == labels[3]) & (df_diet_2_hanoi['Reg'] == 'Hanoi')][['Year', 'value']],
                                         labels[3].split(' in ')[0], 
