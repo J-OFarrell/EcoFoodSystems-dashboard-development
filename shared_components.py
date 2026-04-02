@@ -92,19 +92,20 @@ def city_selector(selected_city='addis', visible=True):
         # Indicator Atlas button
         html.Div([
             dbc.Button(
-                "🔍  Indicator Atlas",
+                "Indicator Atlas",
                 id='atlas-top-button',
-                color='light',
+                color='danger',
                 n_clicks=0,
                 style={
                     "fontSize": "1.1em",
-                    "fontWeight": "200",
-                    "borderRadius": "20px",
-                    "border": f"1px solid {brand_colors['Dark green']}",
+                    "fontWeight": "bold",
+                    "borderRadius": "10px",
+                    "border": "none",
                     "color": brand_colors['Brown'],
-                    "backgroundColor": brand_colors['White'],
-                    "padding": "6px 12px",
-                    "boxShadow": "0 4px 10px rgba(0,0,0,0.08)",
+                    "backgroundColor": brand_colors['Mid green'],
+                    "padding": "12px 20px",
+                    "boxShadow": "0 4px 10px rgba(0,0,0,0.12)",
+                    "minWidth": "160px",
                 }
             )
         ], style={
@@ -127,11 +128,12 @@ def city_selector(selected_city='addis', visible=True):
             dcc.Dropdown(
                 id='city-selector',
                 options=[
-                    {'label': '📍 Addis Ababa', 'value': 'addis'},
-                    {'label': '📍 Hà Nội', 'value': 'hanoi'}
+                    {'label': 'Addis Ababa', 'value': 'addis'},
+                    {'label': 'Hanoi', 'value': 'hanoi'}
                 ],
                 value=selected_city,
                 clearable=False,
+                searchable=False,
                 style={
                     "width": "200px",
                     "fontSize": "0.95em"

@@ -6,13 +6,13 @@ CITY_NAME = "Hà Nội"
 BACKGROUND_IMAGE = "/assets/photos/hanoi_header.png"
 
 # Tab background colors for landing page
-white_tab_bg = "rgba(255, 255, 255, 0.8)"
-grey_tab_bg = "rgba(173, 181, 189, 0.8)"
+white_tab_bg = "#ffffff"
+grey_tab_bg = "#f4f4f4"
 
 TAB_BACKGROUNDS = {
     "stakeholders": white_tab_bg, 
     "supply": white_tab_bg,
-    "sustainability": grey_tab_bg, 
+    "sustainability": white_tab_bg,
     "poverty": white_tab_bg,
     "labour": grey_tab_bg,
     "resilience": white_tab_bg, 

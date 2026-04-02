@@ -856,6 +856,199 @@ def hanoi_affordability_tab_layout():
                     "backgroundColor": brand_colors['Light green']
         })
 
+def hanoi_sustainability_tab_layout():
+    """Hanoi sustainability tab layout - mirrors the Addis sustainability page"""
+    import app as main
+    df_indicators = main.df_indicators
+
+    display_cols = ['Dimensions', 'Components', 'Indicators', 'SDG impact area/target', 'SDG Numbers']
+    df_display = df_indicators[display_cols]
+
+    return html.Div([
+        city_selector(selected_city='hanoi', visible=False),  # Hidden but present for callback
+
+        html.Div([sidebar], style={
+            "width": "15%",
+            "height": "100%",
+            "display": "flex",
+            "vertical-align": 'top',
+            "flexDirection": "column",
+            "justifyContent": "flex-start"
+        }),
+
+        # Main content area
+        html.Div([
+            # SDG Filter Buttons at top
+            dbc.Card([
+                dbc.CardBody([
+                    html.Div([
+                        html.H5("Filter by SDG Goal:", style={
+                            "marginBottom": "10px",
+                            "fontWeight": "bold",
+                            "color": brand_colors['Brown'],
+                            "fontSize": "clamp(0.9em, 1.1vw, 1.2em)"
+                        }),
+                        html.Div([
+                            html.Button([
+                                html.Img(src=f"/assets/logos/SDG%20logos/SDG%20Web%20Files%20w-%20UN%20Emblem/E%20SDG%20Icons%20Square/E_SDG%20goals_icons-individual-rgb-{str(i).zfill(2)}.png",
+                                        style={"height": "80px", "display": "block"}),
+                            ],
+                            id=f"sdg-filter-{i}",
+                            n_clicks=0,
+                            style={
+                                "border": "3px solid transparent",
+                                "borderRadius": "8px",
+                                "padding": "5px",
+                                "margin": "5px",
+                                "cursor": "pointer",
+                                "backgroundColor": "transparent",
+                                "transition": "all 0.2s"
+                            })
+                            for i in range(1, 18)
+                        ], style={"display": "grid", "gridTemplateColumns": "repeat(9, 1fr)", "gap": "5px", "justifyItems": "center", "maxWidth": "100%"}),
+                        html.Button("Clear Filter",
+                                   id="sdg-clear-filter",
+                                   n_clicks=0,
+                                   style={
+                                       "marginTop": "10px",
+                                       "padding": "8px 20px",
+                                       "backgroundColor": brand_colors['Red'],
+                                       "color": "white",
+                                       "border": "none",
+                                       "borderRadius": "5px",
+                                       "cursor": "pointer",
+                                       "fontWeight": "bold"
+                                   }),
+                        html.Div(id="sdg-filter-status", style={
+                            "marginTop": "10px",
+                            "fontSize": "0.9em",
+                            "color": brand_colors['Brown'],
+                            "fontStyle": "italic"
+                        })
+                    ])
+                ])
+            ], style={
+                "marginBottom": "15px",
+                "box-shadow": "0 2px 6px rgba(0,0,0,0.1)",
+                "backgroundColor": brand_colors['White'],
+                "border-radius": "10px",
+                "padding": "10px"
+            }),
+
+            # Table
+            dbc.Card([
+                dbc.CardHeader(html.H3("Sustainability Metrics & Indicators", style=header_style)),
+                dbc.CardBody([
+                    dash_table.DataTable(
+                        id='indicators_table',
+                        data=df_display.to_dict('records'),
+                        columns=[
+                            {"name": "SDG Goals" if col == "SDG Numbers" else str(col), "id": str(col)}
+                            for col in display_cols
+                        ],
+                        page_size=14,
+                        page_action='native',
+                        filter_action='native',
+                        sort_action='native',
+                        sort_mode='multi',
+                        style_cell={
+                            'textAlign': 'left',
+                            'padding': '8px',
+                            'whiteSpace': 'nowrap',
+                            'overflow': 'hidden',
+                            'textOverflow': 'ellipsis',
+                            'fontSize': 'clamp(0.7em, 1vw, 1em)',
+                            'minWidth': '120px',
+                            'maxWidth': '250px',
+                        },
+                        style_cell_conditional=[
+                            {
+                                'if': {'column_id': 'SDG Numbers'},
+                                'minWidth': '100px',
+                                'maxWidth': '150px',
+                                'textAlign': 'center',
+                            }
+                        ],
+                        style_header={
+                            'fontWeight': 'bold',
+                            'backgroundColor': brand_colors['Red'],
+                            'color': 'white',
+                            'textAlign': 'center',
+                            'fontSize': 'clamp(0.8em, 1vw, 1.1em)'
+                        },
+                        style_filter={
+                            'backgroundColor': '#f0f0f0',
+                            'fontSize': 'clamp(0.7em, 0.9vw, 0.95em)',
+                            'padding': '5px'
+                        },
+                        style_data_conditional=[
+                            {'if': {'row_index': 'odd'}, 'backgroundColor': '#f9f9f9'}
+                        ],
+                        tooltip_data=[
+                            {
+                                col: {
+                                    'value': str(row[col]) if (col.lower() in ['abstract', 'title', 'keywords'] or len(str(row[col])) > 20) else '',
+                                    'type': 'text'
+                                } for col in display_cols
+                            } for row in df_display.to_dict('records')
+                        ],
+                        tooltip_duration=None,
+                        css=[
+                            {
+                                'selector': '.dash-table-tooltip',
+                                'rule': 'background-color: ' + brand_colors['Light green'] + '; color: ' + brand_colors['Black'] + '; border: 2px solid ' + brand_colors['Dark green'] + '; padding: 6px; font-size: 14px; box-shadow: 0 4px 8px ' + brand_colors['Black'] + ';'
+                            },
+                            {
+                                'selector': '.dash-table-container .dash-spreadsheet-container',
+                                'rule': 'overflow-x: scroll !important; scrollbar-width: auto;'
+                            },
+                            {
+                                'selector': '.dash-table-container .dash-spreadsheet-container::-webkit-scrollbar',
+                                'rule': 'height: 14px; width: 14px; -webkit-appearance: none;'
+                            },
+                            {
+                                'selector': '.dash-table-container .dash-spreadsheet-container::-webkit-scrollbar-track',
+                                'rule': 'background: #f0f0f0; border-radius: 8px;'
+                            },
+                            {
+                                'selector': '.dash-table-container .dash-spreadsheet-container::-webkit-scrollbar-thumb',
+                                'rule': 'background: ' + brand_colors['Dark green'] + '; border-radius: 8px; border: 2px solid #f0f0f0;'
+                            }
+                        ],
+                        style_table={
+                            'overflowX': 'scroll',
+                            'width': '100%',
+                            'height': '100%',
+                            'overflowY': 'auto'
+                        },
+                        style_as_list_view=True
+                    )
+                ], style={"height": "100%", "display": "flex", "flexDirection": "column", "overflowY": "auto", "overflowX": "auto"})
+            ], style={
+                "height": "auto",
+                "overflowY": "auto",
+                "box-shadow": "0 2px 6px rgba(0,0,0,0.1)",
+                "backgroundColor": brand_colors['White'],
+                "border-radius": "10px",
+                "padding": "10px"
+            }),
+        ], style={
+            "flex": "1 1 85%",
+            "height": "90%",
+            "display": "flex",
+            "flexDirection": "column",
+            "overflow": 'auto',
+            "border-radius": "10px",
+            'margin': "10px 10px 10px 10px"
+        })
+    ], style={
+        "display": "flex",
+        "width": "100%",
+        "height": "100%",
+        "backgroundColor": brand_colors['Light green']
+    })
+
+
 def hanoi_policies_tab_layout():
     """Hanoi policies tab layout"""
     import app as main

@@ -29,8 +29,18 @@ body, * {
 }
 
 .dash-landing-btn:hover, .dash-landing-btn:focus {
-    background-color: rgba(255, 255, 255, 0.9) !important;  
-    color: #313715 !important;          
-    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
-    transition: background 0.2s, color 0.2s;
+    color: #313715 !important;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.13);
+    transform: translateY(-2px);
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.dash-landing-btn-coming-soon {
+    font-style: italic !important;
+    font-size: 0.65em !important;
+    font-weight: normal !important;
+    opacity: 0.5;
+    display: block;
+    margin-top: 5px;
+    letter-spacing: 0.02em;
 }
