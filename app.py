@@ -731,7 +731,7 @@ district_indicator_cfg = {
 # -------------------------- Defining Custom Styles ------------------------- #
 
 tabs_style = {
-                "backgroundColor": brand_colors['Mid green'],
+                "backgroundColor": brand_colors['Light green'],
                 "color": brand_colors['Brown'],
                 "width":"100%",
                 "margin-bottom": "4px",

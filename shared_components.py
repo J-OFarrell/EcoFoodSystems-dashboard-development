@@ -34,7 +34,7 @@ sidebar = dbc.Card([
                 "alignItems": "center",
                 "justifyContent": "center",
                 "backgroundColor": brand_colors['Light green'],
-                "color": brand_colors['White'],
+                "color": brand_colors['Brown'],
                 "borderRadius": "8px",
                 "boxShadow": "0 2px 8px rgba(0,0,0,0.15)",
                 "letterSpacing": "0.5px",
@@ -73,7 +73,8 @@ sidebar = dbc.Card([
     "flexDirection": "column",
     "justifyContent": "flex-start",
     "overflowY": "auto",  
-    "backgroundImage": "url('/assets/photos/urban_food_systems_6.jpg')",  
+    "backgroundImage": "url('/assets/photos/sidebar_img_compressed.jpg')", 
+    #"backgroundColor": brand_colors['Mid green'],  # Fallback color if image doesn't load
     "backgroundSize": "cover",        
     "backgroundPosition": "center",  
     "backgroundRepeat": "no-repeat",
