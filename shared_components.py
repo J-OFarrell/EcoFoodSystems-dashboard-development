@@ -9,8 +9,28 @@ from config import brand_colors, tabs_style
 
 # ========================== Sidebar ==========================
 
-sidebar = dbc.Card([
-    dbc.Nav([
+_SIDEBAR_TABS = [
+    ("Food Systems Stakeholders",                    "tab-1-stakeholders",      "stakeholders"),
+    ("Food Flows & Supply Chains",                   "tab-2-supply",            "supply"),
+    ("Sustainability Metrics",                       "tab-3-sustainability",    "sustainability"),
+    ("Multidimensional Poverty",                     "tab-4-poverty",           "poverty"),
+    ("Labour, Skills & Green Jobs",                  "tab-5-labour",            "labour"),
+    ("Resilience",                                   "tab-6-resilience",        "resilience"),
+    ("Food Environments",                            "tab-7-food-environments", "food-environments"),
+    ("Food Losses & Waste",                          "tab-8-losses",            "losses"),
+    ("Policies & Regulation",                        "tab-9-policies",          "policies"),
+    ("Nutrition & Health",                           "tab-10-nutrition",        "nutrition"),
+    ("Environmental Footprints",                     "tab-11-footprints",       "footprints"),
+    ("Behaviour Change Tool (AI Chatbot & Game)",    "tab-12-behaviour",        "behaviour"),
+]
+
+
+def make_sidebar(selected_city='hanoi'):
+    import hanoi_config
+    import addis_config
+    tab_backgrounds = hanoi_config.TAB_BACKGROUNDS if selected_city == 'hanoi' else addis_config.TAB_BACKGROUNDS
+
+    nav_items = [
         dbc.NavItem(
             dbc.NavLink([
                 html.Img(
@@ -42,43 +62,59 @@ sidebar = dbc.Card([
             }, href="#", active="exact"),
             style={"marginBottom": "8px", "textAlign": "center", 'width': '90%'}
         ),
-        dbc.NavItem(dbc.NavLink("Food Systems Stakeholders", id="tab-1-stakeholders", href="#", active="exact"), style=tabs_style),
-        dbc.NavItem(dbc.NavLink("Food Flows & Supply Chains", id="tab-2-supply", href="#", active="exact"), style=tabs_style),
-        dbc.NavItem(dbc.NavLink("Sustainability Metrics", id="tab-3-sustainability", href="#", active="exact"), style=tabs_style),
-        dbc.NavItem(dbc.NavLink("Multidimensional Poverty", id="tab-4-poverty", href="#", active="exact"), style=tabs_style),
-        dbc.NavItem(dbc.NavLink("Labour, Skills & Green Jobs", id="tab-5-labour", href="#", active="exact"), style=tabs_style),
-        dbc.NavItem(dbc.NavLink("Resilience", id="tab-6-resilience", href="#", active="exact"), style=tabs_style),
-        dbc.NavItem(dbc.NavLink("Food Environments", id="tab-7-food-environments", href="#", active="exact"), style=tabs_style),
-        dbc.NavItem(dbc.NavLink("Food Losses & Waste", id="tab-8-losses", href="#", active="exact"), style=tabs_style),
-        dbc.NavItem(dbc.NavLink("Policies & Regulation", id="tab-9-policies", href="#", active="exact"), style=tabs_style),
-        dbc.NavItem(dbc.NavLink("Nutrition & Health", id="tab-10-nutrition", href="#", active="exact"), style=tabs_style),
-        dbc.NavItem(dbc.NavLink("Environmental Footprints", id="tab-11-footprints", href="#", active="exact"), style=tabs_style),
-        dbc.NavItem(dbc.NavLink("Behaviour Change Tool (AI Chatbot & Game)", id="tab-12-behaviour", href="#", active="exact"), style=tabs_style),
-    ], 
-    vertical="md", 
-    pills=True, 
-    fill=True,
-    style={"marginTop": "20px",
-           "alignItems": "center",
-           "textAlign": "center",
-           "zIndex": 1000})
+    ]
 
-], style={
-    "boxShadow": "0 2px 8px rgba(0,0,0,0.08)",
-    "borderRadius": "12px",
-    "padding": "10px",
-    "height": "100%",
-    "width": "100%",
-    "display": "flex",
-    "flexDirection": "column",
-    "justifyContent": "flex-start",
-    "overflowY": "auto",  
-    "backgroundImage": "url('/assets/photos/sidebar_img_compressed.jpg')", 
-    #"backgroundColor": brand_colors['Mid green'],  # Fallback color if image doesn't load
-    "backgroundSize": "cover",        
-    "backgroundPosition": "center",  
-    "backgroundRepeat": "no-repeat",
-})
+    for label, tab_id, bg_key in _SIDEBAR_TABS:
+        is_coming_soon = tab_backgrounds.get(bg_key, "#ffffff") == "#f4f4f4"
+        link_content = html.Div([
+            html.Span(label),
+            html.Span("Coming soon", className="dash-landing-btn-coming-soon") if is_coming_soon else None,
+        ])
+        nav_link_style = {
+            "opacity": "0.45",
+            "cursor": "default",
+            "pointerEvents": "none",
+        } if is_coming_soon else {}
+        nav_items.append(
+            dbc.NavItem(
+                dbc.NavLink(link_content, id=tab_id, href="#", active="exact", style=nav_link_style),
+                style=tabs_style
+            )
+        )
+
+    return dbc.Card([
+        dbc.Nav(
+            nav_items,
+            vertical="md",
+            pills=True,
+            fill=True,
+            style={
+                "marginTop": "20px",
+                "alignItems": "center",
+                "textAlign": "center",
+                "zIndex": 1000,
+            }
+        ),
+    ], style={
+        "boxShadow": "0 2px 8px rgba(0,0,0,0.08)",
+        "borderRadius": "12px",
+        "padding": "10px",
+        "height": "100%",
+        "width": "100%",
+        "display": "flex",
+        "flexDirection": "column",
+        "justifyContent": "flex-start",
+        "overflowY": "auto",
+        "backgroundImage": "url('/assets/photos/sidebar_img_compressed.jpg')",
+        "backgroundSize": "cover",
+        "backgroundPosition": "center",
+        "backgroundRepeat": "no-repeat",
+    })
+
+
+sidebar_hanoi = make_sidebar('hanoi')
+sidebar_addis = make_sidebar('addis')
+sidebar = sidebar_hanoi  # backward-compat for app.py import
 
 
 # ========================== City Selector ==========================

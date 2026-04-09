@@ -10,7 +10,7 @@ import plotly.graph_objects as go
 import plotly.express as px
 
 from config import brand_colors, header_style, kpi_card_style_2, card_style
-from shared_components import sidebar, city_selector
+from shared_components import sidebar_addis as sidebar, city_selector
 from dashboard_components import create_nutrition_kpi_card, create_price_volatility_kpi_card
 
 

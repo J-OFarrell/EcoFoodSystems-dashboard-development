@@ -13,7 +13,7 @@ import plotly.express as px
 import json
 
 from config import brand_colors, header_style, kpi_card_style_2, card_style
-from shared_components import sidebar, city_selector
+from shared_components import sidebar_hanoi as sidebar, city_selector
 from dashboard_components import create_nutrition_kpi_card, create_nutrition_kpi_card_hanoi
 
 
