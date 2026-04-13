@@ -29,9 +29,10 @@ from lorem_text import lorem
 import warnings
 warnings.filterwarnings("ignore")
 
-# Esri World Street Map tiles — used for Vietnam maps to ensure
-# Hoang Sa (Paracel) and Truong Sa (Spratly) islands are shown
-# as required under Vietnamese law.
+# Esri World Imagery (satellite) tiles — used for Vietnam maps while a
+# compliant labelled basemap is sourced from Vietnamese partners.
+# Hoang Sa (Paracel) and Truong Sa (Spratly) islands are rendered explicitly
+# as GeoJSON overlays on the resilience tab to satisfy Vietnamese law.
 _ESRI_TILE = {
     "below": "traces",
     "sourcetype": "raster",
@@ -491,6 +492,7 @@ atlas_records_hanoi = _load_indicator_atlas_records(atlas_csv_path)
 # ── District climate indicators ───────────────────────────────────────────────
 _climate_csv  = os.path.join(hanoi_climate_dir, "vietnam_climate_resilience_quarterly_v1.csv")
 _districts_path = os.path.join(hanoi_climate_dir, "resilience_districts_base_precision_200m_min.geojson")
+_islands_path = os.path.join(hanoi_resilience_dir, "vnm_islands.geojson")
 
 _lulc_stats_csv = os.path.join(hanoi_resilience_dir, "lulc_stats.csv")
 _communes_geojson_path = os.path.join(hanoi_mpi_dir, "hanoi_communes.geojson")
@@ -2743,12 +2745,36 @@ def _build_drought_map_cached(slider_idx, indicator):
                 "indicator_label": col,
             })
 
+    # ── Island overlay (Hoàng Sa / Trường Sa) ─────────────────────────────────
+    # Shown in grey with a 'coming soon' tooltip to satisfy Vietnamese law
+    # requiring both island groups to be displayed on maps of Vietnam.
+    try:
+        with open(_islands_path) as _f:
+            _islands_geojson = json.load(_f)
+        _island_ids = [feat["properties"]["shapeID"] for feat in _islands_geojson["features"]]
+        _island_names = {feat["properties"]["shapeID"]: feat["properties"]["shapeName"] for feat in _islands_geojson["features"]}
+        fig.add_trace(go.Choroplethmapbox(
+            geojson=_islands_geojson,
+            featureidkey="properties.shapeID",
+            locations=_island_ids,
+            z=[0] * len(_island_ids),
+            text=[_island_names[i] for i in _island_ids],
+            colorscale=[[0, "#AAAAAA"], [1, "#AAAAAA"]],
+            zmin=0, zmax=1,
+            showscale=False,
+            marker=dict(opacity=0.75, line=dict(color="#666666", width=0.5)),
+            hovertemplate="<b>%{text}</b><br>Data coming soon<extra></extra>",
+        ))
+    except Exception as _e:
+        print(f"Island overlay skipped: {_e}")
+
     fig.update_layout(**_map_layout)
     return fig.to_json(), quarter, cards_payload, slider_style
 
 
 @app.callback(
     Output("drought-map-container", "children"),
+
     Output("drought-slider-label", "children"),
     Output("region-kpi-cards", "children"),
     Output("date-slider-card", "style"),
