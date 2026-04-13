@@ -863,7 +863,16 @@ def hanoi_affordability_tab_layout():
                             dcc.Graph(
                                 id='affordability-map-hanoi',
                                 figure=go.Figure().update_layout(
-                                    mapbox=dict(style="carto-positron", center={"lat": 21.0, "lon": 105.85}, zoom=9),
+                                    mapbox=dict(
+                                        style="white-bg",
+                                        layers=[{
+                                            "below": "traces",
+                                            "sourcetype": "raster",
+                                            "source": ["https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}"],
+                                        }],
+                                        center={"lat": 21.0, "lon": 105.85},
+                                        zoom=9
+                                    ),
                                     margin=dict(l=0, r=0, t=0, b=0),
                                     paper_bgcolor=brand_colors['White']
                                 ),

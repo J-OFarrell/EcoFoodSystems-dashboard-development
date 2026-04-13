@@ -29,6 +29,15 @@ from lorem_text import lorem
 import warnings
 warnings.filterwarnings("ignore")
 
+# Esri World Street Map tiles — used for Vietnam maps to ensure
+# Hoang Sa (Paracel) and Truong Sa (Spratly) islands are shown
+# as required under Vietnamese law.
+_ESRI_TILE = {
+    "below": "traces",
+    "sourcetype": "raster",
+    "source": ["https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"],
+}
+
 from dashboard_components import create_nutrition_kpi_card
 import addis_config
 import hanoi_config
@@ -1794,7 +1803,7 @@ def _build_affordability_figure(
             pass
 
     fig.update_layout(
-        mapbox=dict(style="carto-positron", center=center, zoom=zoom),
+        mapbox=dict(style="white-bg", layers=[_ESRI_TILE], center=center, zoom=zoom),
         margin=dict(l=0, r=0, t=0, b=0),
         paper_bgcolor=brand_colors['White'],
         showlegend=True if (selected_outlets or selected_isochrones) else False,
@@ -2380,7 +2389,7 @@ def update_map_on_bar_click_hanoi(clickData, selected_variable):
         color_continuous_scale="YlOrRd",
         opacity=0.7,
         labels=labels,
-        mapbox_style="carto-positron",
+        mapbox_style="white-bg",
         zoom=zoom,
         center=center
     )
@@ -2390,7 +2399,8 @@ def update_map_on_bar_click_hanoi(clickData, selected_variable):
     fig.update_layout(
         paper_bgcolor=brand_colors['White'],
         plot_bgcolor=brand_colors['White'],
-        margin=dict(l=0, r=0, t=0, b=0)
+        margin=dict(l=0, r=0, t=0, b=0),
+        mapbox=dict(style="white-bg", layers=[_ESRI_TILE], center=center, zoom=zoom)
     )
 
     fig.update_traces(
@@ -2596,7 +2606,7 @@ def _build_drought_map_cached(slider_idx, indicator):
     slopes_df = region_ctx["slopes_df"]
 
     _map_layout = dict(
-        mapbox=dict(style="carto-positron", center={"lat": 16.0, "lon": 106.0}, zoom=5),
+        mapbox=dict(style="white-bg", layers=[_ESRI_TILE], center={"lat": 16.0, "lon": 106.0}, zoom=5),
         margin=dict(l=0, r=0, t=0, b=0),
         showlegend=False,
         coloraxis_showscale=False,
@@ -2832,7 +2842,7 @@ def _build_lulc_map_cached(indicator):
     lulc_map_center = lulc_ctx["map_center"]
 
     map_layout = dict(
-        mapbox=dict(style="carto-positron", center=lulc_map_center, zoom=9),
+        mapbox=dict(style="white-bg", layers=[_ESRI_TILE], center=lulc_map_center, zoom=9),
         margin=dict(l=0, r=0, t=0, b=0),
         showlegend=False,
     )
@@ -2883,7 +2893,8 @@ def _build_lulc_map_cached(indicator):
             mapbox=dict(
                 center={"lat": float((miny + maxy) / 2.0), "lon": float((minx + maxx) / 2.0)},
                 zoom=9,
-                style="carto-positron",
+                style="white-bg",
+                layers=[_ESRI_TILE],
             )
         )
 
