@@ -25,6 +25,7 @@ import plotly.colors as pc
 import plotly.io as pio
 from plotly.subplots import make_subplots
 from lorem_text import lorem
+from io import StringIO
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -454,8 +455,22 @@ df_diet_2_hanoi = pd.read_csv(os.path.join(hanoi_nutrition_dir, 'hanoi_health_nu
 def _load_indicator_atlas_records(csv_path):
     if not os.path.exists(csv_path):
         return []
-    with open(csv_path, newline='', encoding='utf-8-sig') as f:
-        rows = list(csv.reader(f))
+
+    rows = None
+    for enc in ('utf-8-sig', 'utf-8', 'cp1252', 'latin-1'):
+        try:
+            with open(csv_path, newline='', encoding=enc) as f:
+                rows = list(csv.reader(f))
+            break
+        except UnicodeDecodeError:
+            continue
+
+    # Last-resort fallback: preserve row structure while replacing undecodable bytes.
+    if rows is None:
+        with open(csv_path, 'rb') as f:
+            text = f.read().decode('utf-8', errors='replace')
+        rows = list(csv.reader(StringIO(text)))
+
     if len(rows) < 2:
         return []
 
@@ -491,7 +506,7 @@ atlas_records_hanoi = _load_indicator_atlas_records(atlas_csv_path)
 
 # ── District climate indicators ───────────────────────────────────────────────
 _climate_csv  = os.path.join(hanoi_climate_dir, "vietnam_climate_resilience_quarterly_v1.csv")
-_districts_path = os.path.join(hanoi_climate_dir, "resilience_districts_base_precision_200m_min.geojson")
+_districts_path = os.path.join(hanoi_climate_dir, "resilience_communes_base_2025.geojson")
 _islands_path = os.path.join(hanoi_resilience_dir, "vnm_islands.geojson")
 
 _lulc_stats_csv = os.path.join(hanoi_resilience_dir, "lulc_stats.csv")
@@ -504,6 +519,8 @@ _slopes_path = os.path.join(hanoi_climate_dir, "regional_indicator_slopes.csv")
 def _get_resilience_context():
     district_climate_df = pd.read_csv(_climate_csv).reset_index()
     district_climate_df["quarter"] = district_climate_df["quarter"].astype(str)
+    if "shapeID" in district_climate_df.columns:
+        district_climate_df["shapeID"] = district_climate_df["shapeID"].astype(str)
 
     resilience_gdf = _read_geojson_cached(_districts_path).copy()
 
@@ -803,18 +820,12 @@ card_style = {
 
 
 ATLAS_SECTIONS = [
-    ("Food Systems Stakeholders", "tab-1-stakeholders"),
-    ("Food Flows & Supply Chains", "tab-2-supply"),
-    ("Sustainability Metrics", "tab-3-sustainability"),
-    ("Multidimensional Poverty", "tab-4-poverty"),
-    ("Resilience Indicators", "tab-6-resilience"),
-    ("Food Environments", "tab-7-food-environments"),
-    ("Food Losses & Waste", "tab-8-losses"),
-    ("Policies & Regulation", "tab-9-policies"),
-    ("Nutrition & Health", "tab-10-nutrition"),
-    ("Environmental Footprints", "tab-11-footprints"),
-    ("Behaviour Change Tool (AI Chatbot & Game)", "tab-12-behaviour"),
-    #("Other Indicators", "tab-3-sustainability"),
+    ("Diets, Nutrition & Health", "tab-10-nutrition"),
+    ("Environment, Natural Resources & Production", "tab-3-sustainability"),
+    ("Livelihoods, Poverty & Equity", "tab-4-poverty"),
+    ("Governance", "tab-9-policies"),
+    ("Resilience", "tab-6-resilience"),
+    ("Uncategorized", "tab-home"),
 ]
 
 ATLAS_CITY_TABS = {
@@ -881,37 +892,48 @@ def _atlas_target_for_record(rec):
     domain = (rec.get('Domain / Sub-theme') or '').lower()
     theme = (rec.get('Theme') or '').lower()
     name = (rec.get('Indicator name') or '').lower()
+    pillars = (rec.get('Pillars') or '').lower()
 
-    if 'stakeholder' in name or 'stakeholder' in domain:
-        return "Food Systems Stakeholders", "tab-1-stakeholders", None
-    if 'flow' in name or 'supply' in domain or 'value chain' in domain:
-        return "Food Flows & Supply Chains", "tab-2-supply", None
-    if 'poverty' in domain or 'multidimensional poverty' in domain:
-        return "Multidimensional Poverty", "tab-4-poverty", None
-    if 'resilience' in domain or 'resilience' in theme:
-        resilience_text = f"{domain} {theme} {name}"
-        if any(k in resilience_text for k in ['Land-use & Land-cover distribution']):
-            return "Resilience Indicators", "tab-6-resilience", "Land-use & Land-cover"
-        if any(k in resilience_text for k in  ['Agricultural climate resilience indicator' , 'Water storage anomalies', 'Natural disasters database']):
-            return "Resilience Indicators", "tab-6-resilience", "Biophysical shocks"
-        if any(k in resilience_text for k in ['food price resilience indicator']):
-            return "Resilience Indicators", "tab-6-resilience", "Socio-Economic Shocks"
-        return "Resilience Indicators", "tab-6-resilience", "Resilience Indicator Trends"
-    if 'food environments' in domain or 'afford' in name or 'afford' in domain or 'dietary mapping' in domain:
-        return "Food Environments", "tab-7-food-environments", None
-    if 'loss' in domain or 'waste' in domain:
-        return "Food Losses & Waste", "tab-8-losses", None
-    if 'policy' in name or 'polic' in domain or 'governance' in theme:
-        return "Policies & Regulation", "tab-9-policies", None
-    if 'nutrition' in domain or 'health' in domain or 'food safety' in domain:
-        return "Nutrition & Health", "tab-10-nutrition", None
-    if 'footprint' in domain or 'life cycle' in name:
-        return "Environmental Footprints", "tab-11-footprints", None
-    if 'behaviour' in domain or 'behavior' in domain or 'chatbot' in name or 'game' in name:
-        return "Behaviour Change Tool (AI Chatbot & Game)", "tab-12-behaviour", None
-    if 'sustainability' in domain or 'sustainability' in name:
-        return "Sustainability Metrics", "tab-3-sustainability", None
-    return "Other Indicators", "tab-home", None
+    pillar_text = f"{pillars} {domain} {theme} {name}"
+
+    # First map to the new high-level pillar groups for atlas display.
+    if ('resilience' in pillar_text) or ('resilience' in domain) or ('resilience' in theme):
+        if any(k in pillar_text for k in ['land-use & land-cover distribution']):
+            return "Resilience", "tab-6-resilience", "Land-use & Land-cover"
+        if any(k in pillar_text for k in ['agricultural climate resilience indicator', 'water storage anomalies', 'natural disasters database']):
+            return "Resilience", "tab-6-resilience", "Biophysical shocks"
+        if any(k in pillar_text for k in ['food price resilience indicator']):
+            return "Resilience", "tab-6-resilience", "Socio-Economic Shocks"
+        return "Resilience", "tab-6-resilience", "Resilience Indicator Trends"
+
+    if any(k in pillar_text for k in ['diets', 'nutrition', 'health', 'food safety', 'food environments', 'affordability', 'afford']):
+        # Route atlas cards to the most relevant existing data view.
+        if any(k in pillar_text for k in ['food environments', 'affordability', 'afford']):
+            return "Diets, Nutrition & Health", "tab-7-food-environments", None
+        return "Diets, Nutrition & Health", "tab-10-nutrition", None
+
+    if any(k in pillar_text for k in ['environment', 'natural resources', 'production', 'sustainability', 'footprint', 'life cycle', 'loss', 'waste']):
+        if any(k in pillar_text for k in ['footprint', 'life cycle']):
+            return "Environment, Natural Resources & Production", "tab-11-footprints", None
+        if any(k in pillar_text for k in ['loss', 'waste']):
+            return "Environment, Natural Resources & Production", "tab-8-losses", None
+        return "Environment, Natural Resources & Production", "tab-3-sustainability", None
+
+    if any(k in pillar_text for k in ['livelihoods', 'poverty', 'equity', 'labour', 'skills', 'green jobs']):
+        if any(k in pillar_text for k in ['labour', 'skills', 'green jobs']):
+            return "Livelihoods, Poverty & Equity", "tab-5-labour", None
+        return "Livelihoods, Poverty & Equity", "tab-4-poverty", None
+
+    if any(k in pillar_text for k in ['governance', 'policy', 'stakeholder', 'flow', 'supply chain', 'value chain', 'behaviour', 'behavior', 'chatbot', 'game']):
+        if any(k in pillar_text for k in ['stakeholder']):
+            return "Governance", "tab-1-stakeholders", None
+        if any(k in pillar_text for k in ['flow', 'supply chain', 'value chain']):
+            return "Governance", "tab-2-supply", None
+        if any(k in pillar_text for k in ['behaviour', 'behavior', 'chatbot', 'game']):
+            return "Governance", "tab-12-behaviour", None
+        return "Governance", "tab-9-policies", None
+
+    return "Uncategorized", "tab-home", None
 
 
 _ALL_TAB_IDS = [
@@ -929,7 +951,7 @@ def _hidden_tab_stubs():
     )
 
 
-def indicator_atlas_layout_hanoi(records):
+def indicator_atlas_layout_hanoi(records, initial_section=None):
     section_map = {title: [] for title, _ in ATLAS_SECTIONS}
 
     for idx, rec in enumerate(records):
@@ -1007,8 +1029,12 @@ def indicator_atlas_layout_hanoi(records):
             )
         )
 
+    section_order = [title for title, _ in ATLAS_SECTIONS]
+    if initial_section in section_map:
+        section_order = [initial_section] + [s for s in section_order if s != initial_section]
+
     section_blocks = []
-    for title, _ in ATLAS_SECTIONS:
+    for title in section_order:
         cards = section_map.get(title, [])
         if not cards:
             continue
@@ -1031,6 +1057,9 @@ def indicator_atlas_layout_hanoi(records):
                     "paddingLeft": "12px",
                     "marginBottom": "14px",
                     "marginTop": "6px",
+                    "display": "flex",
+                    "alignItems": "center",
+                    "justifyContent": "space-between",
                 }),
                 dbc.Row(card_cols, className="g-3"),
             ], style={"marginBottom": "32px"})
@@ -1051,6 +1080,25 @@ def indicator_atlas_layout_hanoi(records):
     return html.Div([
         city_selector(selected_city='hanoi', visible=False),
         html.Div([
+            html.Div([
+                html.Button(
+                    [
+                        html.Img(
+                            src="/assets/logos/home_button.svg",
+                            alt="Home",
+                            style={"height": "18px", "width": "18px", "marginRight": "8px"}
+                        ),
+                        html.Span("Home")
+                    ],
+                    id={"type": "atlas-home-btn", "index": 0},
+                    n_clicks=0,
+                    className="dash-atlas-home-btn",
+                )
+            ], style={
+                "marginBottom": "12px",
+                "display": "flex",
+                "justifyContent": "flex-end",
+            }),
             html.Div(section_blocks),
         ], style={
             "padding": "28px 8%",
@@ -1063,6 +1111,136 @@ def indicator_atlas_layout_hanoi(records):
 
 # ----------------------- App Layout Components -------------------------- #
 # sidebar and footer are now imported from shared_components.py
+
+def _atlas_row_is_available_for_city(rec, city_key):
+    field = 'Available Hanoi' if city_key == 'hanoi' else 'Available Addis'
+    val = str(rec.get(field, '')).strip().lower()
+    return val in {'1', 'true', 'yes', 'y'}
+
+
+def _count_available_indicators_by_pillar(city_key):
+    counts = {
+        'diets': 0,
+        'environment': 0,
+        'livelihoods': 0,
+        'governance': 0,
+        'resilience': 0,
+    }
+    seen = set()
+
+    for rec in atlas_records_hanoi:
+        name = str(rec.get('Indicator name', '')).strip()
+        if not name:
+            continue
+        if not _atlas_row_is_available_for_city(rec, city_key):
+            continue
+
+        pill = str(rec.get('Pillars', '')).strip().lower()
+        dom = str(rec.get('Domain / Sub-theme', '')).strip().lower()
+        key = (name.lower(), pill, dom)
+        if key in seen:
+            continue
+        seen.add(key)
+
+        text = f"{pill} {dom}"
+        if 'diets' in text or 'nutrition' in text or 'health' in text:
+            counts['diets'] += 1
+        elif 'environment' in text or 'natural resources' in text or 'production' in text:
+            counts['environment'] += 1
+        elif 'livelihoods' in text or 'poverty' in text or 'equity' in text:
+            counts['livelihoods'] += 1
+        elif 'governance' in text:
+            counts['governance'] += 1
+        elif 'resilience' in text:
+            counts['resilience'] += 1
+
+    return counts
+
+
+_TAB_BG_KEY_BY_TAB_ID = {
+    'tab-1-stakeholders': 'stakeholders',
+    'tab-2-supply': 'supply',
+    'tab-3-sustainability': 'sustainability',
+    'tab-4-poverty': 'poverty',
+    'tab-5-labour': 'labour',
+    'tab-6-resilience': 'resilience',
+    'tab-7-food-environments': 'food-environments',
+    'tab-8-losses': 'losses',
+    'tab-9-policies': 'policies',
+    'tab-10-nutrition': 'nutrition',
+    'tab-11-footprints': 'footprints',
+    'tab-12-behaviour': 'behaviour',
+}
+
+
+def _record_pillar_key(rec):
+    pill = str(rec.get('Pillars', '')).strip().lower()
+    dom = str(rec.get('Domain / Sub-theme', '')).strip().lower()
+    text = f"{pill} {dom}"
+
+    if 'diets' in text or 'nutrition' in text or 'health' in text:
+        return 'diets'
+    if 'environment' in text or 'natural resources' in text or 'production' in text:
+        return 'environment'
+    if 'livelihoods' in text or 'poverty' in text or 'equity' in text:
+        return 'livelihoods'
+    if 'governance' in text:
+        return 'governance'
+    if 'resilience' in text:
+        return 'resilience'
+    return None
+
+
+def _build_home_indicator_buttons(selected_city, tab_backgrounds, pillar_key):
+    buttons_payload = []
+    seen_names = set()
+
+    for idx, rec in enumerate(atlas_records_hanoi):
+        if _record_pillar_key(rec) != pillar_key:
+            continue
+
+        name = str(rec.get('Indicator name', '')).strip()
+        if not name:
+            continue
+        norm_name = name.lower()
+        if norm_name in seen_names:
+            continue
+        seen_names.add(norm_name)
+
+        _, target_tab, target_subview = _atlas_target_for_record(rec)
+        available = _atlas_row_is_available_for_city(rec, selected_city)
+        bg_key = _TAB_BG_KEY_BY_TAB_ID.get(target_tab)
+        tab_is_coming_soon = tab_backgrounds.get(bg_key or '', '#ffffff') == '#f4f4f4'
+        disabled = (not available) or tab_is_coming_soon
+
+        buttons_payload.append((
+            name.lower(),
+            html.Button(
+                [
+                    html.Span(name),
+                    html.Span('Coming soon', className='dash-landing-btn-coming-soon') if disabled else None,
+                ],
+                id={
+                    'type': 'home-indicator-btn',
+                    'target': target_tab,
+                    'subview': target_subview or '',
+                    'city': selected_city,
+                    'index': idx,
+                },
+                n_clicks=0,
+                className='dash-home-indicator-btn',
+                disabled=disabled,
+                style={
+                    'opacity': 0.45 if disabled else 1,
+                    'cursor': 'not-allowed' if disabled else 'pointer',
+                },
+            )
+        ))
+
+    if not buttons_payload:
+        return [html.Div('No indicators available for this city yet.', className='dash-home-empty-indicators')]
+
+    return [btn for _, btn in sorted(buttons_payload, key=lambda x: x[0])]
 
 # ------------------------- Main app layout ------------------------- #
 
@@ -1079,94 +1257,79 @@ def landing_page_layout(background_image=None, tab_backgrounds=None, selected_ci
         background_image = hanoi_config.BACKGROUND_IMAGE if selected_city == 'hanoi' else addis_config.BACKGROUND_IMAGE
     if tab_backgrounds is None:
         tab_backgrounds = hanoi_config.TAB_BACKGROUNDS if selected_city == 'hanoi' else addis_config.TAB_BACKGROUNDS
-    
-    tab_labels = [
-        "Food Systems Stakeholders", "Food Flows & Supply Chains", "Food Environments", "Policies & Regulations",
-        "Sustainability Metrics", "Resilience Indicators", "Environmental Footprints", "Multidimensional Poverty",
-        "Nutrition & Health", "Labour, skills & green jobs", "Food Losses & Waste",
-        "Behaviour Change Tool (AI Chatbot & Game)"
+
+    pillar_counts = _count_available_indicators_by_pillar(selected_city)
+
+    def _make_pillar_card(index, title, count_key, description):
+        return html.Div([
+            html.Button([
+                html.Div([
+                    html.Span(f'Pillar {index}', className='dash-landing-pill-index'),
+                    html.Span(f"{pillar_counts[count_key]} indicators", className='dash-landing-pill-count'),
+                ], className='dash-landing-pill-top'),
+                html.H4(title, className='dash-landing-pill-title'),
+                html.P(description, className='dash-landing-pill-text'),
+            ],
+                id={
+                    'type': 'home-pillar-atlas-btn',
+                    'section': title,
+                    'city': selected_city,
+                    'index': index,
+                },
+                n_clicks=0,
+                className='dash-landing-pill-card-btn',
+            )
+        ], className='dash-landing-pill-card')
+
+    pillar_cards = [
+        _make_pillar_card(
+            1,
+            'Diets, Nutrition & Health',
+            'diets',
+            'Track affordability, nutrition outcomes, food environments, and health risks across the city-region food system.',
+        ),
+        _make_pillar_card(
+            2,
+            'Environment, Natural Resources & Production',
+            'environment',
+            'Assess production landscapes, environmental pressures, and sustainability trajectories of food systems.',
+        ),
+        _make_pillar_card(
+            3,
+            'Livelihoods, Poverty & Equity',
+            'livelihoods',
+            'Surface structural inequalities shaping access to food, services, and opportunities across households and communities.',
+        ),
+        _make_pillar_card(
+            4,
+            'Governance',
+            'governance',
+            'Map policy and institutional capacity, stakeholder ecosystems, and food flow governance supporting system transitions.',
+        ),
+        _make_pillar_card(
+            5,
+            'Resilience',
+            'resilience',
+            'Understand climate and market shocks, adaptive capacity, and system stability through composite resilience indicators.',
+        ),
     ]
 
-    # Fixed full IDs — order here must match tab_labels above.
-    # Numbers are kept stable so all callbacks referencing e.g. "tab-6-resilience" continue to work.
-    tab_full_ids = [
-        "tab-1-stakeholders", "tab-2-supply", "tab-7-food-environments", "tab-9-policies",
-        "tab-3-sustainability", "tab-6-resilience", "tab-11-footprints", "tab-4-poverty",
-        "tab-10-nutrition", "tab-5-labour", "tab-8-losses", "tab-12-behaviour"
+    # Ensure all callback input ids exist even if not displayed as visible actions.
+    used_ids = {
+        'tab-home', 'tab-1-stakeholders', 'tab-2-supply', 'tab-3-sustainability',
+        'tab-4-poverty', 'tab-5-labour', 'tab-6-resilience', 'tab-7-food-environments',
+        'tab-8-losses', 'tab-9-policies', 'tab-10-nutrition', 'tab-11-footprints', 'tab-12-behaviour'
+    }
+    hidden_stub_buttons = [
+        html.Button(id=tab_id, n_clicks=0, style={'display': 'none'})
+        for tab_id in sorted(used_ids)
     ]
-
-    # Keep callback ids user-friendly while remaining compatible with existing background keys.
-    tab_background_keys = [
-        "stakeholders", "supply", "food-environments", "policies",
-        "sustainability", "resilience", "footprints", "poverty",
-        "nutrition", "labour", "losses", "behaviour"]
-
-    # Use passed-in background_colours
-    background_colours = tab_backgrounds
-
-    # Create grid items
-    grid_items = []
-    for full_id, bg_key, label in zip(tab_full_ids, tab_background_keys, tab_labels):
-        bg_color = background_colours[bg_key]
-        is_coming_soon = (bg_color == "#f4f4f4")
-        btn_content = html.Div([
-            html.Span(label),
-            html.Span("Coming soon", className="dash-landing-btn-coming-soon") if is_coming_soon else None,
-        ])
-        grid_items.append(
-            dbc.Card([
-                dbc.Button(btn_content, id=full_id, color="light", 
-                           className="dash-landing-btn",
-                           style={
-                                "width": "100%",
-                                "height": "100%",
-                                "fontWeight": "bold",
-                                "fontSize": "clamp(1.5em, 1.5em, 2.25em)",
-                                "color": brand_colors['Brown'],
-                                "backgroundColor": background_colours[bg_key],
-                                "borderRadius": "10px",
-                                "boxShadow": "0 4px 8px rgba(0,0,0,0.08)",
-                                #"border": f"2px solid {brand_colors['Dark green']}",
-                                "border": "1px solid #E8F0DA",
-                                "transition": "all 0.2s ease",
-                                "whiteSpace": "normal",
-                                "padding": "18px 12px",
-                }), 
-            ], style={
-                "height": "20vh",
-                "backgroundColor": "rgba(255, 255, 255, 0.5)",
-                "borderRadius": "10px",
-                "boxShadow": "0 2px 6px rgba(0,0,0,0.08)",
-                "margin": "10px"
-            })
-        )
-
-    # Arrange grid items in 4 columns x 3 rows
-    grid_layout = html.Div([
-        dbc.Row([
-            dbc.Col(grid_items[0], width=3),
-            dbc.Col(grid_items[1], width=3),
-            dbc.Col(grid_items[2], width=3),
-            dbc.Col(grid_items[3], width=3),
-        ], style={"marginBottom": "0"}),
-        dbc.Row([
-            dbc.Col(grid_items[4], width=3),
-            dbc.Col(grid_items[5], width=3),
-            dbc.Col(grid_items[6], width=3),
-            dbc.Col(grid_items[7], width=3),
-        ], style={"marginBottom": "0"}),
-        dbc.Row([
-            dbc.Col(grid_items[8], width=3),
-            dbc.Col(grid_items[9], width=3),
-            dbc.Col(grid_items[10], width=3),
-            dbc.Col(grid_items[11], width=3),
-        ], style={"marginBottom": "0"}),
-    ], style={"width": "100%", "margin": "0 auto", "padding": "0 4px"})
 
     # Put sidebar and main landing content side-by-side so the Home tab id exists
     main_content = html.Div([
-        # Hidden home button so `tab-home` exists for callbacks but sidebar is not shown on landing page
-        html.Button(id='tab-home', n_clicks=0, style={'display': 'none'}),
+        # Hidden ids needed for callback stability
+        *hidden_stub_buttons,
+
         # Header with Title and City Selector
         html.Div([
             # Title centered
@@ -1196,13 +1359,13 @@ def landing_page_layout(background_image=None, tab_backgrounds=None, selected_ci
 
         # Subtitle text
         html.Div([
-            html.P("EcoFoodSystems takes a food systems research approach to enable transitions towards diets that are more sustainable, healthier and affordable for consumers in city regions",
+            html.P("Explore the dashboard through five concise pillars adapted from the Food Systems Countdown framing.",
                 style={
                     "color": brand_colors['Brown'],
-                    "fontSize": "1em",
+                    "fontSize": "1.05em",
                     "textAlign": "center",
-                    "maxWidth": "800px",
-                    "margin": "0 auto 30px auto",
+                    "maxWidth": "980px",
+                    "margin": "0 auto 20px auto",
                 }
             ),
         ], style={
@@ -1211,16 +1374,17 @@ def landing_page_layout(background_image=None, tab_backgrounds=None, selected_ci
             "justifyContent": "center"
         }),
 
-        # Tab Grid
-        html.Div([grid_layout], style={ "width": "100%", 
-                                        "height":"auto",
-                                        "display": "block",
-                                        "marginTop": "auto",
-                                        #"backgroundImage": f"url('{background_image}')",  
-                                        "backgroundSize": "cover",        # Image covers the whole area
-                                        "backgroundPosition": "center",   # Center the image
-                                        "backgroundRepeat": "no-repeat"   # Don't repeat the image
-                                            }),
+        html.Div([
+            dbc.Row([
+                dbc.Col(pillar_cards[0], xs=12, md=6, lg=4),
+                dbc.Col(pillar_cards[1], xs=12, md=6, lg=4),
+                dbc.Col(pillar_cards[2], xs=12, md=6, lg=4),
+            ], justify='center', className='dash-landing-pill-row g-3'),
+            dbc.Row([
+                dbc.Col(pillar_cards[3], xs=12, md=6, lg=4),
+                dbc.Col(pillar_cards[4], xs=12, md=6, lg=4),
+            ], justify='center', className='dash-landing-pill-row g-3'),
+        ], className='dash-landing-pill-wrap'),
 
         # Footer logos (optional)
         footer
@@ -1229,7 +1393,7 @@ def landing_page_layout(background_image=None, tab_backgrounds=None, selected_ci
         "backgroundColor": brand_colors['Light green'],
         "height": "100vh",
         "width": "100%",
-        "padding": "0",
+        "padding": "0 2%",
         "margin": "0",
         "boxSizing": "border-box",
         'overflowY':'auto'
@@ -2146,10 +2310,11 @@ def filter_by_sdg(*args):
         Input("atlas-top-button", "n_clicks"),
         Input("city-selector", "value"),
         Input("atlas-open-tab", "data"),
+        Input({"type": "atlas-home-btn", "index": ALL}, "n_clicks"),
     ],
     [State("selected-city", "data")]
 )
-def render_tab_content(n_home, n1, n2, n3, n4, n5, n6, n7, n8, n9, n10, n11, n12, n_atlas_top, city_value, atlas_open_tab, selected_city):
+def render_tab_content(n_home, n1, n2, n3, n4, n5, n6, n7, n8, n9, n10, n11, n12, n_atlas_top, city_value, atlas_open_tab, _atlas_home_btn, selected_city):
 
     def _with_stubs(layout):
         """Wrap a non-landing layout with hidden tab stubs so all callback inputs exist."""
@@ -2171,6 +2336,26 @@ def render_tab_content(n_home, n1, n2, n3, n4, n5, n6, n7, n8, n9, n10, n11, n12
         )
     
     trigger_id = ctx.triggered[0]['prop_id'].split('.')[0]
+
+    # Pattern IDs (e.g., atlas home button) arrive as JSON strings in trigger_id.
+    if trigger_id.startswith('{'):
+        try:
+            trig_obj = json.loads(trigger_id)
+        except Exception:
+            trig_obj = {}
+        if trig_obj.get('type') == 'atlas-home-btn':
+            _city = selected_city if selected_city in ('addis', 'hanoi') else 'hanoi'
+            if _city == 'hanoi':
+                return landing_page_layout(
+                    background_image=hanoi_config.BACKGROUND_IMAGE,
+                    tab_backgrounds=hanoi_config.TAB_BACKGROUNDS,
+                    selected_city='hanoi'
+                )
+            return landing_page_layout(
+                background_image=addis_config.BACKGROUND_IMAGE,
+                tab_backgrounds=addis_config.TAB_BACKGROUNDS,
+                selected_city='addis'
+            )
     
     # If city selector changed, reload landing page with new city config
     if trigger_id == 'city-selector':
@@ -2195,19 +2380,29 @@ def render_tab_content(n_home, n1, n2, n3, n4, n5, n6, n7, n8, n9, n10, n11, n12
         else:
             return _with_stubs(sustainability_tab_layout())
     else:
+        atlas_section = None
         if trigger_id == 'atlas-open-tab' and atlas_open_tab:
             if isinstance(atlas_open_tab, dict):
                 tab_id = atlas_open_tab.get('tab')
                 atlas_subview = atlas_open_tab.get('subview')
                 atlas_city = atlas_open_tab.get('city')
+                atlas_section = atlas_open_tab.get('section')
             else:
                 tab_id = atlas_open_tab
                 atlas_subview = None
                 atlas_city = None
+                atlas_section = None
         else:
             tab_id = trigger_id
             atlas_subview = None
             atlas_city = None
+            atlas_section = None
+
+    if tab_id == 'atlas-section':
+        _atlas_city = atlas_city if atlas_city in ('hanoi', 'addis') else selected_city
+        if _atlas_city == 'hanoi':
+            return _with_stubs(indicator_atlas_layout_hanoi(atlas_records_hanoi, initial_section=atlas_section))
+        return _with_stubs(sustainability_tab_layout())
 
     route_city = atlas_city if atlas_city in ('addis', 'hanoi') else selected_city
     
@@ -2280,11 +2475,94 @@ def render_tab_content(n_home, n1, n2, n3, n4, n5, n6, n7, n8, n9, n10, n11, n12
 
 
 @app.callback(
-    Output("atlas-open-tab", "data"),
-    Input({"type": "atlas-view-btn", "target": ALL, "subview": ALL, "city": ALL, "index": ALL}, "n_clicks"),
+    [
+        Output("pillar-collapse-diets", "is_open"),
+        Output("pillar-collapse-environment", "is_open"),
+        Output("pillar-collapse-livelihoods", "is_open"),
+        Output("pillar-collapse-governance", "is_open"),
+        Output("pillar-collapse-resilience", "is_open"),
+    ],
+    [
+        Input("pillar-toggle-diets", "n_clicks"),
+        Input("pillar-toggle-environment", "n_clicks"),
+        Input("pillar-toggle-livelihoods", "n_clicks"),
+        Input("pillar-toggle-governance", "n_clicks"),
+        Input("pillar-toggle-resilience", "n_clicks"),
+    ],
+    [
+        State("pillar-collapse-diets", "is_open"),
+        State("pillar-collapse-environment", "is_open"),
+        State("pillar-collapse-livelihoods", "is_open"),
+        State("pillar-collapse-governance", "is_open"),
+        State("pillar-collapse-resilience", "is_open"),
+    ],
     prevent_initial_call=True,
 )
-def open_atlas_target_tab(_n_clicks):
+def toggle_sidebar_pillars(
+    n_diets,
+    n_environment,
+    n_livelihoods,
+    n_governance,
+    n_resilience,
+    open_diets,
+    open_environment,
+    open_livelihoods,
+    open_governance,
+    open_resilience,
+):
+    ctx = dash.callback_context
+    if not ctx.triggered:
+        return open_diets, open_environment, open_livelihoods, open_governance, open_resilience
+
+    trigger_id = ctx.triggered[0]['prop_id'].split('.')[0]
+    states = {
+        "diets": open_diets,
+        "environment": open_environment,
+        "livelihoods": open_livelihoods,
+        "governance": open_governance,
+        "resilience": open_resilience,
+    }
+
+    key_map = {
+        "pillar-toggle-diets": "diets",
+        "pillar-toggle-environment": "environment",
+        "pillar-toggle-livelihoods": "livelihoods",
+        "pillar-toggle-governance": "governance",
+        "pillar-toggle-resilience": "resilience",
+    }
+    clicked_key = key_map.get(trigger_id)
+
+    if clicked_key is None:
+        return open_diets, open_environment, open_livelihoods, open_governance, open_resilience
+
+    # Accordion behavior: only one pillar open at a time.
+    new_states = {}
+    for key, is_open in states.items():
+        if key == clicked_key:
+            new_states[key] = not bool(is_open)
+        else:
+            new_states[key] = False
+
+    return (
+        new_states["diets"],
+        new_states["environment"],
+        new_states["livelihoods"],
+        new_states["governance"],
+        new_states["resilience"],
+    )
+
+
+@app.callback(
+    Output("atlas-open-tab", "data"),
+    [
+        Input({"type": "atlas-view-btn", "target": ALL, "subview": ALL, "city": ALL, "index": ALL}, "n_clicks"),
+        Input({"type": "sidebar-indicator-btn", "target": ALL, "subview": ALL, "city": ALL, "index": ALL}, "n_clicks"),
+        Input({"type": "home-indicator-btn", "target": ALL, "subview": ALL, "city": ALL, "index": ALL}, "n_clicks"),
+        Input({"type": "home-pillar-atlas-btn", "section": ALL, "city": ALL, "index": ALL}, "n_clicks"),
+    ],
+    prevent_initial_call=True,
+)
+def open_atlas_target_tab(_atlas_btn_clicks, _sidebar_btn_clicks, _home_btn_clicks, _home_pillar_btn_clicks):
     ctx = dash.callback_context
     if not ctx.triggered:
         return dash.no_update
@@ -2294,6 +2572,16 @@ def open_atlas_target_tab(_n_clicks):
         trig_obj = json.loads(trig)
     except Exception:
         return dash.no_update
+
+    if trig_obj.get("type") == "home-pillar-atlas-btn":
+        section_name = trig_obj.get("section")
+        if not section_name:
+            return dash.no_update
+        return {
+            "tab": "atlas-section",
+            "section": section_name,
+            "city": trig_obj.get("city") or None,
+        }
 
     target_tab = trig_obj.get("target")
     if not target_tab:
@@ -2634,6 +2922,7 @@ def _build_drought_map_cached(slider_idx, indicator):
     if isinstance(indicator, str) and (indicator.startswith("class_") or indicator.startswith("drought_resistance")):
         spei_csv = os.path.join(hanoi_climate_dir, "static_climate_composites.csv")
         spei_df = pd.read_csv(spei_csv)
+        spei_df[district_join_key] = spei_df[district_join_key].astype(str)
         df = spei_df[keep_cols].dropna(subset=[col])
         slider_style = {"display": "none"}
         plot_gdf = districts_unique.merge(df, on=district_join_key, how="left")

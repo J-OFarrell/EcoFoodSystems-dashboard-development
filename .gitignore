@@ -1,1 +1,9 @@
+*.DS_Store
+__pycache__/
+*.pyc
+
 assets/data/all_policy_faodatabase.csv
+
+# Large raw resilience inputs (excluded; keep reduced derivatives only)
+assets/data/hanoi/resilience/precomputed_hanoi_climate_vars/vietnam_spei_event_months_by_polygon.csv
+assets/data/hanoi/resilience/new_geojson/DiaPhan_Xa_2025.*

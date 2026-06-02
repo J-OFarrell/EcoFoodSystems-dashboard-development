@@ -2,27 +2,183 @@
 Shared UI components for EcoFoodSystems Dashboard
 """
 
+import csv
+import os
+from io import StringIO
+
 from dash import html, dcc
 import dash_bootstrap_components as dbc
-from config import brand_colors, tabs_style
+from config import brand_colors
 
 
 # ========================== Sidebar ==========================
 
-_SIDEBAR_TABS = [
-    ("Food Systems Stakeholders",                    "tab-1-stakeholders",      "stakeholders"),
-    ("Food Flows & Supply Chains",                   "tab-2-supply",            "supply"),
-    ("Sustainability Metrics",                       "tab-3-sustainability",    "sustainability"),
-    ("Multidimensional Poverty",                     "tab-4-poverty",           "poverty"),
-    ("Labour, Skills & Green Jobs",                  "tab-5-labour",            "labour"),
-    ("Resilience",                                   "tab-6-resilience",        "resilience"),
-    ("Food Environments",                            "tab-7-food-environments", "food-environments"),
-    ("Food Losses & Waste",                          "tab-8-losses",            "losses"),
-    ("Policies & Regulation",                        "tab-9-policies",          "policies"),
-    ("Nutrition & Health",                           "tab-10-nutrition",        "nutrition"),
-    ("Environmental Footprints",                     "tab-11-footprints",       "footprints"),
-    ("Behaviour Change Tool (AI Chatbot & Game)",    "tab-12-behaviour",        "behaviour"),
+_SIDEBAR_PILLARS = [
+    {
+        "key": "diets",
+        "label": "Diets, Nutrition & Health",
+        "items": [
+            ("Nutrition & Health", "tab-10-nutrition", "nutrition"),
+            ("Food Environments", "tab-7-food-environments", "food-environments"),
+        ],
+    },
+    {
+        "key": "environment",
+        "label": "Environment, Natural Resources & Production",
+        "items": [
+            ("Sustainability Metrics", "tab-3-sustainability", "sustainability"),
+            ("Environmental Footprints", "tab-11-footprints", "footprints"),
+            ("Food Losses & Waste", "tab-8-losses", "losses"),
+        ],
+    },
+    {
+        "key": "livelihoods",
+        "label": "Livelihoods, Poverty & Equity",
+        "items": [
+            ("Multidimensional Poverty", "tab-4-poverty", "poverty"),
+            ("Labour, Skills & Green Jobs", "tab-5-labour", "labour"),
+        ],
+    },
+    {
+        "key": "governance",
+        "label": "Governance",
+        "items": [
+            ("Policies & Regulation", "tab-9-policies", "policies"),
+            ("Food Systems Stakeholders", "tab-1-stakeholders", "stakeholders"),
+            ("Food Flows & Supply Chains", "tab-2-supply", "supply"),
+            ("Behaviour Change Tool", "tab-12-behaviour", "behaviour"),
+        ],
+    },
+    {
+        "key": "resilience",
+        "label": "Resilience",
+        "items": [
+            ("Resilience Indicators", "tab-6-resilience", "resilience"),
+        ],
+    },
 ]
+
+_TAB_BG_KEY_BY_ID = {
+    tab_id: bg_key
+    for pillar in _SIDEBAR_PILLARS
+    for _, tab_id, bg_key in pillar['items']
+}
+
+_ATLAS_CSV_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)),
+    "EcoFoodSystems_indicator_architecture - 260326 - Hanoi_rewritten_descriptions_final.csv",
+)
+
+
+def _load_indicator_atlas_records(csv_path):
+    if not os.path.exists(csv_path):
+        return []
+
+    rows = None
+    for enc in ('utf-8-sig', 'utf-8', 'cp1252', 'latin-1'):
+        try:
+            with open(csv_path, newline='', encoding=enc) as f:
+                rows = list(csv.reader(f))
+            break
+        except UnicodeDecodeError:
+            continue
+
+    if rows is None:
+        with open(csv_path, 'rb') as f:
+            text = f.read().decode('utf-8', errors='replace')
+        rows = list(csv.reader(StringIO(text)))
+
+    if len(rows) < 2:
+        return []
+
+    header_idx = None
+    for idx, row in enumerate(rows):
+        normalized = [str(c).strip() for c in row]
+        if 'Domain / Sub-theme' in normalized and 'Indicator name' in normalized:
+            header_idx = idx
+            break
+
+    if header_idx is None:
+        return []
+
+    header = [str(c).strip() for c in rows[header_idx]]
+    records = []
+    for row in rows[header_idx + 1:]:
+        if not any((c or '').strip() for c in row):
+            continue
+        if len(row) < len(header):
+            row = row + [''] * (len(header) - len(row))
+        rec = dict(zip(header, row[:len(header)]))
+        indicator_name = (rec.get('Indicator name') or '').strip()
+        if not indicator_name:
+            continue
+        records.append(rec)
+    return records
+
+
+def _atlas_available_for_city(rec, selected_city):
+    field = 'Available Hanoi' if selected_city == 'hanoi' else 'Available Addis'
+    val = str(rec.get(field, '')).strip().lower()
+    return val in {'1', 'true', 'yes', 'y'}
+
+
+def _record_pillar_key(rec):
+    pill = str(rec.get('Pillars', '')).strip().lower()
+    dom = str(rec.get('Domain / Sub-theme', '')).strip().lower()
+    text = f"{pill} {dom}"
+
+    if 'diets' in text or 'nutrition' in text or 'health' in text:
+        return 'diets'
+    if 'environment' in text or 'natural resources' in text or 'production' in text:
+        return 'environment'
+    if 'livelihoods' in text or 'poverty' in text or 'equity' in text:
+        return 'livelihoods'
+    if 'governance' in text:
+        return 'governance'
+    if 'resilience' in text:
+        return 'resilience'
+    return None
+
+
+def _record_target_tab(rec):
+    domain = (rec.get('Domain / Sub-theme') or '').lower()
+    name = (rec.get('Indicator name') or '').lower()
+    text = f"{domain} {name}"
+
+    if 'stakeholder' in text:
+        return 'tab-1-stakeholders', None
+    if 'flow' in text or 'supply chain' in text:
+        return 'tab-2-supply', None
+
+    if 'resilience' in text:
+        if 'land-use & land-cover distribution' in name:
+            return 'tab-6-resilience', 'Land-use & Land-cover'
+        if any(k in name for k in ['agricultural climate resilience indicator', 'water storage anomalies', 'natural disasters database']):
+            return 'tab-6-resilience', 'Biophysical shocks'
+        if 'food price resilience indicator' in name:
+            return 'tab-6-resilience', 'Socio-Economic Shocks'
+        return 'tab-6-resilience', 'Resilience Indicator Trends'
+
+    if 'food environments' in domain or 'afford' in text:
+        return 'tab-7-food-environments', None
+    if 'loss' in text or 'waste' in text:
+        return 'tab-8-losses', None
+    if 'policy' in text or 'governance' in text:
+        return 'tab-9-policies', None
+    if 'nutrition' in text or 'health' in text or 'food safety' in text:
+        return 'tab-10-nutrition', None
+    if 'footprint' in text or 'life cycle' in text:
+        return 'tab-11-footprints', None
+    if 'behaviour' in text or 'behavior' in text or 'chatbot' in text or 'game' in text:
+        return 'tab-12-behaviour', None
+    if 'sustainability' in text:
+        return 'tab-3-sustainability', None
+    if 'labour' in text or 'green job' in text or 'skills' in text:
+        return 'tab-5-labour', None
+    if 'poverty' in text:
+        return 'tab-4-poverty', None
+
+    return 'tab-home', None
 
 
 def make_sidebar(selected_city='hanoi'):
@@ -30,9 +186,7 @@ def make_sidebar(selected_city='hanoi'):
     import addis_config
     tab_backgrounds = hanoi_config.TAB_BACKGROUNDS if selected_city == 'hanoi' else addis_config.TAB_BACKGROUNDS
 
-    nav_items = [
-        dbc.NavItem(
-            dbc.NavLink([
+    home_button = html.Button([
                 html.Img(
                     src="/assets/logos/home_button.svg",
                     alt="Home",
@@ -49,53 +203,89 @@ def make_sidebar(selected_city='hanoi'):
                     "fontWeight": "bold",
                     "fontSize": "1.08em"
                 })
-            ], id="tab-home", style={
-                "display": "flex",
-                "alignItems": "center",
-                "justifyContent": "center",
-                "backgroundColor": brand_colors['Light green'],
-                "color": brand_colors['Brown'],
-                "borderRadius": "8px",
-                "boxShadow": "0 2px 8px rgba(0,0,0,0.15)",
-                "letterSpacing": "0.5px",
-                "padding": "6px 4px",
-            }, href="#", active="exact"),
-            style={"marginBottom": "8px", "textAlign": "center", 'width': '90%'}
-        ),
-    ]
+            ], id="tab-home", n_clicks=0, className="dash-sidebar-home-btn")
 
-    for label, tab_id, bg_key in _SIDEBAR_TABS:
-        is_coming_soon = tab_backgrounds.get(bg_key, "#ffffff") == "#f4f4f4"
-        link_content = html.Div([
-            html.Span(label),
-            html.Span("Coming soon", className="dash-landing-btn-coming-soon") if is_coming_soon else None,
-        ])
-        nav_link_style = {
-            "opacity": "0.45",
-            "cursor": "default",
-            "pointerEvents": "none",
-        } if is_coming_soon else {}
-        nav_items.append(
-            dbc.NavItem(
-                dbc.NavLink(link_content, id=tab_id, href="#", active="exact", style=nav_link_style),
-                style=tabs_style
+    atlas_records = _load_indicator_atlas_records(_ATLAS_CSV_PATH)
+
+    pillar_indicator_items = {p['key']: [] for p in _SIDEBAR_PILLARS}
+    seen_by_pillar = {p['key']: set() for p in _SIDEBAR_PILLARS}
+
+    for idx, rec in enumerate(atlas_records):
+        pillar_key = _record_pillar_key(rec)
+        if pillar_key not in pillar_indicator_items:
+            continue
+
+        indicator_name = (rec.get('Indicator name') or '').strip()
+        if not indicator_name:
+            continue
+
+        dedupe_key = indicator_name.lower()
+        if dedupe_key in seen_by_pillar[pillar_key]:
+            continue
+        seen_by_pillar[pillar_key].add(dedupe_key)
+
+        target_tab, target_subview = _record_target_tab(rec)
+        available = _atlas_available_for_city(rec, selected_city)
+
+        # Tab-level availability from city config also gates indicator action buttons.
+        tab_bg_key = _TAB_BG_KEY_BY_ID.get(target_tab)
+        tab_is_coming_soon = tab_backgrounds.get(tab_bg_key or '', '#ffffff') == '#f4f4f4'
+        is_disabled = (not available) or tab_is_coming_soon
+
+        pillar_indicator_items[pillar_key].append(
+            html.Button(
+                [
+                    html.Span(indicator_name),
+                    html.Span("Coming soon", className="dash-landing-btn-coming-soon") if is_disabled else None,
+                ],
+                id={
+                    'type': 'sidebar-indicator-btn',
+                    'target': target_tab,
+                    'subview': target_subview or '',
+                    'city': selected_city,
+                    'index': idx,
+                },
+                n_clicks=0,
+                className='dash-sidebar-subtab-btn',
+                disabled=is_disabled,
+                style={
+                    'opacity': 0.45 if is_disabled else 1,
+                    'cursor': 'not-allowed' if is_disabled else 'pointer',
+                },
             )
         )
 
+    pillar_sections = []
+    for pillar in _SIDEBAR_PILLARS:
+        sub_buttons = pillar_indicator_items.get(pillar['key'], [])
+        if not sub_buttons:
+            sub_buttons = [
+                html.Div('No indicators available yet for this city.', className='dash-sidebar-empty-text')
+            ]
+
+        pillar_sections.append(
+            html.Div([
+                html.Button(
+                    [
+                        html.Span(pillar["label"]),
+                        html.Span(str(len(pillar_indicator_items.get(pillar['key'], []))), className='dash-sidebar-pill-count'),
+                    ],
+                    id=f"pillar-toggle-{pillar['key']}",
+                    n_clicks=0,
+                    className="dash-sidebar-pillar-toggle",
+                ),
+                dbc.Collapse(
+                    html.Div(sub_buttons, className="dash-sidebar-subtab-group"),
+                    id=f"pillar-collapse-{pillar['key']}",
+                    is_open=False,
+                ),
+            ], className="dash-sidebar-pillar-card")
+        )
+
     return dbc.Card([
-        dbc.Nav(
-            nav_items,
-            vertical="md",
-            pills=True,
-            fill=True,
-            style={
-                "marginTop": "20px",
-                "alignItems": "center",
-                "textAlign": "center",
-                "zIndex": 1000,
-            }
-        ),
-    ], style={
+        html.Div(home_button, className="dash-sidebar-home-wrap"),
+        html.Div(pillar_sections, className="dash-sidebar-pillar-list"),
+    ], className="dash-sidebar-card", style={
         "boxShadow": "0 2px 8px rgba(0,0,0,0.08)",
         "borderRadius": "12px",
         "padding": "10px",
@@ -105,10 +295,7 @@ def make_sidebar(selected_city='hanoi'):
         "flexDirection": "column",
         "justifyContent": "flex-start",
         "overflowY": "auto",
-        "backgroundImage": "url('/assets/photos/sidebar_img_compressed.jpg')",
-        "backgroundSize": "cover",
-        "backgroundPosition": "center",
-        "backgroundRepeat": "no-repeat",
+        "backgroundColor": "#f0f6e5",
     })
 
 

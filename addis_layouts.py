@@ -992,6 +992,7 @@ def health_nutrition_tab_layout():
                     ]),
                 ], style={  "overflowY": "auto",
                             "flex": "1 1 85%",
+                            "marginLeft": "14px",
                             "padding": "10px",
                             "backgroundColor": brand_colors['Light green']})
     

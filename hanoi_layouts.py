@@ -680,6 +680,7 @@ def hanoi_health_nutrition_tab_layout():
             "width": "min(90%)",
             "height": "100%",
             "padding": "10px",
+            "marginLeft": "14px",
             "backgroundColor": brand_colors['Light green'],
             "border-radius": "0",
             "margin": "0",
