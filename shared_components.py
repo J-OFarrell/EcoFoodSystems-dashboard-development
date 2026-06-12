@@ -268,7 +268,6 @@ def make_sidebar(selected_city='hanoi'):
                 html.Button(
                     [
                         html.Span(pillar["label"]),
-                        html.Span(str(len(pillar_indicator_items.get(pillar['key'], []))), className='dash-sidebar-pill-count'),
                     ],
                     id=f"pillar-toggle-{pillar['key']}",
                     n_clicks=0,

@@ -38,7 +38,7 @@ def _red_graph_loading(children, loading_id=None):
     )
 
 
-def hanoi_stakeholders_tab_layout():
+def governance_stakeholders_tab_layout():
     """Hà Nội stakeholders tab layout"""
     import app as main
     df_sh_hanoi = main.df_sh_hanoi
@@ -155,7 +155,7 @@ def hanoi_stakeholders_tab_layout():
     })
 
 
-def hanoi_supply_tab_layout():
+def storage_distribution_tab_layout():
     """Hà Nội supply tab layout"""
     return html.Div([
         city_selector(selected_city='hanoi', visible=False),  # Hidden but present for callback
@@ -173,7 +173,7 @@ def hanoi_supply_tab_layout():
             # Intro card
             dbc.Card([
                 dbc.CardBody([
-                    html.H2("Food Flows & Supply Chains", style=header_style),
+                    html.H2("Storage & Distribution", style=header_style),
                     html.P(
                         "This analysis maps the flow of food commodities into and across Hà Nội, "
                         "tracing supply routes from producing provinces and international sources. "
@@ -344,7 +344,7 @@ def hanoi_supply_tab_layout():
     })
 
 
-def hanoi_poverty_tab_layout():
+def livelihoods_poverty_equity_tab_layout():
     """Hà Nội poverty tab layout"""
     import app as main
     mpi_vars = main.mpi_vars
@@ -484,7 +484,7 @@ def hanoi_poverty_tab_layout():
     })
 
 
-def hanoi_affordability_tab_layout_arch():
+def food_affordability_tab_layout_hanoi_arch():
     """Hà Nội affordability tab layout"""
     return html.Div([
         city_selector(selected_city='hanoi', visible=False),  # Hidden but present for callback
@@ -595,7 +595,7 @@ def hanoi_affordability_tab_layout_arch():
     })
 
 
-def hanoi_health_nutrition_tab_layout():
+def diets_nutrition_health_tab_layout():
     """Hà Nội health & nutrition tab layout"""
     import app as main
     df_diet_2_hanoi = main.df_diet_2_hanoi
@@ -700,7 +700,7 @@ def hanoi_health_nutrition_tab_layout():
     })
 
 
-def hanoi_affordability_tab_layout():
+def food_affordability_tab_layout():
     """Hanoi affordability tab layout"""
     import app as main
     outlets_geojson_files_hanoi = main.outlets_geojson_files_hanoi
@@ -906,7 +906,8 @@ def hanoi_affordability_tab_layout():
                     "backgroundColor": brand_colors['Light green']
         })
 
-def hanoi_sustainability_tab_layout():
+
+def sdg_indicator_atlas_tab_layout():
     """Hanoi sustainability tab layout - mirrors the Addis sustainability page"""
     import app as main
     df_indicators = main.df_indicators
@@ -1099,7 +1100,7 @@ def hanoi_sustainability_tab_layout():
     })
 
 
-def hanoi_policies_tab_layout():
+def governance_policies_tab_layout():
     """Hanoi policies tab layout"""
     import app as main
     df_policies = main.df_policies_hanoi
@@ -1901,7 +1902,7 @@ def render_lulc_resilience_layout(lulc_indicator_options):
     ], style={"display": "flex", "width": "100%", "height": "100%"})
 
 
-def hanoi_resilience_tab_layout(all_quarters, default_view='Biophysical shocks'):
+def resilience_tab_layout_hanoi(all_quarters, default_view='Biophysical shocks'):
     """Hà Nội climate tab layout - Multi-dimensional Climate Stress Indicators"""
 
     n = len(all_quarters)
@@ -1949,11 +1950,11 @@ def hanoi_resilience_tab_layout(all_quarters, default_view='Biophysical shocks')
         "class_-1_months_SPEI12": "SPEI-12 Extreme Drought captures the long-duration water balance deficits aggregated by number of months since 1990.",
     }
 
-    view_options = ['Biophysical shocks', 'Resilience Indicator Trends', 'Land-use & Land-cover']
+    view_options = ['Biophysical shocks', 'Land-use & Land-cover']
     selected_view = default_view if default_view in view_options else 'Biophysical shocks'
 
-    if selected_view == 'Resilience Indicator Trends':
-        initial_view_content = render_temporal_resilience_layout()
+    if selected_view == 'Biophysical shocks':
+        initial_view_content = render_spatial_resilience_layout(climate_indicator_options, indicator_descriptions, n, quarter_marks)
     elif selected_view == 'Land-use & Land-cover':
         initial_view_content = render_lulc_resilience_layout([])
     else:
@@ -2007,3 +2008,242 @@ def hanoi_resilience_tab_layout(all_quarters, default_view='Biophysical shocks')
         }),
 
     ], style={"display": "flex", "width": "100vw", "height": "100%"})
+
+
+# =====================================
+#                                       
+# REROUTING ALL TABS TO NEW LAYOUTS  
+# UNTIL WE DEVELOP NEW PAGES 
+#
+# =====================================
+
+
+# NEW TAB LAYOUTS ==== DRIVERS ===
+
+def environment_climate_change_tab(all_quarters, default_view='Biophysical shocks'):
+    """
+    For Hanoi this page contains the Biophysical Shocks view 
+    This is not developed for Addis yet!
+    For Hanoi, we can ammend the drop-down to just include Biophysical shocks and LULC data
+    """
+    
+    """Hà Nội climate tab layout - Multi-dimensional Climate Stress Indicators"""
+
+    n = len(all_quarters)
+    max_tick_labels = 11  # target number of visible labels
+    step = max(1, int(np.ceil((n - 1) / max(1, (max_tick_labels - 1)))))
+
+    quarter_marks = {
+        i: {"label": all_quarters[i][:4], "style": {"fontSize": "10px", "color": "#8c8590"}}
+        for i in range(0, n, step)
+    }
+    quarter_marks[0] = {"label": all_quarters[0][:4], "style": {"fontSize": "10px", "color": "#8c8590"}}
+
+    climate_indicator_options = [
+        {"label": "── Vegetation ──", "value": "divider_veg", "disabled": True},
+        {"label": "Vegetative Stress (VCI)", "value": "vci_severe_pct"},
+        {"label": "Vegetation Drought Resistance", "value": "drought_resistance"},
+        {"label": "── Water ──", "value": "divider_water", "disabled": True},
+        {"label": "Water Storage Anomalies", "value": "grace_trend"},
+        {"label": "Soil Moisture Stress (coming soon)", "value": "soil_moisture", "disabled": True},
+        {"label": "── Precipitation Deficit (SPEI) ──", "value": "divider_spei", "disabled": True},
+        {"label": "Short-term Moderate Drought", "value": "class_-3_months_SPEI3"},
+        {"label": "Short-term Severe Drought", "value": "class_-2_months_SPEI3"},
+        {"label": "Short-term Extreme Drought", "value": "class_-1_months_SPEI3"},
+        {"label": "Seasonal Moderate Drought", "value": "class_-3_months_SPEI6"},
+        {"label": "Seasonal Severe Drought", "value": "class_-2_months_SPEI6"},
+        {"label": "Seasonal Extreme Drought", "value": "class_-1_months_SPEI6"},
+        {"label": "Long-term Moderate Drought", "value": "class_-3_months_SPEI12"},
+        {"label": "Long-term Severe Drought", "value": "class_-2_months_SPEI12"},
+        {"label": "Long-term Extreme Drought", "value": "class_-1_months_SPEI12"},
+    ]
+
+    indicator_descriptions = {
+        "vci_severe_pct": "The Vegetation Condition Index (VCI) measures relative vegetation health compared to historical conditions. Quantiles are applied to calculate indicators of stress; this map shows the percentage of each district under severe vegetative stress.",
+        "drought_resistance": "Vegetation Drought Resistance measures how well cropland vegetation maintained healthy VCI during SPEI6 drought events, weighted by how severe the stress conditions were. Higher values indicate crops sustained better health under equivalent stress. Grey districts recorded no drought that year.",
+        "grace_trend": "GRACE Terrestrial Water Storage Anomalies (TWSA) capture changes in total water storage — including groundwater, surface water, and soil moisture — relative to a long-term baseline. Negative anomalies signal depletion.",
+        "soil_moisture": "Soil Moisture Stress reflects root-zone water availability for crops. Severe deficits indicate conditions where plants cannot access sufficient water, directly threatening agricultural yields.",
+        "class_-3_months_SPEI3": "SPEI-3 Moderate Drought captures the short-term water balance deficits aggregated by number of months since 1990.",
+        "class_-2_months_SPEI3": "SPEI-3 Severe Drought captures the short-term water balance deficits aggregated by number of months since 1990.",
+        "class_-1_months_SPEI3": "SPEI-3 Extreme Drought captures the short-term water balance deficits aggregated by number of months since 1990.",
+        "class_-3_months_SPEI6": "SPEI-6 Moderate Drought captures the seasonal water balance deficits aggregated by number of months since 1990.",
+        "class_-2_months_SPEI6": "SPEI-6 Severe Drought captures the seasonal water balance deficits aggregated by number of months since 1990.",
+        "class_-1_months_SPEI6": "SPEI-6 Extreme Drought captures the seasonal water balance deficits aggregated by number of months since 1990.",
+        "class_-3_months_SPEI12": "SPEI-12 Moderate Drought captures the long-duration water balance deficits aggregated by number of months since 1990.",
+        "class_-2_months_SPEI12": "SPEI-12 Severe Drought captures the long-duration water balance deficits aggregated by number of months since 1990.",
+        "class_-1_months_SPEI12": "SPEI-12 Extreme Drought captures the long-duration water balance deficits aggregated by number of months since 1990.",
+    }
+
+    view_options = ['Biophysical shocks', 'Land-use & Land-cover']
+    selected_view = default_view if default_view in view_options else 'Biophysical shocks'
+
+    if selected_view == 'Biophysical shocks':
+        initial_view_content = render_temporal_resilience_layout()
+    elif selected_view == 'Land-use & Land-cover':
+        initial_view_content = render_lulc_resilience_layout([])
+
+    return html.Div([
+        city_selector(selected_city='hanoi', visible=False),
+        dcc.Store(id="climate-indicator-descriptions", data=indicator_descriptions),
+        dcc.Store(id="resilience-spatial-data", data={
+            "n": n,
+            "quarter_marks": quarter_marks,
+            "climate_indicator_options": climate_indicator_options,
+            "indicator_descriptions": indicator_descriptions,
+        }),
+        html.Script(f"window.quarterLookup = {json.dumps(all_quarters)};"),
+
+        html.Div([sidebar], style={
+            "width": "15%",
+            "height": "100%",
+            "display": "flex",
+            "vertical-align": 'top',
+            "flexDirection": "column",
+            "justifyContent": "flex-start",
+        }),
+
+        # ── Content area: toggle + dynamic view container ────────
+        html.Div([
+            dbc.CardHeader(
+                dcc.Dropdown(
+                    id="resilience_view-select",
+                    options=view_options,
+                    value=selected_view,
+                    clearable=False,
+                    style={"zIndex": "2000", "marginBottom": "0", 'fontSize': 'clamp(0.8em, 1em, 1.4em)', 'width': '100%'}
+                ),
+                style={
+                    "height": "auto", "padding": "6px", "marginBottom": "10px",
+                    "boxShadow": "0 2px 6px rgba(0,0,0,0.1)",
+                    "backgroundColor": brand_colors['White'], "borderRadius": "10px"
+                }
+            ),
+            html.Div(
+                id="resilience-view-container",
+                children=initial_view_content,
+                style={"flex": "1", "display": "flex", "minHeight": 0}
+            ),
+        ], style={
+            "flex": "1", "height": "100%", "display": "flex", "flexDirection": "column",
+            "backgroundColor": brand_colors['Light green'], "padding": "10px",
+            "overflowY": "auto", "boxSizing": "border-box",
+        }),
+
+    ], style={"display": "flex", "width": "100vw", "height": "100%"})
+
+def income_growth_distribution_tab():
+    """Can repurpose MPI tab layout for this and add in any additional indicators available to sub-tabs?
+    """
+    return livelihoods_poverty_equity_tab_layout() 
+
+def policies_leadership_tab():
+    """Can repurpose food price resilience indicator tab layout for this piece but not available yet for Hanoi
+    """
+    return 'coming-soon'
+
+def population_growth_migration_tab():
+    """ Will need to move some of the temporal resilience pieces here under new classification scheme
+    """
+    return 'coming-soon'
+
+def socio_cultural_context_tab():
+    """ Will need to move some of the temporal resilience pieces here under new classification scheme
+    """
+    return 'coming-soon'
+
+# NEW TAB LAYOUTS ==== FOOD ENVIRONMENTS ====
+
+def food_availability_tab():
+    """ Refers to food nutrient availability, not developed yet
+    """
+    return "coming-soon"
+
+def food_affordability_tab():
+    return "coming-soon"
+
+def vendor_properties_tab():
+    """ This tab is broken at the moment since the new food env tab was developed,
+    going to prioritize fixing this piece soon"""
+    return "coming-soon"
+
+# NEW TAB LAYOUTS ==== FOOD SUPPLY CHAINS ====
+
+def processing_packing_tab():
+    """ Environmental footprinting not complete for Hanoi
+    """
+    return "coming-soon"
+
+def production_systems_input_supply_tab():
+    """ Only data available for Hanoi right now is from repurposing vars from resilience temporal trends
+    """
+    return "coming-soon"
+
+def retail_markerting_tab():
+    """ Only data available for Hanoi right now is from repurposing vars from resilience temporal trends
+    """
+    return "coming-soon"
+
+def storage_distrbution_tab():
+    """ Repurposing the sankey flow of rice production for now
+    """
+    return storage_distribution_tab_layout()
+# NEW TAB LAYOUTS ==== INDIVIDUAL FACTORS ====
+
+def economic_tab():
+    """ Need to develop a tab around the food expenditure shares, data available but elsewhere right now
+    """
+    return 'coming-soon'
+
+# NEW TAB LAYOUTS ==== CROSS-CUTTING FACTORS ====
+
+def governance_tab():
+    """
+    Will need to combine policies and stakeholder database pages, perhaps sub-tab dropdown
+    """
+    return governance_stakeholders_tab_layout()
+
+def resilience_tab():
+    """ We need to find a way to combine the sustainability metrics database with additional resliene indicators for Hanoi
+    For now we can just use the temporal reslience layout as a placeholder until we redistribute
+    """
+    return html.Div([
+        city_selector(selected_city='hanoi', visible=False),
+
+        html.Div([sidebar], style={
+            "width": "15%",
+            "height": "100%",
+            "display": "flex",
+            "vertical-align": 'top',
+            "flexDirection": "column",
+            "justifyContent": "flex-start",
+        }),
+
+        # ── Content area: toggle + dynamic view container ────────
+        html.Div([
+            html.Div(
+                id="resilience-view-container",
+                children=render_temporal_resilience_layout(),
+                style={"flex": "1", "display": "flex", "minHeight": 0}
+            ),
+        ], style={
+            "flex": "1", "height": "100%", "display": "flex", "flexDirection": "column",
+            "backgroundColor": brand_colors['Light green'], "padding": "10px",
+            "overflowY": "auto", "boxSizing": "border-box",
+        }),
+
+    ], style={"display": "flex", "width": "100vw", "height": "100%"})
+
+
+# NEW TAB LAYOUTS ==== OUTCOMES ====
+
+def food_security_tab():
+    return 'coming-soon'
+
+def livelihoods_poverty_equity_tab():
+    return livelihoods_poverty_equity_tab_layout()
+
+def noncommunicable_diseases_tab():
+    return 'coming-soon'
+
+def nutrional_status_tab():
+    return diets_nutrition_health_tab_layout(selected_city='addis')

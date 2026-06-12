@@ -120,6 +120,15 @@ header_style = {
     'whiteSpace': 'normal',
 }
 
+sub_header_style = {
+    "color": brand_colors['Brown'],
+    'fontWeight': 'bold',
+    "margin": "0",
+    'textAlign': 'center',
+    "fontSize": "clamp(0.8em, 2vw, 1em)",
+    'whiteSpace': 'normal',
+}
+
 card_style = {
     "backgroundColor": brand_colors['White'],
     "border-radius": "10px",

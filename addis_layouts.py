@@ -9,7 +9,7 @@ import dash_bootstrap_components as dbc
 import plotly.graph_objects as go
 import plotly.express as px
 
-from config import brand_colors, header_style, kpi_card_style_2, card_style
+from config import brand_colors, header_style, sub_header_style, kpi_card_style_2, card_style
 from shared_components import sidebar_addis as sidebar, city_selector
 from dashboard_components import create_nutrition_kpi_card, create_price_volatility_kpi_card
 
@@ -35,7 +35,7 @@ def _red_graph_loading(children, loading_id=None):
     )
 
 
-def stakeholders_tab_layout():
+def governance_stakeholders_tab_layout():
     """Addis Ababa stakeholders tab layout"""
     # Import data at runtime to avoid circular imports
     import app as main
@@ -152,7 +152,7 @@ def stakeholders_tab_layout():
     })
 
 
-def supply_tab_layout():
+def storage_distribution_tab_layout():
     """Addis Ababa supply tab layout"""
     return html.Div([
         city_selector(selected_city='addis', visible=False),  # Hidden but present for callback
@@ -288,7 +288,19 @@ def supply_tab_layout():
         })
 
 
-def poverty_tab_layout():
+    # Backward-compatible aliases for existing imports/callbacks.
+    stakeholders_tab_layout = governance_stakeholders_tab_layout
+    supply_tab_layout = storage_distribution_tab_layout
+    poverty_tab_layout = livelihoods_poverty_equity_tab_layout
+    sustainability_tab_layout = fcd_indicator_atlas_tab_layout
+    policies_tab_layout = governance_policies_tab_layout
+    health_nutrition_tab_layout = diets_nutrition_health_tab_layout
+    footprints_tab_layout = environment_footprints_tab_layout
+    addis_resilience_tab_layout = resilience_tab_layout
+    food_env_tab_layout = food_accessibility_vendor_properties_tab_layout
+
+
+def livelihoods_poverty_equity_tab_layout():
     """Addis Ababa poverty tab layout"""
     import app as main
     variables = main.variables
@@ -311,7 +323,7 @@ def poverty_tab_layout():
                     html.H2("Multidimensional Poverty Index", style=header_style),
                     html.P("The Multidimensional Poverty Index (MPI) assesses poverty across health, education, and living standards using ten indicators including nutrition, schooling, sanitation, water, electricity, and housing. This spatial analysis maps deprivation levels across Addis Ababa's sub-cities, revealing where households face multiple overlapping disadvantages. These insights identify priority areas for targeted interventions, supporting equitable resource allocation and sustainable poverty reduction strategies aligned with SDG goals.",
                             style={  "margin": "10px 6px", 
-                                    "fontSize": 'clamp(0.7em, 1em, 1.0em)',
+                                    "fontSize": 'clamp(0.5em, 0.7em, 0.9em)',
                                     "textAlign": "justify",
                                     "whiteSpace": "normal",
                                     })
@@ -424,187 +436,8 @@ def poverty_tab_layout():
     })
 
 
-def affordability_tab_layout():
-    """Addis Ababa affordability tab layout"""
-    import app as main
-    outlets_geojson_files = main.outlets_geojson_files_addis
-    data_labels_food_env = main.data_labels_food_env
-    cols_food_env = main.cols_food_env
-    
-    return html.Div([
-        city_selector(selected_city='addis', visible=False),  # Hidden but present for callback
-        
-            html.Div([sidebar], style={
-                                "width": "15%",
-                                "height": "100%",
-                                "display": "flex",
-                                "vertical-align":'top',
-                                "flexDirection": "column",
-                                "justifyContent": "flex-start",
-            }),
+def sdg_indicator_atlas_tab_layout():
 
-            # Left Panel
-            html.Div([
-                dbc.Card([
-                    dbc.CardBody([
-                        html.Div([ 
-                            html.H2("Food Environment Analysis", style=header_style),
-                            html.P("This map shows the distribution of healthy and unhealthy food outlets across Addis Ababa's sub-cities. The obesogenic ratio reveals where unhealthy outlets dominate, indicating areas with limited access to nutritious food. Population exposure metrics highlight which communities face the greatest imbalance, providing evidence to guide equitable food policy interventions. This analysis forms part of a broader assessment integrating socioeconomic and built environment factors.",
-                                       style={  "margin": "10px 6px", 
-                                                "fontSize": 'clamp(0.7em, 0.9em, 1.0em)',
-                                                #"textAlign": "justify",
-                                                "whiteSpace": "normal",
-                                                })],
-                                style={
-                                    'margin': '2px 0px',
-                                    'zIndex': '1000',
-                                    'justifyContent': 'end',
-                                    'alignItems': 'center',
-                                    'textAlign': 'center'
-                    })],style={
-                                "display": "flex",
-                                "flexDirection": "column",
-                                "height": "100%"             
-                            })
-                ], style={"height": "auto", 
-                            "padding":"6px" ,
-                            "box-shadow": "0 2px 6px rgba(0,0,0,0.1)",
-                            "backgroundColor": brand_colors['White'],
-                            "border-radius": "10px"}),
-
-                dbc.Card([
-                    dbc.CardBody([
-                        html.Div([
-                                html.P(["Select food outlets (30-minute walkability zones display automatically)."],                                    
-                                       style={   "margin": "6px", 
-                                                'fontSize': 'clamp(0.7em, 1em, 1.0em)',
-                                                "textAlign": "center",
-                                                "whiteSpace": "normal",
-                                                "fontStyle": "italic"
-                                                }),
-                                dcc.Dropdown(
-                                    id="food-outlets-and-isochrones",
-                                    options=[
-                                        {"label": "Select All", "value": "SELECT_ALL"}
-                                    ] + [{
-                                        "label": f.split('_')[1] if len(f.split('_')) < 4 else f"{f.split('_')[1]} {f.split('_')[2]}", 
-                                        "value": f
-                                    } for f in outlets_geojson_files],
-                                    multi=True,
-                                    placeholder="Select outlet layers to display",
-                                    style={'zIndex': '3000'})
-                                ],
-                                style={
-                                    'margin': '2px 0px',
-                                    'justifyContent': 'end',
-                                    'alignItems': 'center',
-                                    'textAlign': 'center'
-                    })],style={
-                                "display": "flex",
-                                "flexDirection": "column",
-                                "height": "100%"             
-                            })
-                ], style={"height": "auto", 
-                            "padding":"6px" ,
-                            "box-shadow": "0 2px 6px rgba(0,0,0,0.1)",
-                            "backgroundColor": brand_colors['White'],
-                            "border-radius": "10px",
-                            "zIndex": "3000",
-                                            "position": "relative"}),
-                dbc.Card([
-                    dbc.CardBody([
-                        html.Div([
-                                html.P(["Select a food environment metric to display as a choropleth layer."],                                    
-                                       style={   "margin": "6px", 
-                                                'fontSize': 'clamp(0.7em, 1em, 1.0em)',
-                                                "textAlign": "center",
-                                                "whiteSpace": "normal",
-                                                "fontStyle": "italic"
-                                                }),
-                                dcc.Dropdown(
-                                    id="choropleth-select",
-                                    options=[{"label": label, "value": col} 
-                                            for label, col in zip(data_labels_food_env, cols_food_env)],
-                                    multi=False,
-                                    value='ratio_obesogenic',
-                                    placeholder="Select metric to display",
-                                    style={'zIndex': '1900'})
-                                ],
-                                style={
-                                    'margin': '2px 0px',
-                                    'justifyContent': 'end',
-                                    'alignItems': 'center',
-                                    'textAlign': 'center'
-                    })],style={
-                                "display": "flex",
-                                "flexDirection": "column",
-                                "height": "100%"             
-                            })
-                ], style={"height": "auto", 
-                            "padding":"6px" ,
-                            "box-shadow": "0 2px 6px rgba(0,0,0,0.1)",
-                            "backgroundColor": brand_colors['White'],
-                            "border-radius": "10px"}),
-                
-            ], style={
-                    "width": "min(30%)",
-                    "height": "100%",
-                    "padding": "10px",
-                    "backgroundColor": brand_colors['Light green'],
-                    "border-radius": "0",
-                    "margin": "0",
-                    "box-shadow": "0 2px 8px rgba(0,0,0,0.05)",
-                    "display": "flex",
-                    "flexDirection": "column",
-                    "justifyContent": "flex-start",
-                    "overflowY": "auto",
-                    "box-sizing": "border-box",
-                    "position": "relative",
-                }),
-
-                # Right panel: map, full height
-                html.Div([
-                    _red_graph_loading(
-                        html.Div(
-                            dcc.Graph(
-                                id='affordability-map',
-                                figure=go.Figure().update_layout(
-                                    mapbox=dict(style="carto-positron", center={"lat": 9.1, "lon": 38.7}, zoom=10),
-                                    margin=dict(l=0, r=0, t=0, b=0),
-                                    paper_bgcolor=brand_colors['White']
-                                ),
-                                config={"displayModeBar": False, "scrollZoom": True, "responsive": True},
-                                style={"height": "100%", "width": "100%", "padding": "0", "margin": "0"}
-                            ),
-                            style={"height": "100%", "width": "100%"}
-                        ),
-                        loading_id="loading-affordability-map",
-                    )
-                ], style={
-                    "flex": "1",
-                    "height": "100%",
-                    "padding": "0",
-                    "margin": "0",
-                    "backgroundColor": brand_colors['White'],
-                    "border-radius": "0",
-                    "display": "flex",
-                    "flexDirection": "column",
-                    "alignItems": "stretch",
-                    "justifyContent": "center",
-                    "box-sizing": "border-box",
-                    "zIndex": 1000,
-                    "position": "relative",
-                })
-
-        ], style={
-                    "display": "flex", 
-                    "width": "100%", 
-                    "height": "100%",
-                    "backgroundColor": brand_colors['Light green']
-        })
-
-
-def sustainability_tab_layout():
     """Addis Ababa sustainability tab layout"""
     import app as main
     df_indicators = main.df_indicators
@@ -798,7 +631,7 @@ def sustainability_tab_layout():
     })
 
 
-def policies_tab_layout():
+def governance_policies_tab_layout():
     """Addis Ababa policies tab layout"""
     import app as main
     df_policies = main.df_policies_addis
@@ -817,99 +650,7 @@ def policies_tab_layout():
 
         # Main content area
         html.Div([
-            dbc.Card([
-                dbc.CardHeader(html.H3("Food System Policies Database", style=header_style)),
-                dbc.CardBody([
-                    dash_table.DataTable(
-                        id='policies_table',
-                        data=df_policies.to_dict('records'),
-                        columns=[
-                            {"name": str(col), "id": str(col), "presentation": "markdown"} if any(k in str(col).lower() for k in ['link', 'website', 'url']) else {"name": str(col), "id": str(col)}
-                            for col in df_policies.columns
-                        ],
-                        page_size=14,
-                        page_action='native',
-                        filter_action='native',
-                        sort_action='native',
-                        sort_mode='multi',
-                        style_cell={
-                            'textAlign': 'left',
-                            'padding': '2px 6px',
-                            'whiteSpace': 'nowrap',
-                            'overflow': 'hidden',
-                            'textOverflow': 'ellipsis',
-                            'fontSize': 'clamp(0.64em, 0.85vw, 0.9em)',
-                            'lineHeight': '1.1',
-                            'minWidth': '120px',
-                            'maxWidth': '250px',
-                            'height': '36px'
-                        },
-                        style_header={
-                            'fontWeight': 'bold',
-                            'backgroundColor': brand_colors['Red'],
-                            'color': 'white',
-                            'textAlign': 'center',
-                            'fontSize': 'clamp(0.8em, 1vw, 1.1em)'
-                        },
-                        style_filter={
-                            'backgroundColor': '#f0f0f0',
-                            'fontSize': 'clamp(0.64em, 0.85vw, 0.9em)',
-                            'padding': '2px 6px'
-                        },
-                        style_data_conditional=[
-                            {'if': {'row_index': 'odd'}, 'backgroundColor': '#f9f9f9'}
-                        ],
-                        tooltip_data=[
-                            {
-                                col: {
-                                    'value': str(row[col]) if (col.lower() == 'description' or len(str(row[col])) > 120) else '',
-                                    'type': 'text'
-                                }
-                                for col in df_policies.columns
-                            } for row in df_policies.to_dict('records')
-                        ],
-                        tooltip_duration=4000,
-                        css=[
-                            {
-                                'selector': '.dash-table-tooltip',
-                                'rule': 'position: fixed !important; background-color: ' + brand_colors['Light green'] + '; color: ' + brand_colors['Black'] + '; border: 2px solid ' + brand_colors['Dark green'] + '; padding: 6px; font-size: 14px; box-shadow: 0 4px 8px ' + brand_colors['Black'] + ';'
-                            },
-                            {
-                                'selector': '.dash-table-container .dash-spreadsheet-container',
-                                'rule': 'overflow-x: scroll !important; scrollbar-width: auto;'
-                            },
-                            {
-                                'selector': '.dash-table-container .dash-spreadsheet-container::-webkit-scrollbar',
-                                'rule': 'height: 14px; width: 14px; -webkit-appearance: none;'
-                            },
-                            {
-                                'selector': '.dash-table-container .dash-spreadsheet-container::-webkit-scrollbar-track',
-                                'rule': 'background: #f0f0f0; border-radius: 8px;'
-                            },
-                            {
-                                'selector': '.dash-table-container .dash-spreadsheet-container::-webkit-scrollbar-thumb',
-                                'rule': 'background: ' + brand_colors['Dark green'] + '; border-radius: 8px; border: 2px solid #f0f0f0;'
-                            }
-                        ],
-                        style_table={
-                            'overflowX': 'scroll',
-                            'width': '100%',
-                            'height': '100%',
-                            'overflowY': 'auto'
-                        }
-                    ,
-                        style_as_list_view=True
-                    )
-                ], style={"flex": "1", "display": "flex", "flexDirection": "column", "minHeight": "0"})
-            ], style={
-                "height": "100%",
-                "box-shadow": "0 2px 6px rgba(0,0,0,0.1)",
-                "backgroundColor": brand_colors['White'],
-                "border-radius": "10px",
-                "padding": "10px",
-                "display": "flex",
-                "flexDirection": "column"
-            }),
+            _build_policy_documents_content(df_policies, table_id='policies_table'),
         ], style={
             "flex": "1 1 85%",
             "height": "96vh",
@@ -927,7 +668,165 @@ def policies_tab_layout():
     })
 
 
-def health_nutrition_tab_layout():
+def _build_policy_documents_content(df_policies, table_id='policies_table'):
+    return dbc.Card([
+        dbc.CardHeader(html.H3("Food System Policies Database", style=header_style)),
+        dbc.CardBody([
+            dash_table.DataTable(
+                id=table_id,
+                data=df_policies.to_dict('records'),
+                columns=[
+                    {"name": str(col), "id": str(col), "presentation": "markdown"} if any(k in str(col).lower() for k in ['link', 'website', 'url']) else {"name": str(col), "id": str(col)}
+                    for col in df_policies.columns
+                ],
+                page_size=14,
+                page_action='native',
+                filter_action='native',
+                sort_action='native',
+                sort_mode='multi',
+                style_cell={
+                    'textAlign': 'left',
+                    'padding': '2px 6px',
+                    'whiteSpace': 'nowrap',
+                    'overflow': 'hidden',
+                    'textOverflow': 'ellipsis',
+                    'fontSize': 'clamp(0.64em, 0.85vw, 0.9em)',
+                    'lineHeight': '1.1',
+                    'minWidth': '120px',
+                    'maxWidth': '250px',
+                    'height': '36px'
+                },
+                style_header={
+                    'fontWeight': 'bold',
+                    'backgroundColor': brand_colors['Red'],
+                    'color': 'white',
+                    'textAlign': 'center',
+                    'fontSize': 'clamp(0.8em, 1vw, 1.1em)'
+                },
+                style_filter={
+                    'backgroundColor': '#f0f0f0',
+                    'fontSize': 'clamp(0.64em, 0.85vw, 0.9em)',
+                    'padding': '2px 6px'
+                },
+                style_data_conditional=[
+                    {'if': {'row_index': 'odd'}, 'backgroundColor': '#f9f9f9'}
+                ],
+                tooltip_data=[
+                    {
+                        col: {
+                            'value': str(row[col]) if (col.lower() == 'description' or len(str(row[col])) > 120) else '',
+                            'type': 'text'
+                        }
+                        for col in df_policies.columns
+                    } for row in df_policies.to_dict('records')
+                ],
+                tooltip_duration=4000,
+                css=[
+                    {
+                        'selector': '.dash-table-tooltip',
+                        'rule': 'position: fixed !important; background-color: ' + brand_colors['Light green'] + '; color: ' + brand_colors['Black'] + '; border: 2px solid ' + brand_colors['Dark green'] + '; padding: 6px; font-size: 14px; box-shadow: 0 4px 8px ' + brand_colors['Black'] + ';'
+                    },
+                    {
+                        'selector': '.dash-table-container .dash-spreadsheet-container',
+                        'rule': 'overflow-x: scroll !important; scrollbar-width: auto;'
+                    },
+                    {
+                        'selector': '.dash-table-container .dash-spreadsheet-container::-webkit-scrollbar',
+                        'rule': 'height: 14px; width: 14px; -webkit-appearance: none;'
+                    },
+                    {
+                        'selector': '.dash-table-container .dash-spreadsheet-container::-webkit-scrollbar-track',
+                        'rule': 'background: #f0f0f0; border-radius: 8px;'
+                    },
+                    {
+                        'selector': '.dash-table-container .dash-spreadsheet-container::-webkit-scrollbar-thumb',
+                        'rule': 'background: ' + brand_colors['Dark green'] + '; border-radius: 8px; border: 2px solid #f0f0f0;'
+                    }
+                ],
+                style_table={
+                    'overflowX': 'scroll',
+                    'width': '100%',
+                    'height': '100%',
+                    'overflowY': 'auto'
+                },
+                style_as_list_view=True
+            )
+        ], style={"flex": "1", "display": "flex", "flexDirection": "column", "minHeight": "0"})
+    ], style={
+        "height": "100%",
+        "box-shadow": "0 2px 6px rgba(0,0,0,0.1)",
+        "backgroundColor": brand_colors['White'],
+        "border-radius": "10px",
+        "padding": "10px",
+        "display": "flex",
+        "flexDirection": "column"
+    })
+
+
+def _build_socio_economic_shocks_content(df_volatility, df_ufpri):
+    if df_volatility.empty or df_ufpri.empty:
+        return html.Div("No price volatility or UFPRI data available.", style={"color": "#999"})
+
+    commodities = sorted(df_volatility['commodity'].unique())
+    kpi_cards = []
+    for commodity in commodities:
+        commodity_vol_data = df_volatility[df_volatility['commodity'] == commodity].copy()
+        commodity_vol_data = commodity_vol_data.sort_values('date')
+        commodity_ufpri = df_ufpri[df_ufpri['commodity'] == commodity]
+
+        if commodity_vol_data.empty or commodity_ufpri.empty:
+            continue
+
+        current_volatility = commodity_vol_data['rolling_volatility'].iloc[-1]
+        ufpri_score = commodity_ufpri['ufpri_score'].iloc[0]
+        shock_frequency = commodity_ufpri['shock_frequency'].iloc[0]
+
+        kpi_card = create_price_volatility_kpi_card(
+            commodity_vol_data[['date', 'rolling_volatility']],
+            commodity,
+            current_volatility,
+            ufpri_score,
+            shock_frequency
+        )
+        kpi_cards.append(dbc.Col([kpi_card], width=12, lg=3))
+
+    return html.Div([
+        dbc.Row(kpi_cards) if kpi_cards else html.Div("No price volatility or UFPRI data available.", style={"color": "#999"}),
+    ])
+
+
+def render_addis_policies_leadership_view(selected_view='Socio-Economic Shocks'):
+    import app as main
+
+    if selected_view == 'Policy Documents Database':
+        return _build_policy_documents_content(
+            main.df_policies_addis,
+            table_id='policies_table_addis_resilience',
+        )
+
+    volatility_csv_path = os.path.join(
+        os.path.dirname(__file__),
+        'assets/data/addis/resilience/addis_rolling_price_volatility.csv'
+    )
+    ufpri_csv_path = os.path.join(
+        os.path.dirname(__file__),
+        'assets/data/addis/resilience/addis_ufpri_scores.csv'
+    )
+
+    try:
+        df_volatility = pd.read_csv(volatility_csv_path)
+    except Exception:
+        df_volatility = pd.DataFrame()
+
+    try:
+        df_ufpri = pd.read_csv(ufpri_csv_path)
+    except Exception:
+        df_ufpri = pd.DataFrame()
+
+    return _build_socio_economic_shocks_content(df_volatility, df_ufpri)
+
+
+def diets_nutrition_health_tab_layout():
     """Addis Ababa health & nutrition tab layout"""
     tile_width, lg = 12, 4
     
@@ -1004,8 +903,8 @@ def health_nutrition_tab_layout():
         })
 
 
-def footprints_tab_layout():
-    """Addis Ababa environmental footprints tab layout"""
+def environment_footprints_tab_layout():
+    """Addis Ababa processing and packing (LCA) tab layout"""
     import app as main
     df_lca = main.df_lca
     
@@ -1074,71 +973,18 @@ def footprints_tab_layout():
     })
 
 
-def addis_resilience_tab_layout(default_view=None):
+def economic_resilience_tab_layout(default_view=None):
     """Addis Ababa resilience tab layout with Socio-Economic Shocks (price volatility)"""
-    import app as main
-    
-    # Load price volatility data
-    volatility_csv_path = os.path.join(
-        os.path.dirname(__file__), 
-        'assets/data/addis/resilience/addis_rolling_price_volatility.csv'
-    )
-    
-    # Load UFPRI scores data
-    ufpri_csv_path = os.path.join(
-        os.path.dirname(__file__), 
-        'assets/data/addis/resilience/addis_ufpri_scores.csv'
-    )
-    
-    try:
-        df_volatility = pd.read_csv(volatility_csv_path)
-    except Exception as e:
-        df_volatility = pd.DataFrame()
-    
-    try:
-        df_ufpri = pd.read_csv(ufpri_csv_path)
-    except Exception as e:
-        df_ufpri = pd.DataFrame()
+    selected_view = default_view or 'Socio-Economic Shocks'
     
     # Define resilience view options
     view_options = [
+        'Policy Documents Database',
         'Socio-Economic Shocks',
-        'Biophysical Shocks (coming soon)',
-        'Resilience Indicator Trends (coming soon)',
-        'Land-use & Land-cover (coming soon)'
+        #'Biophysical Shocks (coming soon)',
+        #'Resilience Indicator Trends (coming soon)',
+        #'Land-use & Land-cover (coming soon)'
     ]
-    
-    # Get unique commodities and sort
-    if not df_volatility.empty:
-        commodities = sorted(df_volatility['commodity'].unique())
-    else:
-        commodities = []
-    
-    # Create KPI cards for each commodity
-    kpi_cards = []
-    if not df_volatility.empty and not df_ufpri.empty:
-        for commodity in commodities:
-            commodity_vol_data = df_volatility[df_volatility['commodity'] == commodity].copy()
-            commodity_vol_data = commodity_vol_data.sort_values('date')
-            
-            # Get UFPRI scores for this commodity
-            commodity_ufpri = df_ufpri[df_ufpri['commodity'] == commodity]
-            
-            if not commodity_vol_data.empty and not commodity_ufpri.empty:
-                current_volatility = commodity_vol_data['rolling_volatility'].iloc[-1]
-                ufpri_score = commodity_ufpri['ufpri_score'].iloc[0]
-                shock_frequency = commodity_ufpri['shock_frequency'].iloc[0]
-                
-                kpi_card = create_price_volatility_kpi_card(
-                    commodity_vol_data[['date', 'rolling_volatility']],
-                    commodity,
-                    current_volatility,
-                    ufpri_score,
-                    shock_frequency
-                )
-                kpi_cards.append(
-                    dbc.Col([kpi_card], width=12, lg=3)
-                )
     
     return html.Div([
         city_selector(selected_city='addis', visible=False),
@@ -1156,12 +1002,12 @@ def addis_resilience_tab_layout(default_view=None):
         html.Div([
             dbc.CardHeader(
                 dcc.Dropdown(
-                    id="addis_resilience_view-select",
+                    id="addis-resilience-view-select",
                     options=[
                         {"label": opt, "value": opt, "disabled": "(coming soon)" in opt}
                         for opt in view_options
                     ],
-                    value=default_view or 'Socio-Economic Shocks',
+                    value=selected_view,
                     clearable=False,
                     style={"zIndex": "2000", "marginBottom": "0", 'fontSize': 'clamp(0.8em, 1em, 1.4em)', 'width': '100%'}
                 ),
@@ -1175,9 +1021,7 @@ def addis_resilience_tab_layout(default_view=None):
             # KPI cards container for Socio-Economic Shocks view
             html.Div(
                 id="addis-resilience-view-container",
-                children=html.Div([
-                    dbc.Row(kpi_cards) if kpi_cards else html.Div("No price volatility or UFPRI data available.", style={"color": "#999"}),
-                ]),
+                children=render_addis_policies_leadership_view(selected_view),
                 style={"flex": "1", "display": "flex", "minHeight": 0, "flexDirection": "column", "overflowY": "auto"}
             ),
         ], style={
@@ -1187,3 +1031,428 @@ def addis_resilience_tab_layout(default_view=None):
         }),
         
     ], style={"display": "flex", "width": "100vw", "height": "100%"})
+
+
+def food_accessibility_vendor_properties_tab_layout(selected_city='addis'):
+    """Addis Ababa accessibility tab layout"""
+    import app as main
+    outlets_geojson_files = main.outlets_geojson_files_addis
+    #data_labels_food_env = main.data_labels_food_env
+    #cols_food_env = main.cols_food_env
+    #walking_segs = main.walking_segments_addis
+    sub_city_level_metrics = main.sub_city_level_metrics
+    cols_labels_hex_vars = main.cols_labels_hex_vars
+
+    if selected_city == 'addis':
+        cityname = 'Addis Ababa'
+    elif selected_city == 'hanoi':
+        cityname = 'Hanoi'
+
+    walking = html.Img(src="/assets/data/logos/walking.svg")
+    bus = html.Img(src="/assets/data/logos/bus.svg")
+    car = html.Img(src="/assets/data/logos/car.svg")
+    population_options = getattr(main, "accessibility_population_options_addis", [])
+    outlet_options = getattr(main, "accessibility_outlet_options_addis", [])
+    population_default = population_options[0]["value"] if population_options else None
+    
+    return html.Div([
+            city_selector(selected_city=selected_city, visible=False),  # Hidden but present for callback
+            dcc.Store(id="transport-mode", data="walk"),
+            html.Div([sidebar], style={
+                                "width": "15%",
+                                "height": "100%",
+                                "display": "flex",
+                                "vertical-align":'top',
+                                "flexDirection": "column",
+                                "justifyContent": "flex-start",
+            }),
+
+            # Left Panel
+            html.Div([
+                dbc.Card([
+                    dbc.CardBody([
+                        html.Div([ 
+                            html.H2("Food Vendor Analysis", style=header_style),
+                            html.P(f"This map shows a number of urban food vendor metrics across {cityname}'s sub-cities regions. These metrics include food outlet density, and highlights areas accessible through a combination of walking, public transportation or driving to identify areas of the city that have prominent food deserts and swamps. Additional layers can be added to the map using the dropdowns below, such as average land-surface temperature and canopy cover, which are important indicators of urban heat island effects and green space access that can further exacerbate food environment inequities.",
+                            #html.P("Placehodler Text!",
+                                       style={  "margin": "10px 6px", 
+                                                "fontSize": 'clamp(0.5em, 0.8em, 1.0em)',
+                                                #"textAlign": "justify",
+                                                "whiteSpace": "normal",
+                                                })],
+                                style={
+                                    'margin': '2px 0px',
+                                    'zIndex': '1000',
+                                    'justifyContent': 'end',
+                                    'alignItems': 'center',
+                                    'textAlign': 'center'
+                    })],style={
+                                "display": "flex",
+                                "flexDirection": "column",
+                                "height": "100%"             
+                            })
+                ], style={"height": "auto", 
+                            "padding":"6px" ,
+                            "box-shadow": "0 2px 6px rgba(0,0,0,0.1)",
+                            "backgroundColor": brand_colors['White'],
+                            "border-radius": "10px",
+                            "marginBottom": "5px"}),
+
+                    dbc.Card([
+                        dbc.CardBody([
+                            html.H3(["Vendor Accessibility Layers"], style={
+                                **sub_header_style,
+                                "justifyContent": 'center',
+                                "alignItems": 'center',
+                                "textAlign": 'center'
+                            }),
+                            html.Div([
+                                html.Div([
+                                    html.Div([
+                                        dbc.ButtonGroup([
+                                                        dbc.Button(
+                                                            html.Img(src="/assets/logos/walking.svg", height="28px"),
+                                                            id="btn-walk",
+                                                            outline=True,
+                                                            color="primary",
+                                                            n_clicks=0,
+                                                        ),
+                                                        dbc.Button(
+                                                            html.Img(src="/assets/logos/bus.svg", height="28px"),
+                                                            id="btn-transit",
+                                                            outline=True,
+                                                            color="primary",
+                                                            n_clicks=0,
+                                                        ),
+                                                        dbc.Button(
+                                                            html.Img(src="/assets/logos/car.svg", height="28px"),
+                                                            id="btn-drive",
+                                                            outline=True,
+                                                            color="primary",
+                                                            n_clicks=0,
+                                                        ),
+                                                    ],
+                                                    size="lg")
+                                    ], style={'display': 'flex', 'flexDirection': 'column', 'alignItems': 'center', 'marginBottom': '15px'}),
+                                
+                                        dcc.Slider(
+                                            id="outlet-travel-time",
+                                            min=0,
+                                            max=2,
+                                            marks={0: "5-minutes", 1: "10-minutes", 2: "15-minutes"},
+                                            value=2,
+                                            step=None,
+                                            tooltip={"always_visible": False},
+                                            updatemode="mouseup",
+                                            vertical=False,
+                                            verticalHeight=300,
+                                            included=False,
+                                            className="dcc-slider",
+                                            persistence=True,
+                                            persistence_type="session")],
+                                            style={'zIndex': '9000', 'width': '100%', 'margin': '20px 0'}
+                                        ),
+
+                                        dcc.Dropdown(
+                                            id="food-outlets-isochrones",
+                                            options=outlet_options,
+                                            value=[],  # Default to empty (no selection)
+                                            multi=True,
+                                            placeholder="Choose outlet layers by group",
+                                            style={'zIndex': '12000'}),
+                                    ],
+                                    style={
+                                        'margin': '2px 0px',
+                                        'justifyContent': 'end',
+                                        'alignItems': 'center',
+                                        'textAlign': 'center'
+                        })],style={
+                                    "display": "flex",
+                                    "flexDirection": "column",
+                                    "height": "100%"             
+                                })
+                    ], style={"height": "auto", 
+                                "padding":"6px" ,
+                                "box-shadow": "0 2px 6px rgba(0,0,0,0.1)",
+                                "backgroundColor": brand_colors['White'],
+                                "border-radius": "10px",
+                                "position": "relative",
+                                "marginBottom": "5px"}),
+
+
+                dbc.Card([
+                    dbc.CardBody([
+                        html.Div([
+                            html.H3(["Population In Accessibility Zones"], style={**sub_header_style, 'marginBottom': '5px'}),
+                            dcc.Dropdown(
+                                id="population-category-select",
+                                options=population_options,
+                                value=population_default,
+                                clearable=False,
+                                placeholder="Select a population category",
+                                style={'zIndex': '3000'}
+                            ),
+                            dcc.Graph(
+                                id="accessibility-population-bar-chart",
+                                config={"displayModeBar": False, "responsive": True},
+                                style={"height": "380px", "width": "100%"}
+                            ),
+                        ], style={
+                            'margin': '2px 0px',
+                            'justifyContent': 'end',
+                            'alignItems': 'center',
+                            'textAlign': 'center'
+                        })
+                    ], style={
+                        "display": "flex",
+                        "flexDirection": "column",
+                        "height": "100%"
+                    })
+                ], style={"height": "auto", 
+                            "padding":"6px" ,
+                            "box-shadow": "0 2px 6px rgba(0,0,0,0.1)",
+                            "backgroundColor": brand_colors['White'],
+                            "border-radius": "10px",
+                            "marginBottom": "5px"}),
+
+
+                dbc.Card([
+                    dbc.CardBody([
+                        html.Div([
+
+                                html.H3(["Contextual Layers"], style={**sub_header_style, 'marginBottom': '5px'}),
+                                dcc.Dropdown(
+                                    id="contextual-layer-select",
+                                    options=[{"label": label, "value": col} 
+                                            for col, label in cols_labels_hex_vars.items()],
+                                    multi=False,
+                                    value=None,
+                                    placeholder="Select contextual layers to display",
+                                    style={'zIndex': '6000', 'position': 'relative'})
+
+                            ],
+                                style={
+                                    'margin': '2px 0px',
+                                    'justifyContent': 'end',
+                                    'alignItems': 'center',
+                                    'textAlign': 'center'
+                    })],style={
+                                "display": "flex",
+                                "flexDirection": "column",
+                                "height": "100%"             
+                            })
+                ], style={"height": "auto", 
+                            "padding":"6px" ,
+                            "box-shadow": "0 2px 6px rgba(0,0,0,0.1)",
+                            "backgroundColor": brand_colors['White'],
+                            "border-radius": "10px",
+                            'marginBottom': "5px"}),
+                            
+                #dbc.Card([
+                #    dbc.CardBody([
+                #        html.Div([
+                #            html.H3(["Administrative Level Summary"], style={**sub_header_style, 'marginBottom': '5px'}),
+                #                html.P(["Select a sub-city level summary metric to display."],                                    
+                #                       style={   "margin": "6px", 
+                #                               'fontSize': 'clamp(0.7em, 1em, 1.0em)',
+                #                               "textAlign": "center",
+                #                               "whiteSpace": "normal",
+                #                               "fontStyle": "italic"
+                #                               }),
+                #                dcc.Dropdown(
+                #                    id="choropleth-select",
+                #                    options=[{"label": label, "value": col} 
+                #                            for col, label in sub_city_level_metrics.items()],
+                #                    multi=False,
+                #                    value='average land surface temperature',
+                #                    placeholder="Select metric to display",
+                #                    style={'zIndex': '1900'})
+                #                ],
+                #                style={
+                #                    'margin': '2px 0px',
+                #                    'justifyContent': 'end',
+                #                    'alignItems': 'center',
+                #                    'textAlign': 'center'
+                #                })],style={
+                #            "display": "flex",
+                #            "flexDirection": "column",
+                #            "height": "100%"             
+                #            })
+                #], style={"height": "auto", 
+                #            "padding":"6px" ,
+                #            "box-shadow": "0 2px 6px rgba(0,0,0,0.1)",
+                #            "backgroundColor": brand_colors['White'],
+                #            "border-radius": "10px"}),
+                
+            ], style={
+                    "width": "min(40%)",
+                    "height": "100%",
+                    "padding": "10px",
+                    "backgroundColor": brand_colors['Light green'],
+                    "border-radius": "0",
+                    "margin": "0",
+                    "box-shadow": "0 2px 8px rgba(0,0,0,0.05)",
+                    "display": "flex",
+                    "flexDirection": "column",
+                    "justifyContent": "flex-start",
+                    "overflowY": "auto",
+                    "box-sizing": "border-box",
+                    "position": "relative",
+                }),
+
+                # Right panel: map, full height
+                html.Div([
+                    dcc.Loading(
+                        id="loading-affordability-map-addis",
+                        parent_style={
+                            "height": "100%",
+                            "width": "100%",
+                            "position": "relative"
+                        },
+                        style={"height": "100%", "width": "100%"},
+                        custom_spinner=html.Div(
+                            dbc.Spinner(color="danger", type="border"),
+                            style={
+                                "position": "absolute",
+                                "inset": "0",
+                                "display": "flex",
+                                "alignItems": "center",
+                                "justifyContent": "center",
+                                "zIndex": 1000,
+                                "pointerEvents": "none",
+                            }
+                        ),
+                        children=html.Div(
+                            dcc.Graph(
+                                id='accessibility-map-addis',
+                                figure=go.Figure().update_layout(
+                                    mapbox=dict(
+                                        #layers=[{
+                                        #    "below": "traces",
+                                        #    "sourcetype": "raster",
+                                        #    "source": ["https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}"],
+                                        #}],
+                                        style="carto-positron",
+                                        center={"lat": 21.0, "lon": 105.85},
+                                        zoom=9
+                                    ),
+                                    margin=dict(l=0, r=0, t=0, b=0),
+                                    paper_bgcolor=brand_colors['White']
+                                ),
+                                config={"displayModeBar": False, "scrollZoom": True, "responsive": True},
+                                style={"height": "100%", "width": "100%", "padding": "0", "margin": "0"}
+                            ),
+                            style={"height": "100%", "width": "100%"}
+                        )
+                    )
+                ], style={
+                    "flex": "1",
+                    "height": "100%",
+                    "padding": "0",
+                    "margin": "0",
+                    "backgroundColor": brand_colors['White'],
+                    "border-radius": "0",
+                    "display": "flex",
+                    "flexDirection": "column",
+                    "alignItems": "stretch",
+                    "justifyContent": "center",
+                    "box-sizing": "border-box",
+                    "zIndex": 1000,
+                    "position": "relative",
+                })
+
+        ], style={
+                    "display": "flex", 
+                    "width": "100%", 
+                    "height": "100%",
+                    "backgroundColor": brand_colors['Light green']
+        })
+
+
+
+
+# NEW TAB LAYOUTS ==== DRIVERS ===
+
+def environment_climate_change_tab():
+    """
+    For Hanoi this page contains the Biophysical Shocks view 
+    This is not developed for Addis yet!
+    For Hanoi, we can ammend the drop-down to just include Biophysical shocks and LULC data
+    """
+    
+    return 'coming-soon'
+
+def income_growth_distribution_tab():
+    """Can repurpose MPI tab layout for this and add in any additional indicators available to sub-tabs?"""
+    return livelihoods_poverty_equity_tab_layout() 
+
+def policies_leadership_tab():
+    """Can repurpose food price resilience indicator tab layout for this piece
+    """
+    return economic_resilience_tab_layout(default_view='Socio-Economic Shocks')
+
+def population_growth_migration_tab():
+    return 'coming-soon'
+
+def socio_cultural_context_tab():
+    return 'coming-soon'
+
+# NEW TAB LAYOUTS ==== FOOD ENVIRONMENTS ====
+
+def food_availability_tab():
+    """ Refers to food nutrient availability, not developed yet
+    """
+    return "coming-soon"
+
+def food_affordability_tab():
+    return "coming-soon"
+
+def vendor_properties_tab():
+    return food_accessibility_vendor_properties_tab_layout(selected_city='addis')
+
+# NEW TAB LAYOUTS ==== FOOD SUPPLY CHAINS ====
+
+def processing_packing_tab():
+    """ For now the only available indicator is the LCA analysis so will use this """
+    return environment_footprints_tab_layout()
+
+def production_systems_input_supply_tab():
+    return 'coming-soon'
+
+def retail_markerting_tab():
+    return 'coming-soon'
+
+def storage_distrbution_tab():
+    return 'coming-soon'
+
+# NEW TAB LAYOUTS ==== INDIVIDUAL FACTORS ====
+
+def economic_tab():
+    return 'coming-soon'
+
+# NEW TAB LAYOUTS ==== CROSS-CUTTING FACTORS ====
+
+def governance_tab():
+    """
+    Will need to combine policies and stakeholder database pages, perhaps sub-tab dropdown
+    """
+    return governance_stakeholders_tab_layout()
+
+def resilience_tab():
+    """ Right now the SDG database is the only thing that fits exclusively here"""
+    return sdg_indicator_atlas_tab_layout()
+
+
+# NEW TAB LAYOUTS ==== OUTCOMES ====
+
+def food_security_tab():
+    return 'coming-soon'
+
+def livelihoods_poverty_equity_tab():
+    return livelihoods_poverty_equity_tab_layout()
+
+def noncommunicable_diseases_tab():
+    return 'coming-soon'
+
+def nutrional_status_tab():
+    return diets_nutrition_health_tab_layout(selected_city='addis')

@@ -13,7 +13,7 @@ import seaborn as sns
 import plotly.express as px
 import json
 import dash
-from dash import Dash, html, dcc, Output, Input, State, callback, dash_table, ALL
+from dash import Dash, html, dcc, Output, Input, State, callback, dash_table, ALL, ctx
 import dash_bootstrap_components as dbc
 import dash_auth  
 import dash_leaflet as dl
@@ -34,27 +34,85 @@ warnings.filterwarnings("ignore")
 # compliant labelled basemap is sourced from Vietnamese partners.
 # Hoang Sa (Paracel) and Truong Sa (Spratly) islands are rendered explicitly
 # as GeoJSON overlays on the resilience tab to satisfy Vietnamese law.
-_ESRI_TILE = {
-    "below": "traces",
-    "sourcetype": "raster",
-    "source": ["https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"],
+#_ESRI_TILE = {
+#    "below": "traces",
+#    "sourcetype": "raster",
+#    "source": ["https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"],
+#}
+
+_BASEMAP_TILE = [
+{
+    "below":"traces",
+    "sourcetype":"raster",
+    "source":[
+        "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+    ]
 }
+]
+
 
 from dashboard_components import create_nutrition_kpi_card
 import addis_config
 import hanoi_config
 from shared_components import sidebar, footer, city_selector
 from addis_layouts import (
-    stakeholders_tab_layout, supply_tab_layout, poverty_tab_layout,
-    affordability_tab_layout, sustainability_tab_layout, policies_tab_layout,
-    health_nutrition_tab_layout, footprints_tab_layout, addis_resilience_tab_layout
+    governance_stakeholders_tab_layout as addis_governance_stakeholders_tab_layout,
+    storage_distribution_tab_layout as addis_storage_distribution_tab_layout,
+    livelihoods_poverty_equity_tab_layout as addis_livelihoods_poverty_equity_tab_layout,
+    sdg_indicator_atlas_tab_layout as addis_fcd_indicator_atlas_tab_layout,
+    governance_policies_tab_layout as addis_governance_policies_tab_layout,
+    diets_nutrition_health_tab_layout as addis_diets_nutrition_health_tab_layout,
+    environment_footprints_tab_layout as addis_environment_footprints_tab_layout,
+    #resilience_tab_layout as addis_resilience_tab_layout,
+    environment_climate_change_tab as addis_environment_climate_change_tab,
+    income_growth_distribution_tab as addis_income_growth_distribution_tab,
+    policies_leadership_tab as addis_policies_leadership_tab,
+    population_growth_migration_tab as addis_population_growth_migration_tab,
+    socio_cultural_context_tab as addis_socio_cultural_context_tab,
+    food_availability_tab as addis_food_availability_tab,
+    food_affordability_tab as addis_food_affordability_tab,
+    food_accessibility_vendor_properties_tab_layout as addis_vendor_properties_tab,
+    processing_packing_tab as addis_processing_packing_tab,
+    production_systems_input_supply_tab as addis_production_systems_input_supply_tab,
+    retail_markerting_tab as addis_retail_markerting_tab,
+    storage_distrbution_tab as addis_storage_distrbution_tab,
+    economic_tab as addis_economic_tab,
+    governance_tab as addis_governance_tab,
+    resilience_tab as addis_resilience_tab,
+    food_security_tab as addis_food_security_tab,
+    livelihoods_poverty_equity_tab as addis_livelihoods_poverty_equity_tab,
+    noncommunicable_diseases_tab as addis_noncommunicable_diseases_tab,
+    nutrional_status_tab as addis_nutrional_status_tab,
+    render_addis_policies_leadership_view as addis_render_policies_leadership_view,
 )
 from hanoi_layouts import (
-    hanoi_stakeholders_tab_layout, hanoi_supply_tab_layout,
-    hanoi_poverty_tab_layout, hanoi_affordability_tab_layout,
-    hanoi_health_nutrition_tab_layout, hanoi_policies_tab_layout,
-    hanoi_sustainability_tab_layout,
-    hanoi_resilience_tab_layout,
+    governance_stakeholders_tab_layout as hanoi_governance_stakeholders_tab_layout,
+    storage_distribution_tab_layout as hanoi_storage_distribution_tab_layout,
+    livelihoods_poverty_equity_tab_layout as hanoi_livelihoods_poverty_equity_tab_layout,
+    food_affordability_tab_layout as hanoi_food_affordability_tab_layout,
+    diets_nutrition_health_tab_layout as hanoi_diets_nutrition_health_tab_layout,
+    governance_policies_tab_layout as hanoi_governance_policies_tab_layout,
+    sdg_indicator_atlas_tab_layout as hanoi_fcd_indicator_atlas_tab_layout,
+    resilience_tab_layout_hanoi,
+    environment_climate_change_tab as hanoi_environment_climate_change_tab,
+    income_growth_distribution_tab as hanoi_income_growth_distribution_tab,
+    policies_leadership_tab as hanoi_policies_leadership_tab,
+    population_growth_migration_tab as hanoi_population_growth_migration_tab,
+    socio_cultural_context_tab as hanoi_socio_cultural_context_tab,
+    food_availability_tab as hanoi_food_availability_tab,
+    food_affordability_tab as hanoi_food_affordability_tab,
+    vendor_properties_tab as hanoi_vendor_properties_tab,
+    processing_packing_tab as hanoi_processing_packing_tab,
+    production_systems_input_supply_tab as hanoi_production_systems_input_supply_tab,
+    retail_markerting_tab as hanoi_retail_markerting_tab,
+    storage_distrbution_tab as hanoi_storage_distrbution_tab,
+    economic_tab as hanoi_economic_tab,
+    governance_tab as hanoi_governance_tab,
+    resilience_tab as hanoi_resilience_tab,
+    food_security_tab as hanoi_food_security_tab,
+    livelihoods_poverty_equity_tab as hanoi_livelihoods_poverty_equity_tab,
+    noncommunicable_diseases_tab as hanoi_noncommunicable_diseases_tab,
+    nutrional_status_tab as hanoi_nutrional_status_tab,
     render_spatial_resilience_layout,
     render_temporal_resilience_layout,
     render_lulc_resilience_layout,
@@ -122,7 +180,7 @@ def _load_food_env_layer(geojson_path, values_csv_path=None, join_key_candidates
 
 @lru_cache(maxsize=4)
 def _get_food_env_geojson(city_key):
-    gdf = gdf_food_env if city_key == "addis" else gdf_food_env_hanoi if city_key == "hanoi" else None
+    gdf = gdf_summary_stats_addis if city_key == "addis" else gdf_food_env_hanoi if city_key == "hanoi" else None
     if gdf is None:
         return None
 
@@ -132,23 +190,66 @@ def _get_food_env_geojson(city_key):
 
 
 @lru_cache(maxsize=48)
-def _build_isochrone_union_geojson(isochrones_path_local, selected_isochrones_key):
+def _build_isochrone_union_geojson(isochrones_path_local, selected_isochrones_key, selected_time_seconds, selected_transport_mode):
+    """
+    Union selected isochrone files and filter by travel time threshold.
+    
+    Args:
+        isochrones_path_local: Path to isochrones directory
+        selected_isochrones_key: Tuple of outlet category names (e.g., ('shop_bakery', 'shop_alcohol'))
+        selected_time_seconds: Time threshold in seconds (e.g., 900 for 15 minutes)
+        selected_transport_mode: Mode of transportation (e.g., 'walk', 'multimodal', 'driving')
+    Returns:
+        GeoJSON string of unioned isochrones, or None if no geometries found
+    """
+
     if not selected_isochrones_key:
+        print(f"DEBUG: No isochrones selected, returning None")
         return None
 
     geoms = []
-    for filename in selected_isochrones_key:
-        path = os.path.join(isochrones_path_local, filename)
-        if os.path.exists(path):
-            gdf = _read_geojson_cached(path)
-            geoms.extend([geom for geom in gdf.geometry if geom is not None and not geom.is_empty])
+    for outlet_category in selected_isochrones_key:
+        # Map outlet category to isochrone filename
+        # E.g., 'shop_bakery' -> 'isochrone_shop_bakery_multimodal.geojson'
+        iso_filename = f"isochrone_{outlet_category}_{selected_transport_mode}.geojson"
+        iso_path = os.path.join(isochrones_path_local, iso_filename)
 
-    if not geoms:
+        print(f"DEBUG: Processing isochrone file: {iso_path} for category '{outlet_category}' with time threshold {selected_time_seconds}")
+      
+        if os.path.exists(iso_path):
+            try:
+                gdf = _read_geojson_cached(iso_path)
+                print(f"DEBUG: Loaded GeoDataFrame shape: {gdf.shape}")
+                
+                # Filter by selected travel time label (time_seconds column)
+                if 'threshold_s' in gdf.columns:
+                    gdf["threshold_s"] = pd.to_numeric(gdf["threshold_s"], errors='coerce')
+                    filtered_gdf = gdf[gdf['threshold_s'].astype(int) == int(selected_time_seconds)]
+                    print(f"DEBUG: Filtered GeoDataFrame shape: {filtered_gdf.shape}")
+                    geoms.extend([geom for geom in filtered_gdf.geometry if geom is not None and not geom.is_empty])
+                else:
+                    print(f"DEBUG: No time_seconds or time_label column, including all {len(gdf)} geometries")
+                    geoms.extend([geom for geom in gdf.geometry if geom is not None and not geom.is_empty])
+            except Exception as e:
+                print(f"Error loading isochrone {iso_filename}: {e}")
+                import traceback
+                traceback.print_exc()
+        else:
+            print(f"DEBUG: Isochrone file not found: {iso_path}")
+
+    try:
+        unioned = unary_union(geoms)
+        # Create GeoDataFrame in EPSG:4326 (isochrones already in this CRS)
+        union_gdf = gpd.GeoDataFrame({"geometry": [unioned]}, crs="EPSG:4326")
+        # Convert to GeoJSON 
+        result = union_gdf.to_json()
+        print(f"DEBUG: Successfully created GeoJSON, length={len(result)}")
+        return result
+    except Exception as e:
+        print(f"Error unioning isochrone geometries: {e}")
+        import traceback
+        traceback.print_exc()
         return None
-
-    unioned = unary_union(geoms)
-    union_gdf = gpd.GeoDataFrame({"geometry": [unioned]}, crs="EPSG:4326")
-    return union_gdf.to_json()
 
 #colors = {
 #  'eco_green': '#AFC912',
@@ -216,6 +317,7 @@ addis_stakeholders_dir = os.path.join(addis_root, "stakeholders")
 addis_food_env_dir = os.path.join(addis_root, "food_environment")
 addis_policy_dir = os.path.join(addis_root, "policy")
 addis_environment_dir = os.path.join(addis_root, "environment")
+addis_adm3_dir = os.path.join(addis_root, "aa_adm3_updated")
 
 hanoi_root = os.path.join(data_root, "hanoi")
 hanoi_mpi_dir = os.path.join(hanoi_root, "mpi")
@@ -227,13 +329,19 @@ hanoi_nutrition_dir = os.path.join(hanoi_root, "nutrition")
 hanoi_food_env_dir = os.path.join(hanoi_root, "food_environment")
 hanoi_resilience_dir = os.path.join(hanoi_root, "resilience")
 hanoi_climate_dir = os.path.join(hanoi_resilience_dir, "precomputed_hanoi_climate_vars")
-atlas_csv_path = os.path.join(homepath, "EcoFoodSystems_indicator_architecture - 260326 - Hanoi_rewritten_descriptions_final.csv")
+#atlas_csv_path = os.path.join(homepath, "EcoFoodSystems_indicator_architecture - 260326 - Hanoi_rewritten_descriptions_final.csv")
+atlas_csv_path = os.path.join(homepath, "EcoFoodSystems_FCD_aligned.csv")
 
 # Loading and Formatting MPI Data
 MPI = gpd.read_file(os.path.join(addis_mpi_dir, "addis_districts_MPI.geojson"))#.set_index('Dist_Name')
 MPI['Multidimensional Poverty Index'] = MPI['Multidimensional Poverty Index'].astype(float)
 MPI['Dist_Name'] = MPI['Dist_Name'].astype(str)
 geojson = json.loads(MPI.to_json())
+
+adm3_eth_gdf = gpd.read_file(os.path.join(addis_adm3_dir, "aa_adm3_updated.geojson")).to_crs("EPSG:4326")
+adm3_eth_gdf = adm3_eth_gdf.reset_index(drop=True)
+adm3_eth_gdf["adm3_id"] = adm3_eth_gdf.index.astype(str)
+adm3_eth_geojson = json.loads(adm3_eth_gdf[["adm3_id", "ADM3_EN", "geometry"]].to_json())
 
 # Loading and Formatting MPI CSV Data=
 # Detect numeric columns in the GeoJSON and coerce to numeric where possible
@@ -285,37 +393,166 @@ total_table_width = sum(column_widths.values())
 outlets_path = os.path.join(addis_food_env_dir, "jsons_addis_foodoutlets")
 outlets_geojson_files_addis = sorted(os.listdir(outlets_path))
 
+
+def _humanize_outlet_label(filename):
+    base = os.path.splitext(os.path.basename(filename))[0]
+    if base.endswith("_addis"):
+        base = base[:-6]
+    if base.startswith("shop_"):
+        base = base[len("shop_"):]
+    elif base.startswith("amenity_"):
+        base = base[len("amenity_"):]
+    if base in {"healthy", "healthy_offers"}:
+        return "All Healthy Offers"
+    if base in {"unhealthy", "unhealthy_offers"}:
+        return "All Unhealthy Offers"
+    if base in {"mixed", "mixed_offers"}:
+        return "All Mixed Offers"
+    return base.replace("_", " ").title()
+
+
+def _build_accessibility_outlet_options_addis(outlet_files):
+    healthy_files = {
+        "healthy_offers_addis.geojson",
+        "shop_butcher_addis.geojson",
+        "shop_dairy_addis.geojson",
+        "shop_farm_addis.geojson",
+        "shop_greengrocer_addis.geojson",
+        "shop_health_food_addis.geojson",
+        "shop_seafood_addis.geojson",
+        "amenity_marketplace_addis.geojson",
+        "amenity_drinking_water_addis.geojson",
+    }
+    unhealthy_files = {
+        "unhealthy_offers_addis.geojson",
+        "shop_bakery_addis.geojson",
+        "shop_beverages_addis.geojson",
+        "shop_confectionery_addis.geojson",
+        "shop_convenience_addis.geojson",
+        "shop_pastry_addis.geojson",
+        "shop_kiosk_addis.geojson",
+        "amenity_fast_food_addis.geojson",
+        "amenity_cafe_addis.geojson",
+        "amenity_ice_cream_addis.geojson",
+        "amenity_vending_machine_addis.geojson",
+    }
+    mixed_files = {
+        "mixed_offers_addis.geojson",
+        "shop_supermarket_addis.geojson",
+        "amenity_restaurant_addis.geojson",
+        "amenity_pub_addis.geojson",
+        "shop_deli_addis.geojson",
+    }
+
+    groups = [
+        ("All Healthy Offers", healthy_files),
+        ("All Unhealthy Offers", unhealthy_files),
+        ("All Mixed Offers", mixed_files),
+    ]
+
+    remaining = []
+    grouped = []
+    used = set()
+
+    for header, known_files in groups:
+        section_items = [f for f in outlet_files if f in known_files]
+        if section_items:
+            grouped.append({"label": f"── {header} ──", "value": f"__{header.lower().replace(' ', '_')}__", "disabled": True})
+            for file_name in sorted(section_items, key=_humanize_outlet_label):
+                grouped.append({"label": _humanize_outlet_label(file_name), "value": file_name})
+                used.add(file_name)
+
+    for file_name in outlet_files:
+        if file_name not in used:
+            remaining.append(file_name)
+
+    if remaining:
+        grouped.append({"label": "── Other Outlet Layers ──", "value": "__other_outlets__", "disabled": True})
+        for file_name in sorted(remaining, key=_humanize_outlet_label):
+            grouped.append({"label": _humanize_outlet_label(file_name), "value": file_name})
+
+    return grouped
+
+
+accessibility_outlet_options_addis = _build_accessibility_outlet_options_addis(outlets_geojson_files_addis)
+
 # Loading GeoJSON files for Isochrones (30-minute accessibility polygons)
-isochrones_path = os.path.join(addis_food_env_dir, "isochrones_addis")
-isochrones_geojson_files_addis = sorted(os.listdir(isochrones_path)) if os.path.exists(isochrones_path) else []
-food_env_path = os.path.join(addis_food_env_dir, "addis_diet_env_mapping.geojson")
-gdf_food_env = gpd.read_file(food_env_path).to_crs('EPSG:4326')
+isochrones_path = os.path.join(addis_food_env_dir, "isochrones_addis_all")
+#isochrones_geojson_files_addis = sorted(os.listdir(isochrones_path)) if os.path.exists(isochrones_path) else []
+summary_stats_path_addis = os.path.join(addis_food_env_dir, "addis_HRSL_diet_env_subcities.geojson")
+gdf_summary_stats_addis = gpd.read_file(summary_stats_path_addis).to_crs('EPSG:4326')
+#walking_segments_addis = gpd.read_file(os.path.join(addis_food_env_dir, "addis_walking_segments_lst_canopy.geojson")).to_crs('EPSG:4326')
+hex_vars_addis = gpd.read_file(os.path.join(addis_food_env_dir, "population_othervars_hexgrid.geojson")).to_crs('EPSG:4326')
+hex_vars_addis_geojson = json.loads(hex_vars_addis.to_crs("EPSG:4326").to_json())
+
+accessibility_zonal_stats_path_addis = os.path.join(addis_food_env_dir, "accessibility_zonal_stats_percentage.csv")
+
+
+def _load_accessibility_zonal_stats(path):
+    if not os.path.exists(path):
+        return pd.DataFrame(), [], [], []
+
+    df = pd.read_csv(path).drop(columns=["Unnamed: 0"], errors="ignore")
+    for col in ["index", "time"]:
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors="coerce")
+
+    for col in ["pop_cat", "offer_cat", "mode"]:
+        if col in df.columns:
+            df[col] = df[col].astype(str).str.strip()
+
+    subcity_cols = [
+        col for col in df.columns
+        if col not in {"index", "pop_cat", "offer_cat", "mode", "time"}
+    ]
+
+    population_labels = {
+        "total": "Total",
+        "men": "Men",
+        "women": "Women",
+        "youth": "Youth",
+        "children_u5": "Children (0-5 years)",
+        "women_rep": "Women of Reproductive Age (15-49 years)",
+        "elderly": "Elderly (60+ years)",
+    }
+    population_options = [
+        {"label": population_labels.get(pop, pop.replace("_", " ").title()), "value": pop}
+        for pop in sorted(df["pop_cat"].dropna().astype(str).unique())
+    ]
+    offer_options = [
+        {"label": offer.replace("_", " ").title(), "value": offer}
+        for offer in sorted(df["offer_cat"].dropna().astype(str).unique())
+    ]
+
+    return df, subcity_cols, population_options, offer_options
+
+
+accessibility_zonal_stats_addis, accessibility_subcity_columns_addis, accessibility_population_options_addis, accessibility_offer_options_addis = _load_accessibility_zonal_stats(accessibility_zonal_stats_path_addis)
 
 # Define food environment metrics and their labels
-cols_food_env = ['density_healthyout', 'density_unhealthyout', 'density_mixoutlets',
-                 'ratio_obesogenic'] #, 'pct_access_healthy', 'ptc_access_unhealthy']
 
-data_labels_food_env = ['Healthy Outlet Density', 'Unhealthy Outlet Density', 'Mixed Outlet Density',
-                        'Obesogenic Ratio'] #, 'Percent Access to Healthy Food', 'Percent Access to Unhealthy Food']
+sub_city_level_metrics = {
+                        'density_he': 'Healthy Outlet Density',
+                        'density_un': 'Unhealthy Outlet Density',
+                        'density_mi': 'Mixed Outlet Density',
+                        'ratio_obes': 'Obesogenic Ratio',
+                        'children_u5': 'Children (0-5 years)', 
+                        'elderly': 'Elderly (60+ years)', 
+                        'women_rep': 'Women of Reproductive Age (15-49 years)', 
+                        'youth': 'Youth (15-24 years)', 
+                        'men': 'Men', 
+                        'women': 'Women', 
+                        'total': 'Total'} 
 
-# Define which metrics are "good" when higher (True) or "bad" when higher (False)
-metric_direction = {
-    'Count_healthy': True,
-    'Count_UnhealthyOutlets': False,
-    'Count_MixOutlets': None,
-    'density_healthyout': True,
-    'density_unhealthyout': False,
-    'density_mixoutlets': None,
-    'ratio_obesogenic': False,
-    'pop_sum': None,
-    'density_pop_healthy': True,
-    'density_pop_unhealthy': False,
-    'total_density_pop': None,
-    'acc_healthyaccess_pop_healthysum': True,
-    'acc_unhealthyaccess_unhealthy_popsum': False,
-    'pct_access_healthy': True,
-    'ptc_access_unhealthy': False
-}
+cols_labels_hex_vars = {'children_u5': 'Children (0-5 years)', 
+                        'elderly': 'Elderly (60+ years)', 
+                        'women_rep': 'Women of Reproductive Age (15-49 years)', 
+                        'youth': 'Youth (15-24 years)', 
+                        'men': 'Men', 
+                        'women': 'Women', 
+                        'total': 'Total', 
+                        'canopy_cover_pixels': 'Canopy Cover (m²)', 
+                        'mean_lst': 'Average Land Surface Temperature (°C)'}
 
 REGION_COLOURS = {
     "Red River Delta":    "#e63946",
@@ -333,6 +570,7 @@ green_scale = ['#e3f6d5', '#c1d88e', '#a5be91', '#6f946d', '#3a6649']
 red_scale = ['#fee5d9', '#fcbba1', '#fc9272', '#fb6a4a', '#de2d26']
 grey_scale = ['#f7f7f7', '#d9d9d9', '#bdbdbd', '#969696', '#636363']
 
+
 # Food-environment choropleth palettes
 # Plotly equivalents for requested styles: RdOrYl_r and GnYl_r
 FOOD_ENV_NEG_SCALE = "YlOrRd"
@@ -344,6 +582,25 @@ FOOD_ENV_NEUTRAL_BONE_SCALE = [
     [0.75, "#d8c9ab"],
     [1.00, "#c5b395"],
 ]
+VIRIDIS_SCALE = "Viridis"
+BLUES_SCALE = "Blues"
+YLORBR_SCALE = "YlOrBr"
+HOT_SCALE = "Hot"
+
+
+metric_direction =      {'density_he': FOOD_ENV_POS_SCALE,
+                        'density_un': FOOD_ENV_NEG_SCALE,
+                        'density_mi': FOOD_ENV_NEUTRAL_BONE_SCALE,
+                        'ratio_obes': FOOD_ENV_NEG_SCALE,
+                        'children_u5': YLORBR_SCALE, 
+                        'elderly': YLORBR_SCALE, 
+                        'women_rep': YLORBR_SCALE, 
+                        'youth': YLORBR_SCALE, 
+                        'men': YLORBR_SCALE, 
+                        'women': YLORBR_SCALE, 
+                        'total': YLORBR_SCALE,
+                        'canopy_cover_pixels': FOOD_ENV_POS_SCALE,
+                        'mean_lst': HOT_SCALE}
 
 # Loading supply flow data for Sankey Diagram
 df_sankey = pd.read_csv(os.path.join(hanoi_supply_dir, 'hanoi_supply.csv'))
@@ -500,8 +757,8 @@ def _load_indicator_atlas_records(csv_path):
     return records
 
 
-atlas_records_hanoi = _load_indicator_atlas_records(atlas_csv_path)
-
+atlas_records = _load_indicator_atlas_records(atlas_csv_path)
+print(f"DEBUG: Loaded {len(atlas_records)} records from indicator atlas CSV, Example: {atlas_records[:1]}")
 
 
 # ── District climate indicators ───────────────────────────────────────────────
@@ -1120,39 +1377,36 @@ def _atlas_row_is_available_for_city(rec, city_key):
 
 def _count_available_indicators_by_pillar(city_key):
     counts = {
-        'diets': 0,
-        'environment': 0,
-        'livelihoods': 0,
-        'governance': 0,
-        'resilience': 0,
+        'drivers': 0,
+        'cross-cutting-issues': 0,
+        'food-environments': 0,
+        'food-supply-chains': 0,
+        'individual-factors': 0,
+        'outcomes': 0,
     }
     seen = set()
 
-    for rec in atlas_records_hanoi:
+    for rec in atlas_records:
         name = str(rec.get('Indicator name', '')).strip()
         if not name:
             continue
         if not _atlas_row_is_available_for_city(rec, city_key):
             continue
 
-        pill = str(rec.get('Pillars', '')).strip().lower()
-        dom = str(rec.get('Domain / Sub-theme', '')).strip().lower()
-        key = (name.lower(), pill, dom)
-        if key in seen:
-            continue
-        seen.add(key)
+        pill = str(rec.get('FCD Primary Pillar', '')).strip().lower()
 
-        text = f"{pill} {dom}"
-        if 'diets' in text or 'nutrition' in text or 'health' in text:
-            counts['diets'] += 1
-        elif 'environment' in text or 'natural resources' in text or 'production' in text:
-            counts['environment'] += 1
-        elif 'livelihoods' in text or 'poverty' in text or 'equity' in text:
-            counts['livelihoods'] += 1
-        elif 'governance' in text:
-            counts['governance'] += 1
-        elif 'resilience' in text:
-            counts['resilience'] += 1
+        if pill == 'drivers':
+            counts['drivers'] += 1
+        elif pill == 'cross-cutting issues':
+            counts['cross-cutting-issues'] += 1
+        elif pill == 'food environments':
+            counts['food-environments'] += 1        
+        elif pill == 'food supply chains':
+            counts['food-supply-chains'] += 1
+        elif pill == 'individual factors':
+            counts['individual-factors'] += 1
+        elif pill == 'outcomes':
+            counts['outcomes'] += 1
 
     return counts
 
@@ -1195,7 +1449,7 @@ def _build_home_indicator_buttons(selected_city, tab_backgrounds, pillar_key):
     buttons_payload = []
     seen_names = set()
 
-    for idx, rec in enumerate(atlas_records_hanoi):
+    for idx, rec in enumerate(atlas_records):
         if _record_pillar_key(rec) != pillar_key:
             continue
 
@@ -1242,9 +1496,225 @@ def _build_home_indicator_buttons(selected_city, tab_backgrounds, pillar_key):
 
     return [btn for _, btn in sorted(buttons_payload, key=lambda x: x[0])]
 
+
+_SUBDOMAIN_GROUPS = {
+    'Drivers': [
+        ('environment-climate-change', 'Environment, Climate Change'),
+        ('income-growth-distribution', 'Income Growth & Distribution'),
+        ('policies-leadership', 'Policies & Leadership'),
+        ('population-growth-migration', 'Population Growth & Migration'),
+        ('socio-cultural-context', 'Socio-Cultural Context'),
+    ],
+    'Food Environments': [
+        ('food-availability', 'Food Availability'),
+        ('food-affordability', 'Food Affordability'),
+        ('vendor-properties', 'Vendor Properties'),
+    ],
+    'Food Supply Chains': [
+        ('processing-packing', 'Processing & Packing'),
+        ('production-systems-input-supply', 'Production Systems & Input Supply'),
+        ('retail-markerting', 'Retail & Marketing'),
+        ('storage-distrbution', 'Storage & Distribution'),
+    ],
+    'Individual Factors': [
+        ('economic', 'Economic'),
+    ],
+    'Cross-Cutting Issues': [
+        ('governance', 'Governance'),
+        ('resilience', 'Resilience'),
+    ],
+    'Outcomes': [
+        ('food-security', 'Food Security'),
+        ('livelihoods-poverty-equity', 'Livelihoods, Poverty & Equity'),
+        ('noncommunicable-diseases', 'Noncommunicable Diseases'),
+        ('nutrional-status', 'Nutritional Status'),
+    ],
+}
+
+
+_COMING_SOON_SUBDOMAINS_BY_CITY = {
+    'addis': {
+        'environment-climate-change',
+        'population-growth-migration',
+        'socio-cultural-context',
+        'food-availability',
+        'food-affordability',
+        'production-systems-input-supply',
+        'retail-markerting',
+        'storage-distrbution',
+        'economic',
+        'food-security',
+        'noncommunicable-diseases',
+    },
+    'hanoi': {
+        'policies-leadership',
+        'population-growth-migration',
+        'socio-cultural-context',
+        'food-availability',
+        'food-affordability',
+        'vendor-properties',
+        'processing-packing',
+        'production-systems-input-supply',
+        'retail-markerting',
+        'economic',
+        'food-security',
+        'noncommunicable-diseases',
+    },
+}
+
+
+def _is_subdomain_coming_soon(selected_city, subdomain_key):
+    city_key = selected_city if selected_city in ('addis', 'hanoi') else 'hanoi'
+    return subdomain_key in _COMING_SOON_SUBDOMAINS_BY_CITY.get(city_key, set())
+
+
+def _render_subdomain_hub_layout(selected_city, section_title):
+    subdomains = _SUBDOMAIN_GROUPS.get(section_title, [])
+    if not subdomains:
+        return html.Div([
+            html.H3(section_title or 'Sub-domain', style={'marginBottom': '10px'}),
+            html.P('No sub-domains configured for this pillar yet.'),
+        ], style={'padding': '20px'})
+
+    return html.Div([
+        city_selector(selected_city=selected_city, visible=False),
+        html.Div([
+            html.H3(section_title, style={
+                'color': brand_colors['Brown'],
+                'fontWeight': 'bold',
+                'marginBottom': '8px',
+            }),
+            html.Div([
+                html.Button(
+                    [
+                        html.Span(label, style={'display': 'block', 'fontWeight': 'bold'}),
+                        html.Span('Coming soon', style={'display': 'block', 'fontSize': '0.78em', 'marginTop': '2px'})
+                        if _is_subdomain_coming_soon(selected_city, subdomain_key) else None,
+                    ],
+                    id={
+                        'type': 'home-subdomain-btn',
+                        'subdomain': subdomain_key,
+                        'city': selected_city,
+                        'index': idx,
+                    },
+                    n_clicks=0,
+                    disabled=_is_subdomain_coming_soon(selected_city, subdomain_key),
+                    style={
+                        'width': '90%',
+                        'textAlign': 'left',
+                        'padding': '12px 14px',
+                        #'marginBottom': '10px',
+                        'borderRadius': '10px',
+                        'margin': '10px',
+                        'border': 'none',
+                        'fontWeight': 'bold',
+                        'color': brand_colors['Brown'],
+                        'backgroundColor': brand_colors['White'],
+                        'boxShadow': '0 2px 6px rgba(0,0,0,0.08)',
+                        'opacity': 0.55 if _is_subdomain_coming_soon(selected_city, subdomain_key) else 1,
+                        'cursor': 'not-allowed' if _is_subdomain_coming_soon(selected_city, subdomain_key) else 'pointer',
+                    },
+                )
+                for idx, (subdomain_key, label) in enumerate(subdomains)
+            ]),
+        ], style={
+            'maxWidth': '820px',
+            'margin': '20px auto',
+            'padding': '16px',
+            'backgroundColor': brand_colors['Light green'],
+            'borderRadius': '12px',
+            'margin': '10px',
+        })
+    ], style={'width': '100%', 'height': '100%', 'overflowY': 'auto'})
+
+
+def _resolve_subdomain_layout(route_city, subdomain_key):
+    if route_city == 'hanoi':
+        if subdomain_key == 'environment-climate-change':
+            resilience_ctx = _get_resilience_context()
+            return resilience_tab_layout_hanoi(list(resilience_ctx['all_quarters']), default_view='Biophysical shocks')
+        if subdomain_key == 'income-growth-distribution':
+            return hanoi_income_growth_distribution_tab()
+        if subdomain_key == 'policies-leadership':
+            return hanoi_policies_leadership_tab()
+        if subdomain_key == 'population-growth-migration':
+            return hanoi_population_growth_migration_tab()
+        if subdomain_key == 'socio-cultural-context':
+            return hanoi_socio_cultural_context_tab()
+        if subdomain_key == 'food-availability':
+            return hanoi_food_availability_tab()
+        if subdomain_key == 'food-affordability':
+            return hanoi_food_affordability_tab()
+        if subdomain_key == 'vendor-properties':
+            return hanoi_vendor_properties_tab()
+        if subdomain_key == 'processing-packing':
+            return hanoi_processing_packing_tab()
+        if subdomain_key == 'production-systems-input-supply':
+            return hanoi_production_systems_input_supply_tab()
+        if subdomain_key == 'retail-markerting':
+            return hanoi_retail_markerting_tab()
+        if subdomain_key == 'storage-distrbution':
+            return hanoi_storage_distrbution_tab()
+        if subdomain_key == 'economic':
+            return hanoi_economic_tab()
+        if subdomain_key == 'governance':
+            return hanoi_governance_tab()
+        if subdomain_key == 'resilience':
+            return hanoi_resilience_tab()
+        if subdomain_key == 'food-security':
+            return hanoi_food_security_tab()
+        if subdomain_key == 'livelihoods-poverty-equity':
+            return hanoi_livelihoods_poverty_equity_tab()
+        if subdomain_key == 'noncommunicable-diseases':
+            return hanoi_noncommunicable_diseases_tab()
+        if subdomain_key == 'nutrional-status':
+            return hanoi_diets_nutrition_health_tab_layout()
+        return html.Div('Coming soon', style={'padding': '20px'})
+
+    # Addis
+    if subdomain_key == 'environment-climate-change':
+        return addis_environment_climate_change_tab()
+    if subdomain_key == 'income-growth-distribution':
+        return addis_income_growth_distribution_tab()
+    if subdomain_key == 'policies-leadership':
+        return addis_policies_leadership_tab()
+    if subdomain_key == 'population-growth-migration':
+        return addis_population_growth_migration_tab()
+    if subdomain_key == 'socio-cultural-context':
+        return addis_socio_cultural_context_tab()
+    if subdomain_key == 'food-availability':
+        return addis_food_availability_tab()
+    if subdomain_key == 'food-affordability':
+        return addis_food_affordability_tab()
+    if subdomain_key == 'vendor-properties':
+        return addis_vendor_properties_tab()
+    if subdomain_key == 'processing-packing':
+        return addis_processing_packing_tab()
+    if subdomain_key == 'production-systems-input-supply':
+        return addis_production_systems_input_supply_tab()
+    if subdomain_key == 'retail-markerting':
+        return addis_retail_markerting_tab()
+    if subdomain_key == 'storage-distrbution':
+        return addis_storage_distrbution_tab()
+    if subdomain_key == 'economic':
+        return addis_economic_tab()
+    if subdomain_key == 'governance':
+        return addis_governance_tab()
+    if subdomain_key == 'resilience':
+        return addis_resilience_tab()
+    if subdomain_key == 'food-security':
+        return addis_food_security_tab()
+    if subdomain_key == 'livelihoods-poverty-equity':
+        return addis_livelihoods_poverty_equity_tab()
+    if subdomain_key == 'noncommunicable-diseases':
+        return addis_noncommunicable_diseases_tab()
+    if subdomain_key == 'nutrional-status':
+        return addis_nutrional_status_tab()
+    return html.Div('Coming soon', style={'padding': '20px'})
+
 # ------------------------- Main app layout ------------------------- #
 
-def landing_page_layout(background_image=None, tab_backgrounds=None, selected_city='hanoi'):
+def landing_page_layout(background_image=None, tab_backgrounds=None, selected_city='hanoi', expanded_section=None):
     """
     Generate landing page layout for a city.
     
@@ -1261,6 +1731,53 @@ def landing_page_layout(background_image=None, tab_backgrounds=None, selected_ci
     pillar_counts = _count_available_indicators_by_pillar(selected_city)
 
     def _make_pillar_card(index, title, count_key, description):
+        is_expanded = expanded_section == title
+        if is_expanded:
+            subdomains = _SUBDOMAIN_GROUPS.get(title, [])
+            subdomain_buttons = []
+            for idx, (subdomain_key, label) in enumerate(subdomains):
+                is_coming_soon = _is_subdomain_coming_soon(selected_city, subdomain_key)
+                subdomain_buttons.append(
+                    html.Button(
+                        [
+                            html.Span(label, style={'display': 'block', 'fontWeight': 'bold'}),
+                            html.Span('Coming soon', style={'display': 'block', 'fontSize': '0.78em', 'marginTop': '2px'}) if is_coming_soon else None,
+                        ],
+                        id={
+                            'type': 'home-subdomain-btn',
+                            'subdomain': subdomain_key,
+                            'city': selected_city,
+                            'index': idx,
+                        },
+                        n_clicks=0,
+                        disabled=is_coming_soon,
+                        style={
+                            'width': '100%',
+                            'textAlign': 'left',
+                            'padding': '10px 12px',
+                            'marginTop': '8px',
+                            'borderRadius': '8px',
+                            'border': 'none',
+                            'color': brand_colors['Brown'],
+                            'backgroundColor': brand_colors['White'],
+                            'boxShadow': '0 2px 6px rgba(0,0,0,0.08)',
+                            'opacity': 0.55 if is_coming_soon else 1,
+                            'cursor': 'not-allowed' if is_coming_soon else 'pointer',
+                        },
+                    )
+                )
+
+            return html.Div([
+                html.Div([
+                    html.Span(f'Pillar {index}', className='dash-landing-pill-index'),
+                    html.Span(f"{pillar_counts[count_key]} indicators", className='dash-landing-pill-count'),
+                ], className='dash-landing-pill-top'),
+                html.H4(title, className='dash-landing-pill-title'),
+                html.P('Select a sub-domain:', className='dash-landing-pill-text', style={'marginBottom': '4px'}),
+                html.Div(subdomain_buttons, style={'margin':'8px 10px 12px 10px'}),
+            ], className='dash-landing-pill-card', style={'margin':'8px 10px 12px 10px',
+                                                          'padding':'12px 14px'})
+
         return html.Div([
             html.Button([
                 html.Div([
@@ -1284,33 +1801,39 @@ def landing_page_layout(background_image=None, tab_backgrounds=None, selected_ci
     pillar_cards = [
         _make_pillar_card(
             1,
-            'Diets, Nutrition & Health',
-            'diets',
-            'Track affordability, nutrition outcomes, food environments, and health risks across the city-region food system.',
+            'Drivers',
+            'drivers',
+            'The biophysical, socio-economic, and political forces that shape how food systems function and evolve over time.',
         ),
         _make_pillar_card(
             2,
-            'Environment, Natural Resources & Production',
-            'environment',
-            'Assess production landscapes, environmental pressures, and sustainability trajectories of food systems.',
+            'Food Supply Chains',
+            'food-supply-chains',
+            'All activities involved in producing, processing, distributing, and retailing food from farm to consumer.',
         ),
         _make_pillar_card(
             3,
-            'Livelihoods, Poverty & Equity',
-            'livelihoods',
-            'Surface structural inequalities shaping access to food, services, and opportunities across households and communities.',
+            'Food Environments',
+            'food-environments',
+            'The physical, economic, political, and socio-cultural contexts that determine how people access and acquire food.',
         ),
         _make_pillar_card(
             4,
-            'Governance',
-            'governance',
-            'Map policy and institutional capacity, stakeholder ecosystems, and food flow governance supporting system transitions.',
-        ),
+            'Individual Factors',
+            'individual-factors',
+            'The personal circumstances, resources, and preferences that shape food choices and dietary behaviours.',
+            ),
         _make_pillar_card(
             5,
-            'Resilience',
-            'resilience',
-            'Understand climate and market shocks, adaptive capacity, and system stability through composite resilience indicators.',
+            'Cross-Cutting Issues',
+            'cross-cutting-issues',
+            'Issues that span multiple pillars and affect the overall functioning and outcomes of food systems.',
+        ),
+        _make_pillar_card(
+            6,
+            'Outcomes',
+            'outcomes',
+            'The resulting impacts of food systems on food security, diets, nutrition and health, environmental sustainability, and socio-economic equity.',
         ),
     ]
 
@@ -1383,6 +1906,7 @@ def landing_page_layout(background_image=None, tab_backgrounds=None, selected_ci
             dbc.Row([
                 dbc.Col(pillar_cards[3], xs=12, md=6, lg=4),
                 dbc.Col(pillar_cards[4], xs=12, md=6, lg=4),
+                dbc.Col(pillar_cards[5], xs=12, md=6, lg=4),
             ], justify='center', className='dash-landing-pill-row g-3'),
         ], className='dash-landing-pill-wrap'),
 
@@ -1545,6 +2069,7 @@ app.layout = html.Div([
     dcc.Store(id='selected-city', data='hanoi'),
     dcc.Store(id='atlas-open-tab', data=None),
     dcc.Store(id='sh-table-page-size-store', data=13),
+
     dcc.Interval(id='resize-interval', interval=1000, n_intervals=0),
     html.Div(id="tab-content", children=landing_page_layout(selected_city='hanoi'), style={"width": "100%",
                                                                        "height": "100%"})
@@ -1709,55 +2234,6 @@ def update_map_on_bar_click(clickData, selected_variable):
 
     return fig
 
-
-
-@app.callback(
-    Output('map_foodoutlets', 'figure'),
-    Input('variable-dropdown', 'value')
-)
-def add_outlets_map(selected_variable):
-    center = {
-        "lat": MPI.geometry.centroid.y.mean(),
-        "lon": MPI.geometry.centroid.x.mean()
-    }
-    zoom = 10
-
-    # For the outlets map, use the selected variable if available so color matches the main choropleth
-    choropleth_col = selected_variable if selected_variable in MPI.columns else ('Multidimensional Poverty Index' if 'Multidimensional Poverty Index' in MPI.columns else None)
-    if choropleth_col is None:
-        empty_fig = go.Figure()
-        empty_fig.update_layout(paper_bgcolor=brand_colors['White'], plot_bgcolor=brand_colors['White'], margin=dict(l=0, r=0, t=0, b=0))
-        return empty_fig
-
-    labels = {choropleth_col: choropleth_col, 'Dist_Name': 'District Name'}
-
-    fig = px.choropleth_mapbox(
-        MPI,
-        geojson=geojson,
-        locations="Dist_Name",
-        featureidkey="properties.Dist_Name",
-        color=choropleth_col,
-        color_continuous_scale="YlOrRd",
-        opacity=0.7,
-        labels=labels,
-        mapbox_style="carto-positron",
-        zoom=zoom,
-        center=center
-    )
-
-    
-    fig.update_layout(coloraxis_colorbar=None)
-    fig.update_coloraxes(showscale=False)
-
-    fig.update_layout(
-    paper_bgcolor=brand_colors['White'],
-    plot_bgcolor=brand_colors['White'],
-    margin=dict(l=0, r=0, t=0, b=0)
-    )
-
-    return fig
-
-
 # Update Piechart 1 UI on click while filtering table
 @app.callback(
     Output('piechart', 'figure'),
@@ -1801,7 +2277,6 @@ def update_pie(filter_by, clickData, current_selected):
 
     return fig, new_selected
 
-
 # Table filtering based on both selections made in piecharts
 @app.callback(
     Output('sh_table', 'data'),
@@ -1820,23 +2295,64 @@ def filter_table(filter_by, selected):
     else:
         return df_sh.to_dict('records')
     
+@callback(
+    Output("transport-mode", "data"),
+    Output("btn-walk", "active"),
+    Output("btn-transit", "active"),
+    Output("btn-drive", "active"),
+    Input("btn-walk", "n_clicks"),
+    Input("btn-transit", "n_clicks"),
+    Input("btn-drive", "n_clicks"),
+    prevent_initial_call=True
+)
+def select_transport(*_):
 
-def _build_affordability_figure(
+    button = ctx.triggered_id
+
+    mode = {
+        "btn-walk": "walk",
+        "btn-transit": "multimodal",
+        "btn-drive": "drive"
+    }[button]
+
+    return (
+        mode,
+        button == "btn-walk",
+        button == "btn-transit",
+        button == "btn-drive"
+    )
+
+dcc.Store(id="transport-mode", data="walk")
+
+def _build_accesibility_figure(
+    selected_travel_time,
     selected_outlets,
     selected_metric,
+    selected_transport_mode,
+    selected_other_layer,
     relayout_data,
     outlets_geojson_files_local,
-    isochrones_geojson_files_local,
     outlets_path_local,
     isochrones_path_local,
     gdf_food_env_local=None,
-    cols_food_env_local=None,
-    data_labels_food_env_local=None,
+    sub_city_level_metrics=None,
+    #cols_food_env_local=None,
+    #data_labels_food_env_local=None,
     metric_direction_local=None,
     center_default=None,
     zoom_default=11,
     city_key=None,
-):
+): 
+    # Map slider value to time_seconds label
+    # Slider returns 0, 1, or 2 -> convert to time label
+    slider_to_time_seconds = {
+        0: 300,
+        1: 600,
+        2: 900
+    }
+    selected_time_seconds = slider_to_time_seconds.get(selected_travel_time, 900)
+    print(f"DEBUG: Converting slider value {selected_travel_time} to time_seconds={selected_time_seconds}")
+    
     # Normalize selection
     if selected_outlets and "SELECT_ALL" in selected_outlets:
         selected_outlets = outlets_geojson_files_local.copy()
@@ -1845,13 +2361,15 @@ def _build_affordability_figure(
     else:
         selected_outlets = [item for item in selected_outlets if item != "SELECT_ALL"]
 
-    # Derive isochrones
+    # Derive isochrone categories from outlet filenames
+    # E.g., 'amenity_cafe_addis.geojson' -> 'amenity_cafe'
     selected_isochrones = []
     if selected_outlets:
         for outlet_file in selected_outlets:
-            iso_file = outlet_file.replace('.geojson', '_isochrone30min.geojson')
-            if iso_file in isochrones_geojson_files_local:
-                selected_isochrones.append(iso_file)
+            print(outlet_file)
+            # Outlet files are named '{category}_{city_key}.geojson'; strip the city suffix only
+            category = outlet_file.replace(f'_{city_key}.geojson', '')
+            selected_isochrones.append(category)  # Store category name, not filename
 
     # Preserve zoom/center
     if relayout_data and 'mapbox.center' in relayout_data:
@@ -1863,75 +2381,69 @@ def _build_affordability_figure(
 
     fig = go.Figure()
 
-    # Choropleth if provided
-    if selected_metric and gdf_food_env_local is not None and cols_food_env_local is not None:
-        gdf = gdf_food_env_local.copy()
-        if selected_metric in gdf.columns:
-            gdf[selected_metric] = pd.to_numeric(gdf[selected_metric], errors='coerce')
-            metric_label = (
-                data_labels_food_env_local[cols_food_env_local.index(selected_metric)]
-                if (data_labels_food_env_local is not None and selected_metric in cols_food_env_local)
-                else selected_metric
-            )
+    # Temporarily disabled: food-environment choropleth layer.
+    # Keep selected_metric in signature so callback wiring remains stable.
+    # if selected_metric and gdf_food_env_local is not None and sub_city_level_metrics is not None:
+    #     ...
 
-            direction = None
-            if metric_direction_local is not None:
-                direction = metric_direction_local.get(selected_metric, None)
-
-            if direction is True:
-                colorscale = FOOD_ENV_POS_SCALE
-            elif direction is False:
-                colorscale = FOOD_ENV_NEG_SCALE
-            else:
-                colorscale = FOOD_ENV_NEUTRAL_BONE_SCALE
-
-            hover_label_col = next(
-                (c for c in ["Dist_Name", "Dist_name", "shapeName", "district", "name", "ma_xa"] if c in gdf.columns),
-                None,
-            )
-            hover_text = gdf[hover_label_col].astype(str) if hover_label_col else gdf.index.astype(str)
-
-            geojson_cols = [hover_label_col, "geometry"] if hover_label_col else ["geometry"]
-            if city_key in {"addis", "hanoi"}:
-                cached_geojson = _get_food_env_geojson(city_key)
-                geojson_data = json.loads(cached_geojson) if cached_geojson else json.loads(gdf[geojson_cols].to_json())
-            else:
-                geojson_data = json.loads(gdf[geojson_cols].to_json())
-
+    # Contextual hex layers containing population data etc. 
+    if selected_other_layer:
+        print(f"DEBUG: Attempting to load other layer {selected_other_layer}")
+        try:
+            other_gdf = hex_vars_addis.copy()
+            print(f"DEBUG: hex_vars_addis columns: {other_gdf.columns}")
+            print(f"DEBUG: selected_other_layer.shape={other_gdf[selected_other_layer].shape}")
             fig.add_trace(go.Choroplethmapbox(
-                geojson=geojson_data,
-                locations=gdf.index,
-                z=gdf[selected_metric],
-                colorscale=colorscale,
-                marker=dict(opacity=0.7, line=dict(color='#222', width=1)),
-                hovertemplate='<b>%{text}</b><br>' + metric_label + ': %{z:.2f}<extra></extra>',
-                text=hover_text,
-                showscale=False
+                geojson=hex_vars_addis_geojson,
+                locations=other_gdf.h3_id,
+                featureidkey="properties.h3_id",
+                z=other_gdf[selected_other_layer],
+                colorscale=metric_direction_local.get(selected_other_layer),
+                marker=dict(opacity=0.9),
+                name=cols_labels_hex_vars[selected_other_layer],
+                showscale=False,
+                hovertemplate='Approximate Population Count: %{z:.2f}<extra></extra>',
             ))
+        except Exception as e:
+            print(f"Error loading other layer {selected_other_layer}: {e}")
 
     # Isochrones: union selected isochrone polygons into a single layer with fixed opacity
-    if selected_isochrones:
+    if selected_isochrones and selected_travel_time is not None:
         try:
+            # Isochrone subdirectory structure: isochrones_path/isochrones_{city_key}_{transport_mode}/
+            iso_dir = os.path.join(isochrones_path_local, f"isochrones_{city_key}_{selected_transport_mode}")
+            
+            print(f"DEBUG: iso_dir={iso_dir}")
+            print(f"DEBUG: selected_isochrones={tuple(sorted(selected_isochrones))}")
+
             union_geojson = _build_isochrone_union_geojson(
-                isochrones_path_local,
+                iso_dir,
                 tuple(sorted(selected_isochrones)),
+                selected_time_seconds,
+                selected_transport_mode
             )
             if union_geojson:
                 geojson_data = json.loads(union_geojson)
-                # single uniform color (light orange) with requested alpha (0.6)
+                # single uniform color (light cyan) with requested alpha (0.6)
                 iso_color = '#83dfe9'
                 fig.add_trace(go.Choroplethmapbox(
                     geojson=geojson_data,
                     locations=[0],
                     z=[1],
                     colorscale=[[0, iso_color], [1, iso_color]],
-                    marker=dict(opacity=0.6, line=dict(width=0)),
-                    hovertemplate='<b>Isochrone (combined)</b><extra></extra>',
+                    marker=dict(opacity=0.6, line=dict(width=0.5, color='black')),
                     showscale=False,
-                    name='Isochrones (combined)'
+                    hoverinfo='skip',
                 ))
+                
+            else:
+                print(f"DEBUG: union_geojson is None")
         except Exception as e:
             print(f"Error unioning isochrones: {e}")
+            import traceback
+            traceback.print_exc()
+    else:
+        print(f"DEBUG: Skipping isochrones - selected_isochrones={bool(selected_isochrones)}, selected_travel_time={selected_travel_time}")
 
     # Outlets
     if selected_outlets:
@@ -1945,7 +2457,7 @@ def _build_affordability_figure(
                     lat=outlet_gdf.geometry.y,
                     lon=outlet_gdf.geometry.x,
                     mode='markers',
-                    marker=dict(size=6, color=marker_color, opacity=0.8),
+                    marker=dict(size=4, color=marker_color, opacity=0.8),
                     name=filename.split('_')[1] if len(filename.split('_')) < 4 else f"{filename.split('_')[1]} {filename.split('_')[2]}",
                     hoverinfo='skip'
                 ))
@@ -1968,8 +2480,27 @@ def _build_affordability_figure(
             # fallback: ensure layout still defines mapbox
             pass
 
+    print(f"DEBUG: adm3_eth_gdf.columns={adm3_eth_gdf.columns}")
+    print(f"DEBUG: adm3_eth_geojson.keys()={adm3_eth_geojson.keys()}")
+
+    if city_key == "addis":
+        fig.add_trace(go.Choroplethmapbox(
+                    geojson=adm3_eth_geojson,
+                    locations=adm3_eth_gdf["adm3_id"],
+                    featureidkey="properties.adm3_id",
+                    z=np.ones(len(adm3_eth_gdf), dtype=float),
+                    colorscale=[[0, "rgba(0,0,0,0)"], [1, "rgba(0,0,0,0)"]],
+                    showscale=False,
+                    marker=dict(
+                        opacity=1.0,
+                        line=dict(color="#FFFFFF", width=1.5)
+                    ),
+                    text=adm3_eth_gdf["ADM3_EN"],
+                    hoverinfo='skip'
+                ))
+
     fig.update_layout(
-        mapbox=dict(style="white-bg", layers=[_ESRI_TILE], center=center, zoom=zoom),
+        mapbox=dict(style="white-bg", layers=_BASEMAP_TILE, center=center, zoom=zoom),
         margin=dict(l=0, r=0, t=0, b=0),
         paper_bgcolor=brand_colors['White'],
         showlegend=True if (selected_outlets or selected_isochrones) else False,
@@ -1981,28 +2512,182 @@ def _build_affordability_figure(
 
 
 @app.callback(
-    Output('affordability-map', 'figure'),
-    [Input("food-outlets-and-isochrones", "value"), Input("choropleth-select", "value")],
-    [State('affordability-map', 'relayoutData')]
+    Output('accessibility-map-addis', 'figure'),
+    [Input('outlet-travel-time', 'value'), Input("food-outlets-isochrones", "value"), #Input("choropleth-select", "value"), 
+     Input("transport-mode", "data"), Input("contextual-layer-select", "value")],
+    [State('accessibility-map-addis', 'relayoutData')]
 )
-def update_affordability_map(selected_outlets, selected_metric, relayout_data):
-    return _build_affordability_figure(
+def update_accesibility_map(selected_travel_time, selected_outlets, selected_transport_mode, selected_other_layer, relayout_data):
+    # Add defensive defaults for None values
+    selected_travel_time = selected_travel_time if selected_travel_time is not None else 2
+    selected_transport_mode = selected_transport_mode if selected_transport_mode else "walk"
+    
+    return _build_accesibility_figure(
+        selected_travel_time,
         selected_outlets,
-        selected_metric,
+        None,
+        selected_transport_mode,
+        selected_other_layer,
         relayout_data,
         outlets_geojson_files_addis,
-        isochrones_geojson_files_addis,
+        #isochrones_geojson_files_addis,
         outlets_path,
         isochrones_path,
-        gdf_food_env_local=gdf_food_env,
-        cols_food_env_local=cols_food_env,
-        data_labels_food_env_local=data_labels_food_env,
+        gdf_food_env_local=gdf_summary_stats_addis,
+        sub_city_level_metrics=sub_city_level_metrics,
+        #sub_city_level_metrics.keys(),
+        #data_labels_food_env_local=sub_city_level_metrics.values(),
         metric_direction_local=metric_direction,
         center_default={"lat": 9.0192, "lon":  38.752},
         zoom_default=11,
         city_key="addis",
     )
 
+
+def _travel_time_to_seconds(selected_travel_time):
+    time_map = {0: 300, 1: 600, 2: 900}
+    return time_map.get(selected_travel_time, 900)
+
+
+def _format_accessibility_label(value, city_key="addis"):
+    label_map = {
+        "total": "Total",
+        "men": "Men",
+        "women": "Women",
+        "youth": "Youth",
+        "children_u5": "Children (0-5 years)",
+        "women_rep": "Women of Reproductive Age (15-49 years)",
+        "elderly": "Elderly (60+ years)",
+    }
+    if value is None:
+        return ""
+    value = str(value)
+    if city_key == "addis":
+        return label_map.get(value, value.replace("_", " ").title())
+    return value.replace("_", " ").title()
+
+
+def _selected_offer_categories(selected_outlets, city_key="addis"):
+    if not selected_outlets:
+        return []
+    if "SELECT_ALL" in selected_outlets:
+        return sorted(accessibility_zonal_stats_addis["offer_cat"].dropna().astype(str).unique())
+    suffix = f"_{city_key}.geojson"
+    categories = [str(item).replace(suffix, "") for item in selected_outlets]
+    return sorted(set(categories))
+
+
+def _build_accessibility_population_bar_figure(pop_cat, selected_outlets, selected_transport_mode, selected_travel_time, city_key="addis"):
+    fig = go.Figure()
+
+    if accessibility_zonal_stats_addis.empty or not accessibility_subcity_columns_addis:
+        fig.add_annotation(
+            text="Accessibility zonal stats are not available.",
+            showarrow=False,
+            xref='paper',
+            yref='paper',
+            x=0.5,
+            y=0.5,
+        )
+        fig.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=380)
+        return fig
+
+    if not pop_cat:
+        fig.add_annotation(
+            text="Select a population category to view the sub-city bar chart.",
+            showarrow=False,
+            xref='paper',
+            yref='paper',
+            x=0.5,
+            y=0.5,
+        )
+        fig.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=380)
+        return fig
+
+    selected_seconds = _travel_time_to_seconds(selected_travel_time)
+    offer_categories = _selected_offer_categories(selected_outlets, city_key=city_key)
+
+    df = accessibility_zonal_stats_addis.copy()
+    df = df[df["pop_cat"].astype(str) == str(pop_cat)]
+    df = df[df["mode"].astype(str) == str(selected_transport_mode)]
+    df = df[pd.to_numeric(df["time"], errors="coerce") == selected_seconds]
+
+    if offer_categories:
+        df = df[df["offer_cat"].astype(str).isin(offer_categories)]
+
+    if df.empty:
+        fig.add_annotation(
+            text="No rows match the selected filters.",
+            showarrow=False,
+            xref='paper',
+            yref='paper',
+            x=0.5,
+            y=0.5,
+        )
+        fig.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=380)
+        return fig
+
+    chart_values = df[accessibility_subcity_columns_addis].apply(pd.to_numeric, errors="coerce").mean(axis=0, skipna=True)
+    chart_df = chart_values.reset_index()
+    chart_df.columns = ["sub_city", "percent_affected"]
+    chart_df = chart_df.sort_values("percent_affected", ascending=False)
+
+    if len(offer_categories) == 1:
+        offer_text = _format_accessibility_label(offer_categories[0], city_key=city_key)
+    elif offer_categories:
+        offer_text = f"{len(offer_categories)} selected outlet types"
+    else:
+        offer_text = "all outlet types"
+
+    title_text = (
+        f"{_format_accessibility_label(pop_cat, city_key=city_key)} affected population by sub-city"
+    )
+    subtitle_text = f"{offer_text} | {selected_transport_mode.title()} | {selected_seconds // 60}-minute threshold"
+
+    fig = px.bar(
+        chart_df,
+        x="sub_city",
+        y="percent_affected",
+        text="percent_affected",
+        color="percent_affected",
+        color_continuous_scale=[brand_colors['Light green'], brand_colors['Dark green']],
+    )
+    fig.update_traces(texttemplate="%{text:.1f}%", textposition="outside")
+    fig.update_layout(
+        #title=dict(text=f"{title_text}<br><sup>{subtitle_text}</sup>", x=0.5, xanchor="center"),
+        title=None,
+        margin=dict(l=10, r=10, t=70, b=70),
+        height=380,
+        paper_bgcolor=brand_colors['White'],
+        plot_bgcolor=brand_colors['White'],
+        coloraxis_showscale=False,
+        xaxis_title=None,
+        yaxis_title="Percentage population affected",
+        xaxis_tickangle=-25,
+    )
+    fig.update_yaxes(range=[0, float(chart_df["percent_affected"].max() * 1.1)])
+    return fig
+
+
+@app.callback(
+    Output("accessibility-population-bar-chart", "figure"),
+    [
+        Input("population-category-select", "value"),
+        Input("food-outlets-isochrones", "value"),
+        Input("transport-mode", "data"),
+        Input("outlet-travel-time", "value"),
+    ],
+)
+def update_accessibility_population_bar_chart(pop_cat, selected_outlets, selected_transport_mode, selected_travel_time):
+    selected_transport_mode = selected_transport_mode or "walk"
+    selected_travel_time = selected_travel_time if selected_travel_time is not None else 2
+    return _build_accessibility_population_bar_figure(
+        pop_cat,
+        selected_outlets,
+        selected_transport_mode,
+        selected_travel_time,
+        city_key="addis",
+    )
 
 # Hanoi callback is defined later; avoid duplicate callback registration here.
 
@@ -2290,6 +2975,14 @@ def filter_by_sdg(*args):
     
     return df_indicators[display_cols].to_dict('records'), "Click an SDG icon to filter indicators", *button_styles
 
+@app.callback(
+    Output('addis-resilience-view-container', 'children'),
+    Input('addis-resilience-view-select', 'value'),
+    prevent_initial_call=False,
+)
+def update_addis_policies_leadership_view(selected_view):
+    return addis_render_policies_leadership_view(selected_view or 'Socio-Economic Shocks')
+
 # Linking the tabs to page content loading 
 @app.callback(
     Output("tab-content", "children"),
@@ -2376,9 +3069,9 @@ def render_tab_content(n_home, n1, n2, n3, n4, n5, n6, n7, n8, n9, n10, n11, n12
         # Open the indicator atlas directly (city-specific)
         _atlas_city = selected_city if selected_city in ('hanoi', 'addis') else 'hanoi'
         if _atlas_city == 'hanoi':
-            return _with_stubs(indicator_atlas_layout_hanoi(atlas_records_hanoi))
+            return _with_stubs(indicator_atlas_layout_hanoi(atlas_records))
         else:
-            return _with_stubs(sustainability_tab_layout())
+            return _with_stubs(addis_fcd_indicator_atlas_tab_layout())
     else:
         atlas_section = None
         if trigger_id == 'atlas-open-tab' and atlas_open_tab:
@@ -2387,50 +3080,60 @@ def render_tab_content(n_home, n1, n2, n3, n4, n5, n6, n7, n8, n9, n10, n11, n12
                 atlas_subview = atlas_open_tab.get('subview')
                 atlas_city = atlas_open_tab.get('city')
                 atlas_section = atlas_open_tab.get('section')
+                atlas_subdomain = atlas_open_tab.get('subdomain')
             else:
                 tab_id = atlas_open_tab
                 atlas_subview = None
                 atlas_city = None
                 atlas_section = None
+                atlas_subdomain = None
         else:
             tab_id = trigger_id
             atlas_subview = None
             atlas_city = None
             atlas_section = None
+            atlas_subdomain = None
 
     if tab_id == 'atlas-section':
         _atlas_city = atlas_city if atlas_city in ('hanoi', 'addis') else selected_city
         if _atlas_city == 'hanoi':
-            return _with_stubs(indicator_atlas_layout_hanoi(atlas_records_hanoi, initial_section=atlas_section))
-        return _with_stubs(sustainability_tab_layout())
+            return _with_stubs(indicator_atlas_layout_hanoi(atlas_records, initial_section=atlas_section))
+        return _with_stubs(addis_fcd_indicator_atlas_tab_layout())
 
     route_city = atlas_city if atlas_city in ('addis', 'hanoi') else selected_city
+
+    if tab_id == 'subdomain-hub':
+        return _with_stubs(_render_subdomain_hub_layout(route_city, atlas_section))
+
+    if tab_id == 'subdomain' and atlas_subdomain:
+        return _with_stubs(_resolve_subdomain_layout(route_city, atlas_subdomain))
     
     # Route to city-specific dashboards
     if route_city == 'hanoi':
         # Hanoi-specific tabs
         if tab_id == "tab-1-stakeholders":
-            return _with_stubs(hanoi_stakeholders_tab_layout())
+            return _with_stubs(hanoi_governance_stakeholders_tab_layout())
         elif tab_id == "tab-2-supply":
-            return _with_stubs(hanoi_supply_tab_layout())
+            return _with_stubs(hanoi_storage_distribution_tab_layout())
         elif tab_id == "tab-3-sustainability":
-            return _with_stubs(hanoi_sustainability_tab_layout())
+            return _with_stubs(hanoi_fcd_indicator_atlas_tab_layout())
         elif tab_id == "tab-4-poverty":
-            return _with_stubs(hanoi_poverty_tab_layout())
+            return _with_stubs(hanoi_livelihoods_poverty_equity_tab_layout())
         elif tab_id == "tab-6-resilience":
             resilience_ctx = _get_resilience_context()
-            return _with_stubs(hanoi_resilience_tab_layout(list(resilience_ctx["all_quarters"]), default_view=atlas_subview or 'Biophysical shocks'))
+            return _with_stubs(resilience_tab_layout_hanoi(list(resilience_ctx["all_quarters"]), default_view=atlas_subview or 'Biophysical shocks'))
         elif tab_id == "tab-7-food-environments":
-            return _with_stubs(hanoi_affordability_tab_layout())
+            return _with_stubs(hanoi_food_affordability_tab_layout())
         elif tab_id == "tab-9-policies":
-            return _with_stubs(hanoi_policies_tab_layout())
+            return _with_stubs(hanoi_governance_policies_tab_layout())
         elif tab_id == "tab-10-nutrition":
-            return _with_stubs(hanoi_health_nutrition_tab_layout())
+            return _with_stubs(hanoi_diets_nutrition_health_tab_layout())
         elif tab_id == "tab-home":
             return landing_page_layout(
                 background_image=hanoi_config.BACKGROUND_IMAGE,
                 tab_backgrounds=hanoi_config.TAB_BACKGROUNDS,
-                selected_city='hanoi'
+                selected_city='hanoi',
+                expanded_section=atlas_section
             )
         else:
             return landing_page_layout(
@@ -2441,37 +3144,46 @@ def render_tab_content(n_home, n1, n2, n3, n4, n5, n6, n7, n8, n9, n10, n11, n12
     
     # Addis Ababa tabs
     if tab_id == "tab-1-stakeholders":
-        return _with_stubs(stakeholders_tab_layout())
+        return _with_stubs(addis_governance_stakeholders_tab_layout())
         
     elif tab_id == "tab-2-supply":
-        return _with_stubs(supply_tab_layout())
+        return _with_stubs(addis_storage_distribution_tab_layout())
     
     elif tab_id == "tab-3-sustainability":
-        return _with_stubs(sustainability_tab_layout())
+        return _with_stubs(addis_fcd_indicator_atlas_tab_layout())
     
     elif tab_id == "tab-4-poverty":
-        return _with_stubs(poverty_tab_layout())
+        return _with_stubs(addis_livelihoods_poverty_equity_tab_layout())
     
     elif tab_id == "tab-7-food-environments":
-        return _with_stubs(affordability_tab_layout())
+        return _with_stubs(addis_vendor_properties_tab(selected_city=route_city))
     
     elif tab_id == "tab-9-policies":
-        return _with_stubs(policies_tab_layout())
+        return _with_stubs(addis_governance_policies_tab_layout())
 
     elif tab_id == "tab-10-nutrition":
-        return _with_stubs(health_nutrition_tab_layout())
+        return _with_stubs(addis_diets_nutrition_health_tab_layout())
     
     elif tab_id == "tab-11-footprints":
-        return _with_stubs(footprints_tab_layout())
+        return _with_stubs(addis_environment_footprints_tab_layout())
     
-    elif tab_id == "tab-6-resilience":
-        return _with_stubs(addis_resilience_tab_layout(default_view=atlas_subview))
+    #elif tab_id == "tab-6-resilience":
+    #    return _with_stubs(addis_resilience_tab_layout(default_view=atlas_subview))
     
     elif tab_id == "tab-home":
-        return landing_page_layout()
+        return landing_page_layout(
+            background_image=addis_config.BACKGROUND_IMAGE,
+            tab_backgrounds=addis_config.TAB_BACKGROUNDS,
+            selected_city='addis',
+            expanded_section=atlas_section,
+        )
 
     else:
-        return landing_page_layout()
+        return landing_page_layout(
+            background_image=addis_config.BACKGROUND_IMAGE,
+            tab_backgrounds=addis_config.TAB_BACKGROUNDS,
+            selected_city='addis',
+        )
 
 
 @app.callback(
@@ -2559,10 +3271,11 @@ def toggle_sidebar_pillars(
         Input({"type": "sidebar-indicator-btn", "target": ALL, "subview": ALL, "city": ALL, "index": ALL}, "n_clicks"),
         Input({"type": "home-indicator-btn", "target": ALL, "subview": ALL, "city": ALL, "index": ALL}, "n_clicks"),
         Input({"type": "home-pillar-atlas-btn", "section": ALL, "city": ALL, "index": ALL}, "n_clicks"),
+        Input({"type": "home-subdomain-btn", "subdomain": ALL, "city": ALL, "index": ALL}, "n_clicks"),
     ],
     prevent_initial_call=True,
 )
-def open_atlas_target_tab(_atlas_btn_clicks, _sidebar_btn_clicks, _home_btn_clicks, _home_pillar_btn_clicks):
+def open_atlas_target_tab(_atlas_btn_clicks, _sidebar_btn_clicks, _home_btn_clicks, _home_pillar_btn_clicks, _home_subdomain_btn_clicks):
     ctx = dash.callback_context
     if not ctx.triggered:
         return dash.no_update
@@ -2578,8 +3291,18 @@ def open_atlas_target_tab(_atlas_btn_clicks, _sidebar_btn_clicks, _home_btn_clic
         if not section_name:
             return dash.no_update
         return {
-            "tab": "atlas-section",
+            "tab": "tab-home",
             "section": section_name,
+            "city": trig_obj.get("city") or None,
+        }
+
+    if trig_obj.get("type") == "home-subdomain-btn":
+        subdomain_key = trig_obj.get("subdomain")
+        if not subdomain_key:
+            return dash.no_update
+        return {
+            "tab": "subdomain",
+            "subdomain": subdomain_key,
             "city": trig_obj.get("city") or None,
         }
 
@@ -2690,7 +3413,7 @@ def update_map_on_bar_click_hanoi(clickData, selected_variable):
         paper_bgcolor=brand_colors['White'],
         plot_bgcolor=brand_colors['White'],
         margin=dict(l=0, r=0, t=0, b=0),
-        mapbox=dict(style="white-bg", layers=[_ESRI_TILE], center=center, zoom=zoom)
+        mapbox=dict(style="white-bg", layers=_BASEMAP_TILE, center=center, zoom=zoom)
     )
 
     fig.update_traces(
@@ -2704,23 +3427,27 @@ def update_map_on_bar_click_hanoi(clickData, selected_variable):
 # Hanoi affordability map with outlet layers and isochrones
 @app.callback(
     Output('affordability-map-hanoi', 'figure'),
-    [Input("food-outlets-and-isochrones-hanoi", "value"), Input("choropleth-select-hanoi", "value")],
-    [State('affordability-map-hanoi', 'relayoutData')]
+    [Input("outlet-travel-time-hanoi", "value"), Input("food-outlets-isochrones-hanoi", "value"), 
+     Input("choropleth-select-hanoi", "value"), Input("transit-mode-hanoi", "value")],
+    [State('affordability-map-hanoi', 'relayout_data')]
 )
-def update_affordability_map_hanoi(selected_outlets, selected_metric, relayout_data):
+def update_affordability_map_hanoi(selected_travel_time, selected_outlets, selected_metric, selected_transit_mode, relayout_data):
     # Delegate to shared builder to avoid duplicate callbacks
-    return _build_affordability_figure(
+    return _build_accesibility_figure(
+        selected_travel_time,
         selected_outlets,
         selected_metric,
+        selected_transit_mode,
+        None,
         relayout_data,
         outlets_geojson_files_hanoi,
-        isochrones_geojson_files_hanoi,
         outlets_path_hanoi,
         isochrones_path_hanoi,
         gdf_food_env_local=gdf_food_env_hanoi,
-        cols_food_env_local=cols_food_env if gdf_food_env_hanoi is not None else None,
-        data_labels_food_env_local=data_labels_food_env if gdf_food_env_hanoi is not None else None,
-        metric_direction_local=metric_direction if gdf_food_env_hanoi is not None else None,
+        sub_city_level_metrics=sub_city_level_metrics,
+        #cols_food_env_local=sub_city_level_metrics.keys() if gdf_food_env_hanoi is not None else None,
+        #data_labels_food_env_local=sub_city_level_metrics.values() if gdf_food_env_hanoi is not None else None,
+        metric_direction_local=metric_direction,
         center_default={"lat": MPI_hanoi.geometry.centroid.y.mean(), "lon": MPI_hanoi.geometry.centroid.x.mean()},
         zoom_default=10,
         city_key="hanoi",
@@ -2896,7 +3623,7 @@ def _build_drought_map_cached(slider_idx, indicator):
     slopes_df = region_ctx["slopes_df"]
 
     _map_layout = dict(
-        mapbox=dict(style="white-bg", layers=[_ESRI_TILE], center={"lat": 16.0, "lon": 106.0}, zoom=5),
+        mapbox=dict(style="white-bg", layers=_BASEMAP_TILE, center={"lat": 16.0, "lon": 106.0}, zoom=5),
         margin=dict(l=0, r=0, t=0, b=0),
         showlegend=False,
         coloraxis_showscale=False,
@@ -3157,7 +3884,7 @@ def _build_lulc_map_cached(indicator):
     lulc_map_center = lulc_ctx["map_center"]
 
     map_layout = dict(
-        mapbox=dict(style="white-bg", layers=[_ESRI_TILE], center=lulc_map_center, zoom=9),
+        mapbox=dict(style="white-bg", layers=_BASEMAP_TILE, center=lulc_map_center, zoom=9),
         margin=dict(l=0, r=0, t=0, b=0),
         showlegend=False,
     )
@@ -3209,7 +3936,7 @@ def _build_lulc_map_cached(indicator):
                 center={"lat": float((miny + maxy) / 2.0), "lon": float((minx + maxx) / 2.0)},
                 zoom=9,
                 style="white-bg",
-                layers=[_ESRI_TILE],
+                layers=_BASEMAP_TILE,
             )
         )
 
