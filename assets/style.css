@@ -403,3 +403,146 @@ body, * {
     opacity: 0.75;
     padding: 4px 2px;
 }
+
+/* ===================== Hero tab bar ===================== */
+
+.dash-hero-tab-bar {
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+    gap: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 0;
+    margin: 0;
+    width: 100%;
+}
+
+.dash-hero-tab-btn {
+    flex: 1;
+    background: transparent;
+    color: #FFFFFF;
+    opacity: 0.9;
+    border: none;
+    border-bottom: 3px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px 8px 0 0;
+    padding: 18px 24px;
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+    letter-spacing: 0.01em;
+    text-align: center;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    transition: opacity 0.2s ease, background 0.2s ease, border-bottom-color 0.2s ease;
+    margin-bottom: -1px;
+    outline: none;
+}
+
+.dash-hero-tab-btn:hover {
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.08);
+    border-bottom-color: rgba(255, 255, 255, 0.5);
+}
+
+.dash-hero-tab-btn--active {
+    flex: 1;
+    background: #ffffff !important;
+    color: #0F2E2A !important;
+    opacity: 1 !important;
+    border-bottom: 3px solid #ffffff !important;
+    font-size: 18px !important;
+    font-weight: 700 !important;
+    text-shadow: none !important;
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.dash-hero-tab-btn--active:hover {
+    background: #ffffff !important;
+    color: #0F2E2A !important;
+    opacity: 1 !important;
+}
+
+/* ===================== Explore button in indicator rows ===================== */
+
+.dash-hero-explore-btn {
+    background: none;
+    border: 1px solid #0F2E2A;
+    color: #0F2E2A;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+    padding: 5px 10px;
+    border-radius: 4px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: background 0.15s, color 0.15s;
+}
+
+.dash-hero-explore-btn:hover {
+    background: #0F2E2A;
+    color: #ffffff;
+}
+
+/* ===================== Indicator cards ===================== */
+
+.dash-indicator-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    text-align: left;
+    background: #ffffff;
+    border: 1px solid #E5E7EB;
+    border-radius: 10px;
+    padding: 16px 20px;
+    cursor: pointer;
+    gap: 12px;
+    transition: all 0.2s ease;
+    margin-bottom: 8px;
+    outline: none;
+}
+
+.dash-indicator-card:hover {
+    background: #E8F3F0;
+    transform: translateX(4px);
+    border-color: #499588;
+    box-shadow: 0 2px 8px rgba(73,149,136,0.15);
+}
+
+.dash-indicator-card:hover .dash-hero-explore-inline {
+    background: #499588;
+    color: #ffffff;
+    border-color: #499588;
+}
+
+.dash-indicator-card-disabled {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    background: #ffffff;
+    border: 1px solid #E5E7EB;
+    border-radius: 10px;
+    padding: 16px 20px;
+    gap: 12px;
+    margin-bottom: 8px;
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.dash-hero-explore-inline {
+    display: inline-block;
+    background: none;
+    border: 1px solid #0F2E2A;
+    color: #0F2E2A;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 5px 10px;
+    border-radius: 4px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
