@@ -2756,7 +2756,7 @@ def _build_accessibility_population_bar_figure(pop_cat, selected_outlets, select
         y="percent_affected",
         text="percent_affected",
         color="percent_affected",
-        color_continuous_scale=[brand_colors['Light green'], brand_colors['Dark green']],
+        color_continuous_scale=["#c8e3e0", "#1d574f"],
     )
     fig.update_traces(texttemplate="%{text:.1f}%", textposition="outside")
     fig.update_layout(
