@@ -403,3 +403,269 @@ body, * {
     opacity: 0.75;
     padding: 4px 2px;
 }
+
+/* ===================== Hero tab bar ===================== */
+
+.dash-hero-tab-bar {
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+    gap: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 0;
+    margin: 0;
+    width: 100%;
+}
+
+.dash-hero-tab-btn {
+    flex: 1;
+    background: transparent;
+    color: #FFFFFF;
+    opacity: 0.9;
+    border: none;
+    border-bottom: 3px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px 8px 0 0;
+    padding: 18px 24px;
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+    letter-spacing: 0.01em;
+    text-align: center;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    transition: opacity 0.2s ease, background 0.2s ease, border-bottom-color 0.2s ease;
+    margin-bottom: -1px;
+    outline: none;
+}
+
+.dash-hero-tab-btn:hover {
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.08);
+    border-bottom-color: rgba(255, 255, 255, 0.5);
+}
+
+.dash-hero-tab-btn--active {
+    flex: 1;
+    background: #ffffff !important;
+    color: #0F2E2A !important;
+    opacity: 1 !important;
+    border-bottom: 3px solid #ffffff !important;
+    font-size: 18px !important;
+    font-weight: 700 !important;
+    text-shadow: none !important;
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.dash-hero-tab-btn--active:hover {
+    background: #ffffff !important;
+    color: #0F2E2A !important;
+    opacity: 1 !important;
+}
+
+/* ===================== Explore button in indicator rows ===================== */
+
+.dash-hero-explore-btn {
+    background: none;
+    border: 1px solid #0F2E2A;
+    color: #0F2E2A;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+    padding: 5px 10px;
+    border-radius: 4px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: background 0.15s, color 0.15s;
+}
+
+.dash-hero-explore-btn:hover {
+    background: #0F2E2A;
+    color: #ffffff;
+}
+
+/* ===================== Indicator cards ===================== */
+
+.dash-indicator-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    text-align: left;
+    background: #ffffff;
+    border: 1px solid #E5E7EB;
+    border-radius: 10px;
+    padding: 16px 20px;
+    cursor: pointer;
+    gap: 12px;
+    transition: all 0.2s ease;
+    margin-bottom: 8px;
+    outline: none;
+}
+
+.dash-indicator-card:hover {
+    background: #E8F3F0;
+    transform: translateX(4px);
+    border-color: #499588;
+    box-shadow: 0 2px 8px rgba(73,149,136,0.15);
+}
+
+.dash-indicator-card:hover .dash-hero-explore-inline {
+    background: #499588;
+    color: #ffffff;
+    border-color: #499588;
+}
+
+.dash-indicator-card-disabled {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    background: #ffffff;
+    border: 1px solid #E5E7EB;
+    border-radius: 10px;
+    padding: 16px 20px;
+    gap: 12px;
+    margin-bottom: 8px;
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.dash-hero-explore-inline {
+    display: inline-block;
+    background: none;
+    border: 1px solid #0F2E2A;
+    color: #0F2E2A;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 5px 10px;
+    border-radius: 4px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+/* ===================== Dark sidebar — Vendor Properties page ===================== */
+
+.dash-sidebar-card--dark {
+    background-color: #1d574f !important;
+}
+
+/* Strip the white card backgrounds that bleed through on the dark sidebar */
+.dash-sidebar-card--dark .dash-sidebar-pillar-card {
+    background-color: transparent !important;
+    border: none !important;
+}
+
+/* Pillar section header buttons */
+.dash-sidebar-card--dark .dash-sidebar-pillar-toggle {
+    color: #FFFFFF !important;
+    background: transparent !important;
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    padding: 16px 14px !important;
+    border-radius: 8px !important;
+    opacity: 1 !important;
+    transition: all 0.2s ease !important;
+    cursor: pointer !important;
+}
+
+.dash-sidebar-card--dark .dash-sidebar-pillar-toggle:hover {
+    background-color: #E8F3F0 !important;
+    color: #1d574f !important;
+}
+
+/* Active pillar — collapse is open */
+.dash-sidebar-card--dark .dash-sidebar-pillar-card:has(.collapse.show) .dash-sidebar-pillar-toggle {
+    background-color: #2A7A6F !important;
+    color: #FFFFFF !important;
+}
+
+/* Individual indicator buttons inside a collapsed pillar */
+.dash-sidebar-card--dark .dash-sidebar-subtab-btn {
+    color: #FFFFFF !important;
+    background: transparent !important;
+    border-color: rgba(255, 255, 255, 0.15) !important;
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    padding: 16px 14px !important;
+    border-radius: 8px !important;
+    opacity: 1 !important;
+    transition: all 0.2s ease !important;
+    cursor: pointer !important;
+}
+
+.dash-sidebar-card--dark .dash-sidebar-subtab-btn:hover:not(:disabled) {
+    background-color: #E8F3F0 !important;
+    color: #1d574f !important;
+}
+
+/* Gap between subtab items — already 6px in base class but enforce here */
+.dash-sidebar-card--dark .dash-sidebar-subtab-group {
+    gap: 6px !important;
+}
+
+/* Home button: white bg, dark teal text */
+.dash-sidebar-card--dark .dash-sidebar-home-btn {
+    background-color: #FFFFFF !important;
+    color: #1d574f !important;
+}
+
+.dash-sidebar-card--dark .dash-sidebar-home-btn:hover {
+    background-color: #E8F3F0 !important;
+    color: #1d574f !important;
+}
+
+/* ===================== Vendor page transport toggle buttons ===================== */
+
+/* Inactive (default) state */
+#btn-walk,
+#btn-transit,
+#btn-drive {
+    background-color: #FFFFFF !important;
+    border: 2px solid #1d574f !important;
+    border-radius: 8px !important;
+    color: #1d574f !important;
+    transition: all 0.2s ease !important;
+    cursor: pointer !important;
+}
+
+#btn-walk img,
+#btn-transit img,
+#btn-drive img {
+    filter: invert(24%) sepia(36%) saturate(613%) hue-rotate(136deg) brightness(82%) contrast(95%);
+    transition: filter 0.2s ease;
+}
+
+/* Hover on inactive buttons */
+#btn-walk:not(.active):hover,
+#btn-transit:not(.active):hover,
+#btn-drive:not(.active):hover {
+    background-color: #E8F3F0 !important;
+}
+
+/* Active/selected state — callback sets active=True, DBC adds .active class */
+#btn-walk.active,
+#btn-transit.active,
+#btn-drive.active {
+    background-color: #4e998c !important;
+    border: 2px solid #4e998c !important;
+    color: #FFFFFF !important;
+}
+
+#btn-walk.active img,
+#btn-transit.active img,
+#btn-drive.active img {
+    filter: brightness(0) invert(1) !important;
+}
+
+/* ===================== Vendor page dropdowns ===================== */
+
+#food-outlets-isochrones .Select-control,
+#population-category-select .Select-control,
+#contextual-layer-select .Select-control {
+    border: 1px solid #1d574f !important;
+    background-color: #FFFFFF !important;
+}

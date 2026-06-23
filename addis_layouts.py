@@ -10,7 +10,7 @@ import plotly.graph_objects as go
 import plotly.express as px
 
 from config import brand_colors, header_style, sub_header_style, kpi_card_style_2, card_style
-from shared_components import sidebar_addis as sidebar, city_selector
+from shared_components import sidebar_addis as sidebar, sidebar_addis_vendor, city_selector
 from dashboard_components import create_nutrition_kpi_card, create_price_volatility_kpi_card
 
 
@@ -1059,7 +1059,7 @@ def food_accessibility_vendor_properties_tab_layout(selected_city='addis'):
     return html.Div([
             city_selector(selected_city=selected_city, visible=False),  # Hidden but present for callback
             dcc.Store(id="transport-mode", data="walk"),
-            html.Div([sidebar], style={
+            html.Div([sidebar_addis_vendor], style={
                                 "width": "15%",
                                 "height": "100%",
                                 "display": "flex",
@@ -1072,13 +1072,12 @@ def food_accessibility_vendor_properties_tab_layout(selected_city='addis'):
             html.Div([
                 dbc.Card([
                     dbc.CardBody([
-                        html.Div([ 
-                            html.H2("Food Vendor Analysis", style=header_style),
+                        html.Div([
+                            html.H2("Food Vendor Analysis", style={**header_style, "fontSize": "22px", "fontWeight": "700", "color": "#1d574f"}),
                             html.P(f"This map shows a number of urban food vendor metrics across {cityname}'s sub-cities regions. These metrics include food outlet density, and highlights areas accessible through a combination of walking, public transportation or driving to identify areas of the city that have prominent food deserts and swamps. Additional layers can be added to the map using the dropdowns below, such as average land-surface temperature and canopy cover, which are important indicators of urban heat island effects and green space access that can further exacerbate food environment inequities.",
-                            #html.P("Placehodler Text!",
-                                       style={  "margin": "10px 6px", 
-                                                "fontSize": 'clamp(0.5em, 0.8em, 1.0em)',
-                                                #"textAlign": "justify",
+                                       style={  "margin": "10px 6px",
+                                                "fontSize": "14px",
+                                                "color": "#4B5563",
                                                 "whiteSpace": "normal",
                                                 })],
                                 style={
@@ -1090,19 +1089,22 @@ def food_accessibility_vendor_properties_tab_layout(selected_city='addis'):
                     })],style={
                                 "display": "flex",
                                 "flexDirection": "column",
-                                "height": "100%"             
+                                "height": "100%",
+                                "padding": "14px 24px",
                             })
-                ], style={"height": "auto", 
-                            "padding":"6px" ,
-                            "box-shadow": "0 2px 6px rgba(0,0,0,0.1)",
-                            "backgroundColor": brand_colors['White'],
-                            "border-radius": "10px",
-                            "marginBottom": "5px"}),
+                ], style={"height": "auto",
+                            "padding": "0",
+                            "boxShadow": "0 2px 12px rgba(0,0,0,0.08)",
+                            "backgroundColor": "#FFFFFF",
+                            "borderRadius": "12px",
+                            "marginBottom": "16px"}),
 
                     dbc.Card([
                         dbc.CardBody([
                             html.H3(["Vendor Accessibility Layers"], style={
-                                **sub_header_style,
+                                "fontSize": "16px",
+                                "fontWeight": "600",
+                                "color": "#1d574f",
                                 "justifyContent": 'center',
                                 "alignItems": 'center',
                                 "textAlign": 'center'
@@ -1117,6 +1119,7 @@ def food_accessibility_vendor_properties_tab_layout(selected_city='addis'):
                                                             outline=True,
                                                             color="primary",
                                                             n_clicks=0,
+                                                            active=True,
                                                         ),
                                                         dbc.Button(
                                                             html.Img(src="/assets/logos/bus.svg", height="28px"),
@@ -1170,21 +1173,22 @@ def food_accessibility_vendor_properties_tab_layout(selected_city='addis'):
                         })],style={
                                     "display": "flex",
                                     "flexDirection": "column",
-                                    "height": "100%"             
+                                    "height": "100%",
+                                    "padding": "14px 24px",
                                 })
-                    ], style={"height": "auto", 
-                                "padding":"6px" ,
-                                "box-shadow": "0 2px 6px rgba(0,0,0,0.1)",
-                                "backgroundColor": brand_colors['White'],
-                                "border-radius": "10px",
+                    ], style={"height": "auto",
+                                "padding": "0",
+                                "boxShadow": "0 2px 12px rgba(0,0,0,0.08)",
+                                "backgroundColor": "#FFFFFF",
+                                "borderRadius": "12px",
                                 "position": "relative",
-                                "marginBottom": "5px"}),
+                                "marginBottom": "16px"}),
 
 
                 dbc.Card([
                     dbc.CardBody([
                         html.Div([
-                            html.H3(["Population In Accessibility Zones"], style={**sub_header_style, 'marginBottom': '5px'}),
+                            html.H3(["Population In Accessibility Zones"], style={"fontSize": "16px", "fontWeight": "600", "color": "#1d574f", 'marginBottom': '5px'}),
                             dcc.Dropdown(
                                 id="population-category-select",
                                 options=population_options,
@@ -1207,21 +1211,22 @@ def food_accessibility_vendor_properties_tab_layout(selected_city='addis'):
                     ], style={
                         "display": "flex",
                         "flexDirection": "column",
-                        "height": "100%"
+                        "height": "100%",
+                        "padding": "14px 24px",
                     })
-                ], style={"height": "auto", 
-                            "padding":"6px" ,
-                            "box-shadow": "0 2px 6px rgba(0,0,0,0.1)",
-                            "backgroundColor": brand_colors['White'],
-                            "border-radius": "10px",
-                            "marginBottom": "5px"}),
+                ], style={"height": "auto",
+                            "padding": "0",
+                            "boxShadow": "0 2px 12px rgba(0,0,0,0.08)",
+                            "backgroundColor": "#FFFFFF",
+                            "borderRadius": "12px",
+                            "marginBottom": "16px"}),
 
 
                 dbc.Card([
                     dbc.CardBody([
                         html.Div([
 
-                                html.H3(["Contextual Layers"], style={**sub_header_style, 'marginBottom': '5px'}),
+                                html.H3(["Contextual Layers"], style={"fontSize": "16px", "fontWeight": "600", "color": "#1d574f", 'marginBottom': '5px'}),
                                 dcc.Dropdown(
                                     id="contextual-layer-select",
                                     options=[{"label": label, "value": col} 
@@ -1240,14 +1245,15 @@ def food_accessibility_vendor_properties_tab_layout(selected_city='addis'):
                     })],style={
                                 "display": "flex",
                                 "flexDirection": "column",
-                                "height": "100%"             
+                                "height": "100%",
+                                "padding": "14px 24px",
                             })
-                ], style={"height": "auto", 
-                            "padding":"6px" ,
-                            "box-shadow": "0 2px 6px rgba(0,0,0,0.1)",
-                            "backgroundColor": brand_colors['White'],
-                            "border-radius": "10px",
-                            'marginBottom': "5px"}),
+                ], style={"height": "auto",
+                            "padding": "0",
+                            "boxShadow": "0 2px 12px rgba(0,0,0,0.08)",
+                            "backgroundColor": "#FFFFFF",
+                            "borderRadius": "12px",
+                            'marginBottom': "16px"}),
                             
                 #dbc.Card([
                 #    dbc.CardBody([
@@ -1289,7 +1295,7 @@ def food_accessibility_vendor_properties_tab_layout(selected_city='addis'):
                     "width": "min(40%)",
                     "height": "100%",
                     "padding": "10px",
-                    "backgroundColor": brand_colors['Light green'],
+                    "backgroundColor": "#1d574f",
                     "border-radius": "0",
                     "margin": "0",
                     "box-shadow": "0 2px 8px rgba(0,0,0,0.05)",
@@ -1363,10 +1369,10 @@ def food_accessibility_vendor_properties_tab_layout(selected_city='addis'):
                 })
 
         ], style={
-                    "display": "flex", 
-                    "width": "100%", 
+                    "display": "flex",
+                    "width": "100%",
                     "height": "100%",
-                    "backgroundColor": brand_colors['Light green']
+                    "backgroundColor": "#1d574f"
         })
 
 

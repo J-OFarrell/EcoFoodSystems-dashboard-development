@@ -1715,129 +1715,34 @@ def _resolve_subdomain_layout(route_city, subdomain_key):
 # ------------------------- Main app layout ------------------------- #
 
 def landing_page_layout(background_image=None, tab_backgrounds=None, selected_city='hanoi', expanded_section=None):
-    """
-    Generate landing page layout for a city.
-    
-    Args:
-        background_image: URL to background image (default: selected city)
-        tab_backgrounds: Dict mapping tab_id to background color (default: selected city)
-        selected_city: Currently selected city ('addis' or 'hanoi')
-    """
     if background_image is None:
         background_image = hanoi_config.BACKGROUND_IMAGE if selected_city == 'hanoi' else addis_config.BACKGROUND_IMAGE
     if tab_backgrounds is None:
         tab_backgrounds = hanoi_config.TAB_BACKGROUNDS if selected_city == 'hanoi' else addis_config.TAB_BACKGROUNDS
 
+    # Default active tab to Drivers
+    if expanded_section is None:
+        expanded_section = 'Drivers'
+
     pillar_counts = _count_available_indicators_by_pillar(selected_city)
 
-    def _make_pillar_card(index, title, count_key, description):
-        is_expanded = expanded_section == title
-        if is_expanded:
-            subdomains = _SUBDOMAIN_GROUPS.get(title, [])
-            subdomain_buttons = []
-            for idx, (subdomain_key, label) in enumerate(subdomains):
-                is_coming_soon = _is_subdomain_coming_soon(selected_city, subdomain_key)
-                subdomain_buttons.append(
-                    html.Button(
-                        [
-                            html.Span(label, style={'display': 'block', 'fontWeight': 'bold'}),
-                            html.Span('Coming soon', style={'display': 'block', 'fontSize': '0.78em', 'marginTop': '2px'}) if is_coming_soon else None,
-                        ],
-                        id={
-                            'type': 'home-subdomain-btn',
-                            'subdomain': subdomain_key,
-                            'city': selected_city,
-                            'index': idx,
-                        },
-                        n_clicks=0,
-                        disabled=is_coming_soon,
-                        style={
-                            'width': '100%',
-                            'textAlign': 'left',
-                            'padding': '10px 12px',
-                            'marginTop': '8px',
-                            'borderRadius': '8px',
-                            'border': 'none',
-                            'color': brand_colors['Brown'],
-                            'backgroundColor': brand_colors['White'],
-                            'boxShadow': '0 2px 6px rgba(0,0,0,0.08)',
-                            'opacity': 0.55 if is_coming_soon else 1,
-                            'cursor': 'not-allowed' if is_coming_soon else 'pointer',
-                        },
-                    )
-                )
-
-            return html.Div([
-                html.Div([
-                    html.Span(f'Pillar {index}', className='dash-landing-pill-index'),
-                    html.Span(f"{pillar_counts[count_key]} indicators", className='dash-landing-pill-count'),
-                ], className='dash-landing-pill-top'),
-                html.H4(title, className='dash-landing-pill-title'),
-                html.P('Select a sub-domain:', className='dash-landing-pill-text', style={'marginBottom': '4px'}),
-                html.Div(subdomain_buttons, style={'margin':'8px 10px 12px 10px'}),
-            ], className='dash-landing-pill-card', style={'margin':'8px 10px 12px 10px',
-                                                          'padding':'12px 14px'})
-
-        return html.Div([
-            html.Button([
-                html.Div([
-                    html.Span(f'Pillar {index}', className='dash-landing-pill-index'),
-                    html.Span(f"{pillar_counts[count_key]} indicators", className='dash-landing-pill-count'),
-                ], className='dash-landing-pill-top'),
-                html.H4(title, className='dash-landing-pill-title'),
-                html.P(description, className='dash-landing-pill-text'),
-            ],
-                id={
-                    'type': 'home-pillar-atlas-btn',
-                    'section': title,
-                    'city': selected_city,
-                    'index': index,
-                },
-                n_clicks=0,
-                className='dash-landing-pill-card-btn',
-            )
-        ], className='dash-landing-pill-card')
-
-    pillar_cards = [
-        _make_pillar_card(
-            1,
-            'Drivers',
-            'drivers',
-            'The biophysical, socio-economic, and political forces that shape how food systems function and evolve over time.',
-        ),
-        _make_pillar_card(
-            2,
-            'Food Supply Chains',
-            'food-supply-chains',
-            'All activities involved in producing, processing, distributing, and retailing food from farm to consumer.',
-        ),
-        _make_pillar_card(
-            3,
-            'Food Environments',
-            'food-environments',
-            'The physical, economic, political, and socio-cultural contexts that determine how people access and acquire food.',
-        ),
-        _make_pillar_card(
-            4,
-            'Individual Factors',
-            'individual-factors',
-            'The personal circumstances, resources, and preferences that shape food choices and dietary behaviours.',
-            ),
-        _make_pillar_card(
-            5,
-            'Cross-Cutting Issues',
-            'cross-cutting-issues',
-            'Issues that span multiple pillars and affect the overall functioning and outcomes of food systems.',
-        ),
-        _make_pillar_card(
-            6,
-            'Outcomes',
-            'outcomes',
-            'The resulting impacts of food systems on food security, diets, nutrition and health, environmental sustainability, and socio-economic equity.',
-        ),
+    _PILLAR_TABS = [
+        ('Drivers', 1, 'drivers',
+         'The biophysical, socio-economic, and political forces that shape how food systems function and evolve over time.'),
+        ('Food Supply Chains', 2, 'food-supply-chains',
+         'All activities involved in producing, processing, distributing, and retailing food from farm to consumer.'),
+        ('Food Environments', 3, 'food-environments',
+         'The physical, economic, political, and socio-cultural contexts that determine how people access and acquire food.'),
+        ('Individual Factors', 4, 'individual-factors',
+         'The personal circumstances, resources, and preferences that shape food choices and dietary behaviours.'),
+        ('Cross-Cutting Issues', 5, 'cross-cutting-issues',
+         'Issues that span multiple pillars and affect the overall functioning and outcomes of food systems.'),
+        ('Outcomes', 6, 'outcomes',
+         'The resulting impacts on food security, diets, nutrition and health, environmental sustainability, and socio-economic equity.'),
     ]
 
-    # Ensure all callback input ids exist even if not displayed as visible actions.
+    city_label = 'HANOI' if selected_city == 'hanoi' else 'ADDIS ABABA'
+
     used_ids = {
         'tab-home', 'tab-1-stakeholders', 'tab-2-supply', 'tab-3-sustainability',
         'tab-4-poverty', 'tab-5-labour', 'tab-6-resilience', 'tab-7-food-environments',
@@ -1848,83 +1753,284 @@ def landing_page_layout(background_image=None, tab_backgrounds=None, selected_ci
         for tab_id in sorted(used_ids)
     ]
 
-    # Put sidebar and main landing content side-by-side so the Home tab id exists
-    main_content = html.Div([
-        # Hidden ids needed for callback stability
-        *hidden_stub_buttons,
+    # Hero tab buttons — clicking triggers existing home-pillar-atlas-btn callback
+    tab_buttons = []
+    for title, num, _ck, _d in _PILLAR_TABS:
+        is_active = (expanded_section == title)
+        tab_buttons.append(
+            html.Button(
+                title,
+                id={
+                    'type': 'home-pillar-atlas-btn',
+                    'section': title,
+                    'city': selected_city,
+                    'index': num,
+                },
+                n_clicks=0,
+                className='dash-hero-tab-btn dash-hero-tab-btn--active' if is_active else 'dash-hero-tab-btn',
+            )
+        )
 
-        # Header with Title and City Selector
-        html.Div([
-            # Title centered
+    # Active pillar metadata
+    active_info = next(
+        ((t, n, ck, d) for t, n, ck, d in _PILLAR_TABS if t == expanded_section),
+        _PILLAR_TABS[0]
+    )
+    active_title, active_index, active_count_key, active_description = active_info
+
+    _DOT_COLORS = {
+        'environment-climate-change': '#22c55e',
+        'income-growth-distribution': '#f59e0b',
+        'policies-leadership': '#60a5fa',
+        'population-growth-migration': '#a855f7',
+        'socio-cultural-context': '#7A9A3A',
+        'food-availability': '#22c55e',
+        'food-affordability': '#f59e0b',
+        'vendor-properties': '#7A9A3A',
+        'processing-packing': '#22c55e',
+        'production-systems-input-supply': '#7A9A3A',
+        'retail-markerting': '#f59e0b',
+        'storage-distrbution': '#22c55e',
+        'economic': '#f59e0b',
+        'governance': '#60a5fa',
+        'resilience': '#a855f7',
+        'food-security': '#22c55e',
+        'livelihoods-poverty-equity': '#7A9A3A',
+        'noncommunicable-diseases': '#ef4444',
+        'nutrional-status': '#22c55e',
+    }
+
+    _SUBDOMAIN_DESCRIPTIONS = {
+        'environment-climate-change': 'Climate patterns, land use, and environmental conditions shaping food production and availability.',
+        'income-growth-distribution': 'Economic growth, income distribution, and their effects on food system actors and consumers.',
+        'policies-leadership': 'Government policies, regulatory frameworks, and leadership enabling sustainable food systems.',
+        'population-growth-migration': 'Demographic shifts driving changes in food demand patterns and urban food systems.',
+        'socio-cultural-context': 'Cultural norms, traditions, and social structures influencing food preferences and practices.',
+        'food-availability': 'Supply of diverse, nutritious food through markets and distribution channels.',
+        'food-affordability': 'Ability of different population groups to access adequate nutritious food within their budgets.',
+        'vendor-properties': 'Physical characteristics and practices of food vendors including hygiene and quality.',
+        'processing-packing': 'Value-addition activities transforming raw agricultural produce into food products.',
+        'production-systems-input-supply': 'Agricultural production methods and supply of inputs for food growing.',
+        'retail-markerting': 'Marketing, branding, and retail practices shaping consumer food choices.',
+        'storage-distrbution': 'Post-harvest storage infrastructure and distribution networks moving food from farms to markets.',
+        'economic': 'Individual economic resources, livelihoods, and financial capacity affecting food access.',
+        'governance': 'Institutions, policies, and multi-stakeholder processes governing the food system.',
+        'resilience': 'Capacity of food systems to absorb shocks and adapt to climate and economic disruptions.',
+        'food-security': 'Access to sufficient, safe, and nutritious food for active and healthy lives.',
+        'livelihoods-poverty-equity': 'Income, wellbeing, and equity outcomes for people working in and depending on food systems.',
+        'noncommunicable-diseases': 'Chronic diseases linked to diet quality including diabetes, hypertension, and obesity.',
+        'nutrional-status': 'Nutritional outcomes including stunting, wasting, micronutrient deficiencies, and overweight.',
+    }
+
+    subdomains = _SUBDOMAIN_GROUPS.get(active_title, [])
+
+    # Build indicator rows — coming-soon state preserved exactly from _COMING_SOON_SUBDOMAINS_BY_CITY
+    indicator_rows = []
+    for idx, (subdomain_key, label) in enumerate(subdomains):
+        is_coming_soon = _is_subdomain_coming_soon(selected_city, subdomain_key)
+        dot_color = _DOT_COLORS.get(subdomain_key, '#7A9A3A')
+        description = _SUBDOMAIN_DESCRIPTIONS.get(subdomain_key, '')
+
+        row_inner = [
             html.Div([
-                html.H1("EcoFoodSystems Dashboard", style={
-                    "color": brand_colors['Brown'],
-                    "fontWeight": "bold",
-                    "fontSize": "2.75em",
-                    "marginBottom": "0",
-                    "textAlign": "center"
+                html.Div(style={
+                    'width': '8px',
+                    'height': '8px',
+                    'borderRadius': '50%',
+                    'backgroundColor': dot_color if not is_coming_soon else '#d1d5db',
+                    'marginTop': '5px',
+                    'flexShrink': '0',
                 }),
+                html.Div([
+                    html.Span(label, style={
+                        'fontWeight': 'bold',
+                        'fontSize': '15px',
+                        'color': '#374151',
+                    }),
+                    html.P(description, style={
+                        'color': '#6B7280',
+                        'fontSize': '13px',
+                        'margin': '3px 0 0 0',
+                        'lineHeight': '1.4',
+                    }) if description else None,
+                    html.Span('Coming soon', style={
+                        'display': 'block',
+                        'fontSize': '11px',
+                        'color': '#9ca3af',
+                        'fontStyle': 'italic',
+                        'marginTop': '3px',
+                    }) if is_coming_soon else None,
+                ], style={'flex': '1', 'minWidth': '0', 'textAlign': 'left'}),
             ], style={
-                "width": "100%",
-                "display": "flex",
-                "justifyContent": "center",
-                "alignItems": "center"
+                'display': 'flex',
+                'gap': '12px',
+                'alignItems': 'flex-start',
+                'flex': '1',
+                'minWidth': '0',
             }),
-            
-            # City Selector positioned on the right
-            city_selector(selected_city=selected_city, visible=True),
-        ], style={
-            "position": "relative",
-            "width": "100%",
-            "paddingTop": "30px",
-            "paddingBottom": "10px"
-        }),
+            html.Span('EXPLORE →', className='dash-hero-explore-inline') if not is_coming_soon else None,
+        ]
 
-        # Subtitle text
-        html.Div([
-            html.P("Explore the dashboard through five concise pillars adapted from the Food Systems Countdown framing.",
-                style={
-                    "color": brand_colors['Brown'],
-                    "fontSize": "1.05em",
-                    "textAlign": "center",
-                    "maxWidth": "980px",
-                    "margin": "0 auto 20px auto",
-                }
-            ),
-        ], style={
-            "width": "100%",
-            "display": "flex",
-            "justifyContent": "center"
-        }),
+        if not is_coming_soon:
+            indicator_rows.append(html.Button(
+                row_inner,
+                id={
+                    'type': 'home-subdomain-btn',
+                    'subdomain': subdomain_key,
+                    'city': selected_city,
+                    'index': idx,
+                },
+                n_clicks=0,
+                className='dash-indicator-card',
+            ))
+        else:
+            indicator_rows.append(html.Div(
+                row_inner,
+                className='dash-indicator-card-disabled',
+            ))
 
-        html.Div([
-            dbc.Row([
-                dbc.Col(pillar_cards[0], xs=12, md=6, lg=4),
-                dbc.Col(pillar_cards[1], xs=12, md=6, lg=4),
-                dbc.Col(pillar_cards[2], xs=12, md=6, lg=4),
-            ], justify='center', className='dash-landing-pill-row g-3'),
-            dbc.Row([
-                dbc.Col(pillar_cards[3], xs=12, md=6, lg=4),
-                dbc.Col(pillar_cards[4], xs=12, md=6, lg=4),
-                dbc.Col(pillar_cards[5], xs=12, md=6, lg=4),
-            ], justify='center', className='dash-landing-pill-row g-3'),
-        ], className='dash-landing-pill-wrap'),
-
-        # Footer logos (optional)
-        footer
-
+    legend = html.Div([
+        html.Span([html.Span('●', style={'color': '#22c55e'}), ' Environmental'],
+                  style={'fontSize': '12px', 'color': '#6B7280', 'marginRight': '14px'}),
+        html.Span([html.Span('●', style={'color': '#7A9A3A'}), ' Social'],
+                  style={'fontSize': '12px', 'color': '#6B7280', 'marginRight': '14px'}),
+        html.Span([html.Span('●', style={'color': '#f59e0b'}), ' Economic'],
+                  style={'fontSize': '12px', 'color': '#6B7280', 'marginRight': '14px'}),
+        html.Span([html.Span('●', style={'color': '#60a5fa'}), ' Governance'],
+                  style={'fontSize': '12px', 'color': '#6B7280', 'marginRight': '14px'}),
+        html.Span([html.Span('●', style={'color': '#a855f7'}), ' Resilience'],
+                  style={'fontSize': '12px', 'color': '#6B7280', 'marginRight': '14px'}),
+        html.Span([html.Span('●', style={'color': '#ef4444'}), ' Health'],
+                  style={'fontSize': '12px', 'color': '#6B7280'}),
     ], style={
-        "backgroundColor": brand_colors['Light green'],
-        "height": "100vh",
-        "width": "100%",
-        "padding": "0 2%",
-        "margin": "0",
-        "boxSizing": "border-box",
-        'overflowY':'auto'
+        'display': 'flex',
+        'flexWrap': 'wrap',
+        'gap': '4px',
+        'paddingTop': '14px',
+        'borderTop': '1px solid #f3f4f6',
+        'marginTop': '4px',
     })
 
-    # Return only the main landing content (no sidebar visible on homepage)
-    return main_content
+    content_panel = html.Div([
+        html.Div([
+            html.Div([
+                html.Span(
+                    f"PILLAR {active_index} OF 6  ·  {pillar_counts.get(active_count_key, 0)} INDICATORS",
+                    style={
+                        'color': '#7A9A3A',
+                        'fontSize': '12px',
+                        'fontWeight': '600',
+                        'letterSpacing': '0.05em',
+                        'textTransform': 'uppercase',
+                        'display': 'block',
+                        'marginBottom': '6px',
+                    }
+                ),
+                html.H2(active_title, style={
+                    'fontSize': '28px',
+                    'fontWeight': '700',
+                    'color': '#111827',
+                    'margin': '0 0 8px 0',
+                }),
+                html.P(active_description, style={
+                    'color': '#6B7280',
+                    'fontSize': '14px',
+                    'lineHeight': '1.5',
+                    'margin': '0',
+                    'maxWidth': '580px',
+                }),
+            ], style={'flex': '1', 'minWidth': '0'}),
+            html.Div([
+                html.Span(
+                    f'CITY: {city_label}',
+                    style={
+                        'color': '#9ca3af',
+                        'fontSize': '11px',
+                        'fontWeight': '600',
+                        'letterSpacing': '0.1em',
+                        'textTransform': 'uppercase',
+                        'display': 'block',
+                        'textAlign': 'right',
+                        'whiteSpace': 'nowrap',
+                    }
+                ),
+            ], style={'paddingLeft': '24px', 'flexShrink': '0'}),
+        ], style={
+            'display': 'flex',
+            'justifyContent': 'space-between',
+            'alignItems': 'flex-start',
+            'marginBottom': '16px',
+            'gap': '16px',
+        }),
+        html.Hr(style={'border': 'none', 'borderTop': '1px solid #e5e7eb', 'margin': '0 0 4px 0'}),
+        html.Div(indicator_rows if indicator_rows else [
+            html.P('No sub-domains available yet.', style={'color': '#9ca3af', 'padding': '20px 0'})
+        ]),
+        legend,
+    ], style={
+        'backgroundColor': 'white',
+        'borderRadius': '12px',
+        'boxShadow': '0 4px 20px rgba(0,0,0,0.1)',
+        'padding': '28px 32px',
+    })
+
+    hero = html.Div([
+        # Top bar: city selector floats via absolute positioning within this 60px container
+        html.Div([
+            city_selector(selected_city=selected_city, visible=True),
+        ], style={
+            'position': 'relative',
+            'height': '60px',
+            'width': '100%',
+        }),
+        # Title + subtitle
+        html.Div([
+            html.H1('ECOFOODSYSTEMS DASHBOARD', style={
+                'color': 'white',
+                'fontWeight': '800',
+                'fontSize': 'clamp(24px, 4vw, 44px)',
+                'letterSpacing': '0.04em',
+                'textTransform': 'uppercase',
+                'margin': '0 0 14px 0',
+                'textAlign': 'center',
+            }),
+            html.P(
+                'Explore the EcoFoodSystems dashboard through six concise pillars adapted from the Food Systems Countdown framing.',
+                style={
+                    'color': 'rgba(255,255,255,0.85)',
+                    'fontSize': '15px',
+                    'maxWidth': '600px',
+                    'textAlign': 'center',
+                    'margin': '0 auto 32px auto',
+                    'lineHeight': '1.6',
+                }
+            ),
+        ], style={'padding': '16px 24px 0', 'textAlign': 'center'}),
+        # Tab bar — sits at the bottom edge of the hero
+        html.Div(tab_buttons, className='dash-hero-tab-bar'),
+    ], style={
+        'background': 'linear-gradient(135deg, #0F2E2A 0%, #2A7A6F 50%, #5FA89A 100%)',
+        'paddingBottom': '0',
+        'position': 'relative',
+        'zIndex': '20',
+    })
+
+    return html.Div([
+        *hidden_stub_buttons,
+        hero,
+        html.Div([content_panel], style={
+            'margin': '-20px 24px 0 24px',
+            'position': 'relative',
+            'zIndex': '10',
+        }),
+        footer,
+    ], style={
+        'backgroundColor': '#ffffff',
+        'minHeight': '100vh',
+        'width': '100%',
+        'overflowY': 'auto',
+        'boxSizing': 'border-box',
+    })
 
 
 # ------------------------- Tab Layouts ------------------------- #
@@ -2650,7 +2756,7 @@ def _build_accessibility_population_bar_figure(pop_cat, selected_outlets, select
         y="percent_affected",
         text="percent_affected",
         color="percent_affected",
-        color_continuous_scale=[brand_colors['Light green'], brand_colors['Dark green']],
+        color_continuous_scale=["#c8e3e0", "#1d574f"],
     )
     fig.update_traces(texttemplate="%{text:.1f}%", textposition="outside")
     fig.update_layout(

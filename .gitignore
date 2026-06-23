@@ -1,6 +1,7 @@
 *.DS_Store
 __pycache__/
 *.pyc
+venv/
 
 assets/data/all_policy_faodatabase.csv
 

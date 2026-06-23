@@ -181,7 +181,7 @@ def _record_target_tab(rec):
     return 'tab-home', None
 
 
-def make_sidebar(selected_city='hanoi'):
+def make_sidebar(selected_city='hanoi', dark=False):
     import hanoi_config
     import addis_config
     tab_backgrounds = hanoi_config.TAB_BACKGROUNDS if selected_city == 'hanoi' else addis_config.TAB_BACKGROUNDS
@@ -281,10 +281,13 @@ def make_sidebar(selected_city='hanoi'):
             ], className="dash-sidebar-pillar-card")
         )
 
+    bg_color = "#1d574f" if dark else "#f0f6e5"
+    card_class = "dash-sidebar-card dash-sidebar-card--dark" if dark else "dash-sidebar-card"
+
     return dbc.Card([
         html.Div(home_button, className="dash-sidebar-home-wrap"),
         html.Div(pillar_sections, className="dash-sidebar-pillar-list"),
-    ], className="dash-sidebar-card", style={
+    ], className=card_class, style={
         "boxShadow": "0 2px 8px rgba(0,0,0,0.08)",
         "borderRadius": "12px",
         "padding": "10px",
@@ -294,12 +297,13 @@ def make_sidebar(selected_city='hanoi'):
         "flexDirection": "column",
         "justifyContent": "flex-start",
         "overflowY": "auto",
-        "backgroundColor": "#f0f6e5",
+        "backgroundColor": bg_color,
     })
 
 
 sidebar_hanoi = make_sidebar('hanoi')
 sidebar_addis = make_sidebar('addis')
+sidebar_addis_vendor = make_sidebar('addis', dark=True)
 sidebar = sidebar_hanoi  # backward-compat for app.py import
 
 
