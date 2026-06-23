@@ -1630,24 +1630,6 @@ def render_temporal_resilience_layout():
     })
 
     return html.Div([
-        #dbc.Card([
-        #    dbc.CardBody([
-        #        html.H2("Temporal Resilience Indicators", style=header_style),
-        #        html.P(
-        #            "This view summarizes city-level resilience indicators over time. "
-        #            "Each card shows the latest value and a sparkline of the historical trend.",
-        #            style={
-        #                "margin": "10px 6px",
-        #                "fontSize": 'clamp(0.7em, 0.9em, 1.0em)',
-        #                "whiteSpace": "normal",
-        #            }
-        #        )
-        #    ])
-        #], style={
-        #    "height": "auto", "padding": "6px", "marginBottom": "10px",
-        #    "boxShadow": "0 2px 6px rgba(0,0,0,0.1)",
-        #    "backgroundColor": brand_colors['White'], "borderRadius": "10px"
-        #}),
 
         sos_section,
 
@@ -1663,7 +1645,7 @@ def render_temporal_resilience_layout():
     })
 
 
-def render_spatial_resilience_layout(climate_indicator_options, indicator_descriptions, n, quarter_marks):
+def render_spatial_climate_resilience_layout(climate_indicator_options, indicator_descriptions, n, quarter_marks):
     """Spatial (map) sub-layout for the resilience tab."""
     return html.Div([
 
@@ -1672,7 +1654,9 @@ def render_spatial_resilience_layout(climate_indicator_options, indicator_descri
 
             dbc.Card([
                 dbc.CardBody([
-                    html.H2("Biophysical Shocks", style=header_style),
+                    html.H2("Environment and Climate Change", style=header_style),
+                    html.H4("Agriculture and Climate Resilience", style={**header_style, "fontSize": "16px", "margin": "10px"}),
+                    html.Hr(style={"borderTop": f"2px solid {brand_colors['Teal']}", "margin": "6px 0"}),
                     html.P(
                         "This page provides a multi-dimensional view of biophysical shocks across Hanoi's districts and nationally, "
                         "integrating climate resilience for vegetation health in key production areas, water availability trends, and districts most "
@@ -1699,7 +1683,7 @@ def render_spatial_resilience_layout(climate_indicator_options, indicator_descri
                     dcc.Dropdown(
                         id="climate-indicator-select",
                         options=climate_indicator_options,
-                        value="vci_severe_pct",
+                        value="ag_area_ha",  # Default value
                         clearable=False,
                         style={"zIndex": "2000", "marginBottom": "6px"}
                     ),
@@ -1707,7 +1691,7 @@ def render_spatial_resilience_layout(climate_indicator_options, indicator_descri
                         dbc.CardBody([
                             html.Div(
                                 id="climate-indicator-description",
-                                children=indicator_descriptions.get("vci_severe_pct", ""),
+                                children=indicator_descriptions.get("ag_area_ha", ""),
                                 style={
                                     "padding": "2px 4px",
                                     "fontSize": "clamp(0.65em, 0.85em, 0.95em)",
@@ -1911,6 +1895,7 @@ def resilience_tab_layout_hanoi(all_quarters, default_view='Biophysical shocks')
     quarter_marks[0] = {"label": all_quarters[0][:4], "style": {"fontSize": "10px", "color": "#8c8590"}}
 
     climate_indicator_options = [
+        {"label": "Cropland Area (ha)", "value": "ag_area_ha"},
         {"label": "── Vegetation ──", "value": "divider_veg", "disabled": True},
         {"label": "Vegetative Stress (VCI)", "value": "vci_severe_pct"},
         {"label": "Vegetation Drought Resistance", "value": "drought_resistance"},
@@ -1930,6 +1915,7 @@ def resilience_tab_layout_hanoi(all_quarters, default_view='Biophysical shocks')
     ]
 
     indicator_descriptions = {
+        'ag_area_ha': "Cropland Area (ha) represents the total area of land under cultivation for crops in each district. This indicator provides context for understanding the scale of agricultural activity and potential exposure to climate stressors.",
         "vci_severe_pct": "The Vegetation Condition Index (VCI) measures relative vegetation health compared to historical conditions. Quantiles are applied to calculate indicators of stress; this map shows the percentage of each district under severe vegetative stress.",
         "drought_resistance": "Vegetation Drought Resistance measures how well cropland vegetation maintained healthy VCI during SPEI6 drought events, weighted by how severe the stress conditions were. Higher values indicate crops sustained better health under equivalent stress. Grey districts recorded no drought that year.",
         "grace_trend": "GRACE Terrestrial Water Storage Anomalies (TWSA) capture changes in total water storage — including groundwater, surface water, and soil moisture — relative to a long-term baseline. Negative anomalies signal depletion.",
@@ -1949,11 +1935,11 @@ def resilience_tab_layout_hanoi(all_quarters, default_view='Biophysical shocks')
     selected_view = default_view if default_view in view_options else 'Biophysical shocks'
 
     if selected_view == 'Biophysical shocks':
-        initial_view_content = render_spatial_resilience_layout(climate_indicator_options, indicator_descriptions, n, quarter_marks)
+        initial_view_content = render_spatial_climate_resilience_layout(climate_indicator_options, indicator_descriptions, n, quarter_marks)
     elif selected_view == 'Land-use & Land-cover':
         initial_view_content = render_lulc_resilience_layout([])
     else:
-        initial_view_content = render_spatial_resilience_layout(climate_indicator_options, indicator_descriptions, n, quarter_marks)
+        initial_view_content = render_spatial_climate_resilience_layout(climate_indicator_options, indicator_descriptions, n, quarter_marks)
 
     return html.Div([
         city_selector(selected_city='hanoi', visible=False),

@@ -113,7 +113,7 @@ from hanoi_layouts import (
     livelihoods_poverty_equity_tab as hanoi_livelihoods_poverty_equity_tab,
     noncommunicable_diseases_tab as hanoi_noncommunicable_diseases_tab,
     nutrional_status_tab as hanoi_nutrional_status_tab,
-    render_spatial_resilience_layout,
+    render_spatial_climate_resilience_layout,
     render_temporal_resilience_layout,
     render_lulc_resilience_layout,
 )
@@ -184,7 +184,7 @@ def _get_food_env_geojson(city_key):
     if gdf is None:
         return None
 
-    keep_cols = [c for c in ["Dist_Name", "Dist_name", "shapeName", "district", "name", "ma_xa"] if c in gdf.columns]
+    keep_cols = [c for c in ["Dist_Name", "Dist_name", "shapeName", "commune", "name", "ma_xa"] if c in gdf.columns]
     slim_gdf = gdf[keep_cols + ["geometry"]].copy() if keep_cols else gdf[["geometry"]].copy()
     return slim_gdf.to_json()
 
@@ -768,9 +768,9 @@ atlas_records = _load_indicator_atlas_records(atlas_csv_path)
 #print(f"DEBUG: Loaded {len(atlas_records)} records from indicator atlas CSV, Example: {atlas_records[:1]}")
 
 
-# ── District climate indicators ───────────────────────────────────────────────
+# ── commune climate indicators ───────────────────────────────────────────────
 _climate_csv  = os.path.join(hanoi_climate_dir, "vietnam_climate_resilience_quarterly_v1.csv")
-_districts_path = os.path.join(hanoi_climate_dir, "resilience_communes_base_2025.geojson")
+_communes_path = os.path.join(hanoi_climate_dir, "resilience_communes_base_2025.geojson")
 _islands_path = os.path.join(hanoi_resilience_dir, "vnm_islands.geojson")
 
 _lulc_stats_csv = os.path.join(hanoi_resilience_dir, "lulc_stats.csv")
@@ -781,18 +781,18 @@ _slopes_path = os.path.join(hanoi_climate_dir, "regional_indicator_slopes.csv")
 
 @lru_cache(maxsize=1)
 def _get_resilience_context():
-    district_climate_df = pd.read_csv(_climate_csv).reset_index()
-    district_climate_df["quarter"] = district_climate_df["quarter"].astype(str)
-    if "shapeID" in district_climate_df.columns:
-        district_climate_df["shapeID"] = district_climate_df["shapeID"].astype(str)
+    commune_climate_df = pd.read_csv(_climate_csv).reset_index()
+    commune_climate_df["quarter"] = commune_climate_df["quarter"].astype(str)
+    if "shapeID" in commune_climate_df.columns:
+        commune_climate_df["shapeID"] = commune_climate_df["shapeID"].astype(str)
 
-    resilience_gdf = _read_geojson_cached(_districts_path).copy()
+    resilience_gdf = _read_geojson_cached(_communes_path).copy()
 
-    # Prefer shapeID for district joins when available; shapeName can be ambiguous.
-    if ("shapeID" in resilience_gdf.columns) and ("shapeID" in district_climate_df.columns):
+    # Prefer shapeID for commune joins when available; shapeName can be ambiguous.
+    if ("shapeID" in resilience_gdf.columns) and ("shapeID" in commune_climate_df.columns):
         join_key = "shapeID"
         featureidkey = "properties.shapeID"
-        districts_unique = (
+        communes_unique = (
             resilience_gdf[["shapeID", "shapeName", "geometry"]]
             .dissolve(by="shapeID", as_index=False)
             .reset_index(drop=True)
@@ -800,19 +800,19 @@ def _get_resilience_context():
     else:
         join_key = "shapeName"
         featureidkey = "properties.shapeName"
-        districts_unique = (
+        communes_unique = (
             resilience_gdf[["shapeName", "geometry"]]
             .dissolve(by="shapeName", as_index=False)
             .reset_index(drop=True)
         )
 
     return {
-        "district_climate_df": district_climate_df,
-        "districts_unique": districts_unique,
-        "resilience_base_geojson": json.loads(districts_unique.to_json()),
+        "commune_climate_df": commune_climate_df,
+        "communes_unique": communes_unique,
+        "resilience_base_geojson": json.loads(communes_unique.to_json()),
         "join_key": join_key,
         "featureidkey": featureidkey,
-        "all_quarters": tuple(sorted(district_climate_df["quarter"].unique())),
+        "all_quarters": tuple(sorted(commune_climate_df["quarter"].unique())),
     }
 
 
@@ -1003,7 +1003,8 @@ def update_resilience_emdat(selected_city):
     return build_resilience_figure_from_cache(size_max=20)
 
 
-district_indicator_cfg = {
+commune_indicator_cfg = {
+    "ag_area_ha":                    {"col": "ag_area_ha",                  "label": "Agricultural Area (ha)",                  "colorscale": "YlGn",     "diverging": False, "vmin": "0", "vmax": "10000" },   
     "grace_trend":                   {"col": "grace_trend",                 "label": "Terrestrial Water Storage Anomaly (mm)",  "colorscale": "RdYlBu",   "diverging": True, "vmin": "-30", "vmax": "30" },
     "vci_severe_pct":                {"col": "vci_severe_pct",              "label": "Cropland Area Under Severe Drought (%)",  "colorscale": "RdYlGn_r", "diverging": False, "vmin": "0", "vmax": "100" },
     "drought_resistance":            {"col": "drought_resistance",          "label": "Vegetation Drought Resistance (SPEI6)",   "colorscale": "RdYlGn",   "diverging": False, "vmin": "0", "vmax": "1" },
@@ -2242,7 +2243,7 @@ def update_bar(selected_variable):
             y='Dist_Name',
             orientation='h',
             hover_data=['Dist_Name'],
-            labels={'Dist_Name': "District", selected_variable: 'Percentage of Deprived Households'},
+            labels={'Dist_Name': "commune", selected_variable: 'Percentage of Deprived Households'},
             #color_discrete_sequence=[brand_colors['Red']]
             #color_discrete_sequence=["#1d574f"]
             color=selected_variable,
@@ -2292,7 +2293,7 @@ def update_map_on_bar_click(clickData, selected_variable):
     MPI_display['line_width'] = 0.8
     MPI_display['line_color'] = '#ffffff'
 
-    # If a bar is clicked, zoom to that district
+    # If a bar is clicked, zoom to that commune
     if clickData and 'points' in clickData:
         selected_dist = clickData['points'][0]['y']  # y is Dist_Name for horizontal bar
         match = MPI[MPI['Dist_Name'] == selected_dist]
@@ -2304,7 +2305,7 @@ def update_map_on_bar_click(clickData, selected_variable):
             }
             #area = match.geometry.area.values[0]
             #zoom = max(8, min(12, 12 - area * 150))  # Zoom in closer
-            # Highlight: set opacity and line_width for the selected district
+            # Highlight: set opacity and line_width for the selected commune
 
             zoom = 11.5
             MPI_display.loc[MPI_display['Dist_Name'] == selected_dist, 'opacity'] = 0.2
@@ -2319,7 +2320,7 @@ def update_map_on_bar_click(clickData, selected_variable):
         empty_fig.update_layout(paper_bgcolor=brand_colors['White'], plot_bgcolor=brand_colors['White'], margin=dict(l=0, r=0, t=0, b=0))
         return empty_fig
 
-    labels = {choropleth_col: choropleth_col, 'Dist_Name': 'District Name'}
+    labels = {choropleth_col: choropleth_col, 'Dist_Name': 'commune Name'}
 
     fig = px.choropleth_mapbox(
         MPI,
@@ -3764,11 +3765,11 @@ def update_health_trend_hanoi(selected_variable):
 @lru_cache(maxsize=64)
 def _build_drought_map_cached(slider_idx, indicator):
     resilience_ctx = _get_resilience_context()
-    district_climate_df = resilience_ctx["district_climate_df"]
-    districts_unique = resilience_ctx["districts_unique"]
+    commune_climate_df = resilience_ctx["commune_climate_df"]
+    communes_unique = resilience_ctx["communes_unique"]
     resilience_base_geojson = resilience_ctx["resilience_base_geojson"]
-    district_join_key = resilience_ctx["join_key"]
-    district_featureidkey = resilience_ctx["featureidkey"]
+    commune_join_key = resilience_ctx["join_key"]
+    commune_featureidkey = resilience_ctx["featureidkey"]
     all_quarters = resilience_ctx["all_quarters"]
 
     region_ctx = _get_region_quarterly_context()
@@ -3788,30 +3789,30 @@ def _build_drought_map_cached(slider_idx, indicator):
 
     safe_idx = max(0, min(int(slider_idx), len(all_quarters) - 1))
     quarter = all_quarters[safe_idx]
-    cfg = district_indicator_cfg.get(indicator)
+    cfg = commune_indicator_cfg.get(indicator)
 
     if cfg is None:
         empty_fig = go.Figure().update_layout(**_map_layout)
         return empty_fig.to_json(), quarter, [], {"display": "block"}
 
     col = cfg["col"]
-    keep_cols = [district_join_key, col]
-    if ("shapeName" in district_climate_df.columns) and ("shapeName" != district_join_key):
+    keep_cols = [commune_join_key, col]
+    if ("shapeName" in commune_climate_df.columns) and ("shapeName" != commune_join_key):
         keep_cols.append("shapeName")
 
-    if isinstance(indicator, str) and (indicator.startswith("class_") or indicator.startswith("drought_resistance")):
+    if isinstance(indicator, str) and (indicator.startswith("class_") or indicator in ("ag_area_ha", "drought_resistance")):
         spei_csv = os.path.join(hanoi_climate_dir, "static_climate_composites.csv")
         spei_df = pd.read_csv(spei_csv)
-        spei_df[district_join_key] = spei_df[district_join_key].astype(str)
+        spei_df[commune_join_key] = spei_df[commune_join_key].astype(str)
         df = spei_df[keep_cols].dropna(subset=[col])
         slider_style = {"display": "none"}
-        plot_gdf = districts_unique.merge(df, on=district_join_key, how="left")
+        plot_gdf = communes_unique.merge(df, on=commune_join_key, how="left")
     else:
         df = (
-            district_climate_df[district_climate_df["quarter"] == quarter][keep_cols]
+            commune_climate_df[commune_climate_df["quarter"] == quarter][keep_cols]
             .dropna(subset=[col])
         )
-        plot_gdf = districts_unique.merge(df, on=district_join_key, how="left")
+        plot_gdf = communes_unique.merge(df, on=commune_join_key, how="left")
         slider_style = {"display": "block"}
 
     overlay = plot_gdf[plot_gdf[col].notna()].copy()
@@ -3841,7 +3842,7 @@ def _build_drought_map_cached(slider_idx, indicator):
                 break
 
     if hover_label_col is None:
-        hover_label_col = district_join_key
+        hover_label_col = commune_join_key
 
     fig = go.Figure()
     if not overlay.empty:
@@ -3879,13 +3880,13 @@ def _build_drought_map_cached(slider_idx, indicator):
 
         fig.add_trace(go.Choroplethmapbox(
             geojson=resilience_base_geojson,
-            featureidkey=district_featureidkey,
-            locations=overlay[district_join_key],
+            featureidkey=commune_featureidkey,
+            locations=overlay[commune_join_key],
             z=overlay[col],
-            text=overlay[hover_label_col].astype(str) if hover_label_col else overlay[district_join_key].astype(str),
+            text=overlay[hover_label_col].astype(str) if hover_label_col else overlay[commune_join_key].astype(str),
             colorscale=cfg["colorscale"],
             zmin=zmin, zmax=zmax,
-            marker=dict(opacity=0.78, line=dict(color="black", width=0.4)),
+            marker=dict(opacity=0.78, line=dict(color="white", width=0.4)),
             showscale=True,
             colorbar=colorbar_map,
             hovertemplate=(
@@ -3943,7 +3944,6 @@ def _build_drought_map_cached(slider_idx, indicator):
 
 @app.callback(
     Output("drought-map-container", "children"),
-
     Output("drought-slider-label", "children"),
     Output("region-kpi-cards", "children"),
     Output("date-slider-card", "style"),
@@ -3952,7 +3952,7 @@ def _build_drought_map_cached(slider_idx, indicator):
 )
 def update_drought_map(slider_idx, indicator):
     fig_json, quarter, cards_payload, slider_style = _build_drought_map_cached(int(slider_idx or 0), indicator or "")
-    cfg = district_indicator_cfg.get(indicator or "")
+    cfg = commune_indicator_cfg.get(indicator or "")
 
     cards = [
         dbc.Col(
@@ -4022,7 +4022,7 @@ def update_resilience_view_layout(view_selection, spatial_data):
     quarter_marks_raw = spatial_data.get("quarter_marks", {0: {"label": "", "style": {"fontSize": "10px", "color": "#8c8590"}}})
     quarter_marks = {int(k): v for k, v in quarter_marks_raw.items()}
 
-    return render_spatial_resilience_layout(
+    return render_spatial_climate_resilience_layout(
         climate_indicator_options,
         indicator_descriptions,
         n,
