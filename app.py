@@ -83,7 +83,7 @@ from addis_layouts import (
     livelihoods_poverty_equity_tab as addis_livelihoods_poverty_equity_tab,
     noncommunicable_diseases_tab as addis_noncommunicable_diseases_tab,
     nutrional_status_tab as addis_nutrional_status_tab,
-    render_addis_policies_leadership_view as addis_render_policies_leadership_view,
+    governance_policies_tab_layout as addis_governance_policies_tab_layout,
 )
 from hanoi_layouts import (
     governance_stakeholders_tab_layout as hanoi_governance_stakeholders_tab_layout,
@@ -267,6 +267,7 @@ brand_colors = {
     "Red": "#A80050",
     "Orange": "#D9A85C",
     "Teal": "#1d574f",
+    "Light Teal": "#4e998c",
     "Dark green": "#939f5c",
     "Mid green": "#bbce8a",
     "Light green": "#E8F0DA",
@@ -606,10 +607,15 @@ metric_direction =      {'density_he': FOOD_ENV_POS_SCALE,
 # Loading supply flow data for Sankey Diagram
 df_sankey = pd.read_csv(os.path.join(hanoi_supply_dir, 'hanoi_supply.csv'))
 
-df_policies_addis = pd.read_csv(os.path.join(addis_policy_dir, 'addis_policy_database.csv')).drop('Unnamed: 0',axis=1)
+df_policies_addis = pd.read_csv(os.path.join(addis_policy_dir, 'addis_policy_database_faolex.csv'))#.drop('Unnamed: 0',axis=1)
 # Ensure link columns render as markdown links in the DataTable
-if 'Document Link' in df_policies_addis.columns:
-    df_policies_addis['Document Link'] = df_policies_addis['Document Link'].apply(
+if 'Document URL' in df_policies_addis.columns:
+    df_policies_addis['Document URL'] = df_policies_addis['Document URL'].apply(
+        lambda x: f'[Link Available]({x})' if x and str(x).startswith('http') else '--'
+    )
+
+if 'Record URL' in df_policies_addis.columns:
+    df_policies_addis['Record URL'] = df_policies_addis['Record URL'].apply(
         lambda x: f'[Link Available]({x})' if x and str(x).startswith('http') else '--'
     )
 
@@ -2299,7 +2305,7 @@ def store_selected_city(city):
 
 # Linking the dropdown to the bar chart for the MPI page    
 @app.callback(
-    Output('bar-plot', 'figure'),
+    Output('bar-plot-addis', 'figure'),
     Input('variable-dropdown', 'value'),
     prevent_initial_call=False
     
@@ -2317,8 +2323,12 @@ def update_bar(selected_variable):
             hover_data=['Dist_Name'],
             labels={'Dist_Name': "District", selected_variable: 'Percentage of Deprived Households'},
             #color_discrete_sequence=[brand_colors['Red']]
-            color_discrete_sequence=["#1d574f"]
+            #color_discrete_sequence=["#1d574f"]
+            color=selected_variable,
+            color_continuous_scale=["#ffffff", "#D9A85C", "#A80050"]
         )
+        
+        fig.update_coloraxes(showscale=False)
 
         # compute bounded height from number of rows for stable layout
         nrows = df_plot.shape[0]
@@ -2346,7 +2356,7 @@ def update_bar(selected_variable):
 # Adding MPI map and linking it to the bar chart via click
 @app.callback(
     Output('addis-mpi-map', 'figure'),
-    Input('bar-plot', 'clickData'),
+    Input('bar-plot-addis', 'clickData'),
     Input('variable-dropdown', 'value')
 )
 def update_map_on_bar_click(clickData, selected_variable):
@@ -2354,11 +2364,12 @@ def update_map_on_bar_click(clickData, selected_variable):
         "lat": MPI.geometry.centroid.y.mean(),
         "lon": MPI.geometry.centroid.x.mean()
     }
-    zoom = 10
+    zoom = 11
 
     MPI_display = MPI.copy()
     MPI_display['opacity'] = 0.7
     MPI_display['line_width'] = 0.8
+    MPI_display['line_color'] = '#ffffff'
 
     # If a bar is clicked, zoom to that district
     if clickData and 'points' in clickData:
@@ -2374,9 +2385,10 @@ def update_map_on_bar_click(clickData, selected_variable):
             #zoom = max(8, min(12, 12 - area * 150))  # Zoom in closer
             # Highlight: set opacity and line_width for the selected district
 
-            zoom = 10
-            MPI_display.loc[MPI_display['Dist_Name'] == selected_dist, 'opacity'] = 1
+            zoom = 11.5
+            MPI_display.loc[MPI_display['Dist_Name'] == selected_dist, 'opacity'] = 0.2
             MPI_display.loc[MPI_display['Dist_Name'] == selected_dist, 'line_width'] = 2
+            MPI_display.loc[MPI_display['Dist_Name'] == selected_dist, 'line_color'] = "#000000"
 
     # Choose choropleth column: prefer selected variable if present in GeoJSON, else fall back to 'Multidimensional Poverty Index'
     choropleth_col = selected_variable if selected_variable in MPI.columns else ('Multidimensional Poverty Index' if 'Multidimensional Poverty Index' in MPI.columns else None)
@@ -2394,8 +2406,8 @@ def update_map_on_bar_click(clickData, selected_variable):
         locations="Dist_Name",
         featureidkey="properties.Dist_Name",
         color=choropleth_col,
-        color_continuous_scale="YlOrRd",
-        opacity=0.7,
+        color_continuous_scale=["#ffffff", "#D9A85C", "#A80050"],
+        opacity=0.9,
         labels=labels,
         mapbox_style="carto-positron",
         zoom=zoom,
@@ -2415,7 +2427,7 @@ def update_map_on_bar_click(clickData, selected_variable):
     fig.update_traces(
         marker=dict(
             opacity=MPI_display['opacity'],
-            line=dict(width=MPI_display['line_width'], color='black')
+            line=dict(width=MPI_display['line_width'], color=MPI_display['line_color'])
         )
     )
 
@@ -3192,8 +3204,6 @@ def filter_by_sdg(*args):
     Input('addis-resilience-view-select', 'value'),
     prevent_initial_call=False,
 )
-def update_addis_policies_leadership_view(selected_view):
-    return addis_render_policies_leadership_view(selected_view or 'Socio-Economic Shocks')
 
 # Linking the tabs to page content loading 
 @app.callback(
@@ -3352,6 +3362,11 @@ def render_tab_content(city_value, atlas_open_tab, selected_city):
     
     elif tab_id == "tab-4-poverty":
         return _with_stubs(addis_livelihoods_poverty_equity_tab_layout())
+
+    elif tab_id == "tab-6-resilience":
+        # Addis resilience currently uses the dedicated wrapper tab function.
+        # Sidebar indicator links route here via target='tab-6-resilience'.
+        return _with_stubs(addis_resilience_tab())
     
     elif tab_id == "tab-7-food-environments":
         return _with_stubs(addis_vendor_properties_tab(selected_city=route_city))
@@ -3364,9 +3379,6 @@ def render_tab_content(city_value, atlas_open_tab, selected_city):
     
     elif tab_id == "tab-11-footprints":
         return _with_stubs(addis_environment_footprints_tab_layout())
-    
-    #elif tab_id == "tab-6-resilience":
-    #    return _with_stubs(addis_resilience_tab_layout(default_view=atlas_subview))
     
     elif tab_id == "tab-home":
         return landing_page_layout(

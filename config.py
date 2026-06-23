@@ -4,16 +4,33 @@ Shared configuration, styles, and constants for EcoFoodSystems Dashboard
 
 # ========================== Brand Colors ==========================
 
+
 brand_colors = {
     'Black': '#333333',
     "Brown": "#313715",
     "Red": "#A80050",
     "Orange": "#D9A85C",
     "Teal": "#1d574f",
+    "Light Teal": "#4e998c",
     "Dark green": "#939f5c",
     "Mid green": "#bbce8a",
     "Light green": "#E8F0DA",
     "White": "#ffffff"
+}
+
+sidebar_colors = {
+'Background (light)' : '#ffffff',
+'Text (light)' : '#313715',
+'Hover (light)' : '#f4f7ee',
+'Background (dark card)' : '#FFFFFF',
+'Text (dark card)' : '#1d574f',
+'Hover (dark card)' : '#E8F3F0'
+}
+
+hero_gradient = {
+    "0%": "#0F2E2A",
+    "50%": "#2A7A6F",
+    "100%": "#5FA89A"
 }
 
 # ========================== Color Palettes ==========================
