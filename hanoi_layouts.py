@@ -1678,14 +1678,14 @@ def render_spatial_climate_resilience_layout(climate_indicator_options, indicato
             dbc.Card([
                 dbc.CardBody([
                     html.P("Select a climate stress indicator:",
-                           style={"margin": "6px", "fontSize": 'clamp(0.7em, 1em, 1.0em)',
-                                  "textAlign": "center", "fontStyle": "italic"}),
+                           style={"margin": "0 0 8px 0", "fontSize": "14px",
+                                  "fontWeight": "600", "color": "#1d574f", "fontStyle": "normal"}),
                     dcc.Dropdown(
                         id="climate-indicator-select",
                         options=climate_indicator_options,
                         value="ag_area_ha",  # Default value
                         clearable=False,
-                        style={"zIndex": "2000", "marginBottom": "6px"}
+                        style={"zIndex": "2000", "marginBottom": "10px"}
                     ),
                     dbc.Card([
                         dbc.CardBody([
@@ -1693,24 +1693,26 @@ def render_spatial_climate_resilience_layout(climate_indicator_options, indicato
                                 id="climate-indicator-description",
                                 children=indicator_descriptions.get("ag_area_ha", ""),
                                 style={
-                                    "padding": "2px 4px",
-                                    "fontSize": "clamp(0.65em, 0.85em, 0.95em)",
-                                    "color": brand_colors['Brown'],
-                                    "fontStyle": "italic",
-                                    "lineHeight": "1.4"
+                                    "padding": "14px 16px",
+                                    "fontSize": "14px",
+                                    "fontWeight": "400",
+                                    "color": "#FFFFFF",
+                                    "fontStyle": "normal",
+                                    "lineHeight": "1.4",
                                 }
                             )
-                        ])
+                        ], style={"padding": "0"})
                     ], id="climate-indicator-description-card", style={
-                        "height": "auto", "padding": "6px", "marginBottom": "10px",
-                        "boxShadow": "0 2px 6px rgba(0,0,0,0.1)",
-                        "backgroundColor": brand_colors['Teal'], "borderRadius": "10px"
+                        "height": "auto", "padding": "0", "marginBottom": "0",
+                        "backgroundColor": "#1d574f", "borderRadius": "8px",
+                        "border": "none", "borderLeft": "4px solid #4e998c",
+                        "overflow": "hidden",
                     }),
-                ])
+                ], style={"padding": "16px 20px"})
             ], style={
-                "height": "auto", "padding": "6px", "marginBottom": "10px",
-                "boxShadow": "0 2px 6px rgba(0,0,0,0.1)",
-                "backgroundColor": brand_colors['White'], "borderRadius": "10px",
+                "height": "auto", "padding": "0", "marginBottom": "10px",
+                "boxShadow": "0 2px 12px rgba(0,0,0,0.08)",
+                "backgroundColor": brand_colors['White'], "borderRadius": "12px",
                 "zIndex": "2000", "position": "relative"
             }),
 
@@ -1744,21 +1746,52 @@ def render_spatial_climate_resilience_layout(climate_indicator_options, indicato
                 "backgroundColor": brand_colors['White'], "borderRadius": "10px"
             }),
 
-            html.Div(id="region-kpi-cards", className="mt-3"),
+            html.Div(id="region-kpi-cards", className="mt-3", style={
+                "backgroundColor": "#FFFFFF",
+                "borderRadius": "12px",
+                "boxShadow": "0 2px 12px rgba(0,0,0,0.08)",
+                "padding": "10px",
+            }),
 
-            # EMDAT natural disasters summary
+            # EMDAT natural disasters summary — tabbed
             dbc.Card([
                 dbc.CardBody([
                     html.H6("EMDAT Natural Disasters (2000-2026)", style={"marginBottom": "6px", "fontSize": "0.9em", "fontWeight": "bold"}),
-                    html.Div("Summary of natural disaster events and total affected (source: EMDAT)", style={"fontSize": "0.8em", "color": "#444", "marginBottom": "6px"}),
-                    _red_graph_loading(
-                        dcc.Graph(
-                            id='resilience-emdat-graph',
-                            config={"displayModeBar": False},
-                            style={"flex": "1 1 auto", "minHeight": "0", "height": "600px", "width": "100%"}
-                        ),
-                        loading_id="loading-resilience-emdat-hanoi",
-                    )
+                    html.Div("Summary of natural disaster events and total affected (source: EMDAT)", style={"fontSize": "0.8em", "color": "#444", "marginBottom": "8px"}),
+                    html.Div([
+                        html.Button("Disaster Events", id="emdat-tab-events", n_clicks=0,
+                            className="emdat-tab-active"),
+                        html.Button("Total Affected", id="emdat-tab-affected", n_clicks=0,
+                            className="emdat-tab-inactive"),
+                    ], style={
+                        "display": "flex",
+                        "justifyContent": "center",
+                        "gap": "8px",
+                        "backgroundColor": "transparent",
+                        "border": "none",
+                        "padding": "12px 0",
+                        "marginBottom": "0",
+                    }),
+                    html.Div([
+                        _red_graph_loading(
+                            dcc.Graph(
+                                id='resilience-emdat-events-graph',
+                                config={"displayModeBar": False},
+                                style={"flex": "1 1 auto", "minHeight": "0", "height": "350px", "width": "100%"}
+                            ),
+                            loading_id="loading-resilience-emdat-events",
+                        )
+                    ], id="emdat-events-container", style={"display": "block"}),
+                    html.Div([
+                        _red_graph_loading(
+                            dcc.Graph(
+                                id='resilience-emdat-affected-graph',
+                                config={"displayModeBar": False},
+                                style={"flex": "1 1 auto", "minHeight": "0", "height": "350px", "width": "100%"}
+                            ),
+                            loading_id="loading-resilience-emdat-affected",
+                        )
+                    ], id="emdat-affected-container", style={"display": "none"}),
                 ], style={"display": "flex", "flexDirection": "column", "flex": "1 1 auto", "minHeight": "0"})
             ], style={
                 "height": "auto", "padding": "2px", "marginTop": "10px",
@@ -1769,7 +1802,7 @@ def render_spatial_climate_resilience_layout(climate_indicator_options, indicato
 
         ], style={
             "width": "min(50%)", "height": "100%", "padding": "10px",
-            "backgroundColor": brand_colors['Teal'], "borderRadius": "0", "margin": "0",
+            "backgroundColor": "#F8FAF8", "borderRadius": "0", "margin": "0",
             "display": "flex", "flexDirection": "column", "justifyContent": "flex-start",
             "overflowY": "auto", "boxSizing": "border-box", "position": "relative",
         }),
@@ -1984,7 +2017,7 @@ def resilience_tab_layout_hanoi(all_quarters, default_view='Biophysical shocks')
             ),
         ], style={
             "flex": "1", "height": "100%", "display": "flex", "flexDirection": "column",
-            "backgroundColor": brand_colors['Teal'], "padding": "10px",
+            "backgroundColor": "#F8FAF8", "padding": "10px",
             "overflowY": "auto", "boxSizing": "border-box",
         }),
 
@@ -2106,7 +2139,7 @@ def environment_climate_change_tab(all_quarters, default_view='Biophysical shock
             ),
         ], style={
             "flex": "1", "height": "100%", "display": "flex", "flexDirection": "column",
-            "backgroundColor": brand_colors['Teal'], "padding": "10px",
+            "backgroundColor": "#F8FAF8", "padding": "10px",
             "overflowY": "auto", "boxSizing": "border-box",
         }),
 

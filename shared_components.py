@@ -311,7 +311,7 @@ def make_sidebar(selected_city='hanoi', dark=False):
         html.Div(pillar_sections, className="dash-sidebar-pillar-list"),
     ], className=card_class, style={
         #"boxShadow": "0 2px 8px rgba(0,0,0,0.08)",
-        "borderRadius": "12px",
+        "borderRadius": "0px",
         "padding": "10px",
         "height": "100%",
         "width": "100%",
