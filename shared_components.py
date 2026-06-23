@@ -193,7 +193,7 @@ def make_sidebar(selected_city='hanoi', dark=False):
     import addis_config
     tab_backgrounds = hanoi_config.TAB_BACKGROUNDS if selected_city == 'hanoi' else addis_config.TAB_BACKGROUNDS
 
-    home_button = html.Button([
+    home_button = html.A([
                 html.Img(
                     src="/assets/logos/home_button.svg",
                     alt="Home",
@@ -210,7 +210,7 @@ def make_sidebar(selected_city='hanoi', dark=False):
                     "fontWeight": "bold",
                     "fontSize": "1.08em"
                 })
-            ], id="tab-home", n_clicks=0, className="dash-sidebar-home-btn")
+            ], href="/", className="dash-sidebar-home-btn")
 
     atlas_records = _load_indicator_atlas_records(_ATLAS_CSV_PATH)
 

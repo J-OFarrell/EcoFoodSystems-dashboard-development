@@ -317,6 +317,7 @@ body, * {
     padding: 6px 4px;
     font-weight: bold;
     border-radius: 10px;
+    text-decoration: none;
 }
 
 .dash-sidebar-home-btn:hover {
