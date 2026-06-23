@@ -151,7 +151,7 @@ def governance_stakeholders_tab_layout():
         "display": "flex",
         "width": "100%",
         "height": "100vh",
-        "backgroundColor": brand_colors['Light green']
+        "backgroundColor": brand_colors['Teal']
     })
 
 
@@ -333,14 +333,14 @@ def storage_distribution_tab_layout():
             "flexDirection": "column",
             "padding": "10px",
             "margin":"0",
-            "backgroundColor": brand_colors['Light green'],
+            "backgroundColor": brand_colors['Teal'],
             "marginBottom": "auto" 
         }),
     ], style={
         "display": "flex", 
         "width": "100%", 
         "height": "100%",
-        "backgroundColor": brand_colors['Light green']
+        "backgroundColor": brand_colors['Teal']
     })
 
 
@@ -428,7 +428,7 @@ def livelihoods_poverty_equity_tab_layout():
 
             ], style={
                 "height": "100%",
-                "backgroundColor": brand_colors['Light green'],
+                "backgroundColor": brand_colors['Teal'],
                 "border-radius": "0",
                 "margin": "0",
                 "display": "flex",
@@ -447,7 +447,7 @@ def livelihoods_poverty_equity_tab_layout():
             "height": "100%",
             "minHeight": 0,
             "padding": "10px",
-            "backgroundColor": brand_colors['Light green']
+            "backgroundColor": brand_colors['Teal']
         }),
 
         # Right panel: map
@@ -575,7 +575,7 @@ def food_affordability_tab_layout_hanoi_arch():
             "width": "min(50%)",
             "height": "100%",
             "padding": "10px",
-            "backgroundColor": brand_colors['Light green'],
+            "backgroundColor": brand_colors['Teal'],
             "border-radius": "0",
             "margin": "0",
             "box-shadow": "0 2px 8px rgba(0,0,0,0.05)",
@@ -591,7 +591,7 @@ def food_affordability_tab_layout_hanoi_arch():
         "display": "flex", 
         "width": "100%", 
         "height": "100%",
-        "backgroundColor": brand_colors['Light green']
+        "backgroundColor": brand_colors['Teal']
     })
 
 
@@ -681,7 +681,7 @@ def diets_nutrition_health_tab_layout():
             "height": "100%",
             "padding": "10px",
             "marginLeft": "14px",
-            "backgroundColor": brand_colors['Light green'],
+            "backgroundColor": brand_colors['Teal'],
             "border-radius": "0",
             "margin": "0",
             "box-shadow": "0 2px 8px rgba(0,0,0,0.05)",
@@ -696,7 +696,7 @@ def diets_nutrition_health_tab_layout():
         "display": "flex",
         "width": "100%",
         "height": "100%",
-        "backgroundColor": brand_colors['Light green']
+        "backgroundColor": brand_colors['Teal']
     })
 
 
@@ -826,7 +826,7 @@ def food_affordability_tab_layout():
                     "width": "min(40%)",
                     "height": "100%",
                     "padding": "10px",
-                    "backgroundColor": brand_colors['Light green'],
+                    "backgroundColor": brand_colors['Teal'],
                     "border-radius": "0",
                     "margin": "0",
                     "box-shadow": "0 2px 8px rgba(0,0,0,0.05)",
@@ -865,12 +865,7 @@ def food_affordability_tab_layout():
                                 id='affordability-map-hanoi',
                                 figure=go.Figure().update_layout(
                                     mapbox=dict(
-                                        style="white-bg",
-                                        layers=[{
-                                            "below": "traces",
-                                            "sourcetype": "raster",
-                                            "source": ["https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}"],
-                                        }],
+                                        style="carto-positron",
                                         center={"lat": 21.0, "lon": 105.85},
                                         zoom=9
                                     ),
@@ -903,7 +898,7 @@ def food_affordability_tab_layout():
                     "display": "flex", 
                     "width": "100%", 
                     "height": "100%",
-                    "backgroundColor": brand_colors['Light green']
+                    "backgroundColor": brand_colors['Teal']
         })
 
 
@@ -1096,7 +1091,7 @@ def sdg_indicator_atlas_tab_layout():
         "display": "flex",
         "width": "100%",
         "height": "100%",
-        "backgroundColor": brand_colors['Light green']
+        "backgroundColor": brand_colors['Teal']
     })
 
 
@@ -1218,7 +1213,7 @@ def governance_policies_tab_layout():
         "display": "flex",
         "width": "100%",
         "height": "100vh",
-        "backgroundColor": brand_colors['Light green']
+        "backgroundColor": brand_colors['Teal']
     })
 
 
@@ -1420,7 +1415,7 @@ def _build_temporal_pillar_section(title, csv_filename, line_color, pillar_num, 
                 ], style={
                     "marginBottom": "12px",
                     "borderRadius": "8px",
-                    "backgroundColor": brand_colors['Light green'],
+                    "backgroundColor": brand_colors['Teal'],
                     "border": f"1px solid {brand_colors['Mid green']}",
                     "boxShadow": "0 1px 4px rgba(0,0,0,0.08)",
                 })
@@ -1664,7 +1659,7 @@ def render_temporal_resilience_layout():
         "height": "100%",
         "overflowY": "auto",
         "padding": "6px",
-        "backgroundColor": brand_colors['Light green']
+        "backgroundColor": brand_colors['Teal']
     })
 
 
@@ -1725,7 +1720,7 @@ def render_spatial_resilience_layout(climate_indicator_options, indicator_descri
                     ], id="climate-indicator-description-card", style={
                         "height": "auto", "padding": "6px", "marginBottom": "10px",
                         "boxShadow": "0 2px 6px rgba(0,0,0,0.1)",
-                        "backgroundColor": brand_colors['Light green'], "borderRadius": "10px"
+                        "backgroundColor": brand_colors['Teal'], "borderRadius": "10px"
                     }),
                 ])
             ], style={
@@ -1790,7 +1785,7 @@ def render_spatial_resilience_layout(climate_indicator_options, indicator_descri
 
         ], style={
             "width": "min(50%)", "height": "100%", "padding": "10px",
-            "backgroundColor": brand_colors['Light green'], "borderRadius": "0", "margin": "0",
+            "backgroundColor": brand_colors['Teal'], "borderRadius": "0", "margin": "0",
             "display": "flex", "flexDirection": "column", "justifyContent": "flex-start",
             "overflowY": "auto", "boxSizing": "border-box", "position": "relative",
         }),
@@ -1873,7 +1868,7 @@ def render_lulc_resilience_layout(lulc_indicator_options):
             }),
         ], style={
             "width": "min(50%)", "height": "100%", "padding": "10px",
-            "backgroundColor": brand_colors['Light green'], "borderRadius": "0", "margin": "0",
+            "backgroundColor": brand_colors['Teal'], "borderRadius": "0", "margin": "0",
             "display": "flex", "flexDirection": "column", "justifyContent": "flex-start",
             "overflowY": "auto", "boxSizing": "border-box", "position": "relative",
         }),
@@ -2003,7 +1998,7 @@ def resilience_tab_layout_hanoi(all_quarters, default_view='Biophysical shocks')
             ),
         ], style={
             "flex": "1", "height": "100%", "display": "flex", "flexDirection": "column",
-            "backgroundColor": brand_colors['Light green'], "padding": "10px",
+            "backgroundColor": brand_colors['Teal'], "padding": "10px",
             "overflowY": "auto", "boxSizing": "border-box",
         }),
 
@@ -2125,7 +2120,7 @@ def environment_climate_change_tab(all_quarters, default_view='Biophysical shock
             ),
         ], style={
             "flex": "1", "height": "100%", "display": "flex", "flexDirection": "column",
-            "backgroundColor": brand_colors['Light green'], "padding": "10px",
+            "backgroundColor": brand_colors['Teal'], "padding": "10px",
             "overflowY": "auto", "boxSizing": "border-box",
         }),
 
@@ -2227,7 +2222,7 @@ def resilience_tab():
             ),
         ], style={
             "flex": "1", "height": "100%", "display": "flex", "flexDirection": "column",
-            "backgroundColor": brand_colors['Light green'], "padding": "10px",
+            "backgroundColor": brand_colors['Teal'], "padding": "10px",
             "overflowY": "auto", "boxSizing": "border-box",
         }),
 

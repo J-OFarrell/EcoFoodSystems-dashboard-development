@@ -111,7 +111,6 @@ body, * {
     font-size: 0.82em;
     font-weight: bold;
     letter-spacing: 0.04em;
-    text-transform: uppercase;
 }
 
 .dash-landing-pill-count {
@@ -312,12 +311,12 @@ body, * {
     justify-content: center;
     background-color: #ffffff;
     color: #313715;
-    border-radius: 8px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.15);
     border: none;
     letter-spacing: 0.5px;
     padding: 6px 4px;
     font-weight: bold;
+    border-radius: 10px;
 }
 
 .dash-sidebar-home-btn:hover {
@@ -371,8 +370,8 @@ body, * {
     text-align: left;
     border: 1px solid #d8e3c0;
     border-radius: 8px;
-    background: #ffffff;
-    color: #313715;
+    background: #ffffffc8;
+    color: #1d574f;
     font-size: 0.8em;
     font-weight: 600;
     line-height: 1.25;
@@ -398,10 +397,45 @@ body, * {
 }
 
 .dash-sidebar-empty-text {
-    font-size: 0.8em;
+    font-size: 1.2em;
     color: #313715;
     opacity: 0.75;
     padding: 4px 2px;
+}
+
+/* Sub-domain details/summary group */
+.dash-sidebar-subdomain-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 6px 0;
+    max-height: 42vh;
+    overflow-y: auto;
+}
+
+.dash-sidebar-subdomain-card {
+    border: none;
+    background: #ffffffc8;
+    line-height: 1.25;
+    padding: 4px 2px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+
+.dash-sidebar-subdomain-toggle {
+    width: 100%;
+    padding: 6px 10px;
+    font-size: 1.2em;
+    font-weight: 700;
+    color: #313715;
+    background: rgba(147, 159, 92, 0.2);
+    border-radius: 6px;
+    cursor: pointer;
+    list-style: none;
+    letter-spacing: 0.02em;
+}
+
+.dash-sidebar-subdomain-toggle:hover {
+    background: rgba(147, 159, 92, 0.35);
 }
 
 /* ===================== Hero tab bar ===================== */
@@ -470,7 +504,6 @@ body, * {
     font-size: 11px;
     font-weight: 600;
     letter-spacing: 0.06em;
-    text-transform: uppercase;
     cursor: pointer;
     padding: 5px 10px;
     border-radius: 4px;
@@ -539,7 +572,6 @@ body, * {
     font-size: 11px;
     font-weight: 600;
     letter-spacing: 0.06em;
-    text-transform: uppercase;
     padding: 5px 10px;
     border-radius: 4px;
     white-space: nowrap;
@@ -561,12 +593,13 @@ body, * {
 
 /* Pillar section header buttons */
 .dash-sidebar-card--dark .dash-sidebar-pillar-toggle {
-    color: #FFFFFF !important;
+    color: #ffffffe8 !important;
     background: transparent !important;
     font-size: 15px !important;
     font-weight: 600 !important;
     padding: 16px 14px !important;
     border-radius: 8px !important;
+    border-color: rgba(255, 255, 255, 0.15) !important;
     opacity: 1 !important;
     transition: all 0.2s ease !important;
     cursor: pointer !important;
@@ -586,9 +619,9 @@ body, * {
 /* Individual indicator buttons inside a collapsed pillar */
 .dash-sidebar-card--dark .dash-sidebar-subtab-btn {
     color: #FFFFFF !important;
-    background: transparent !important;
+    background: #e8f3f09c !important;
     border-color: rgba(255, 255, 255, 0.15) !important;
-    font-size: 15px !important;
+    font-size: 12px !important;
     font-weight: 600 !important;
     padding: 16px 14px !important;
     border-radius: 8px !important;
@@ -602,9 +635,46 @@ body, * {
     color: #1d574f !important;
 }
 
-/* Gap between subtab items — already 6px in base class but enforce here */
+/* Adding styling for sub-domain dropdown group to match the dark sidebar theme */
+.dash-sidebar-subdomain-group {
+    padding: 8px !important;
+    max-height: 42vh !important;
+    overflow-y: auto !important;
+    border-radius: 8px !important;
+}
+
 .dash-sidebar-card--dark .dash-sidebar-subtab-group {
-    gap: 6px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 4px !important;
+    padding: 4px 0 !important;
+}
+
+/* Sub-domain Details/Summary in dark sidebar */
+.dash-sidebar-card--dark .dash-sidebar-subdomain-group {
+    background: transparent !important;
+    padding: 4px 0 !important;
+}
+
+.dash-sidebar-card--dark .dash-sidebar-subdomain-card {
+    background: transparent !important;
+    border: none !important;
+}
+
+.dash-sidebar-card--dark .dash-sidebar-subdomain-toggle {
+    color: rgba(255, 255, 255, 0.7) !important;
+    background: rgba(255, 255, 255, 0.07) !important;
+    font-size: 0.72em !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.06em !important;
+    padding: 7px 12px !important;
+    border-radius: 6px !important;
+    cursor: pointer !important;
+}
+
+.dash-sidebar-card--dark .dash-sidebar-subdomain-toggle:hover {
+    background: rgba(255, 255, 255, 0.14) !important;
+    color: #FFFFFF !important;
 }
 
 /* Home button: white bg, dark teal text */

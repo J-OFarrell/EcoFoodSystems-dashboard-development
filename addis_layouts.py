@@ -14,6 +14,17 @@ from shared_components import sidebar_addis as sidebar, sidebar_addis_vendor, ci
 from dashboard_components import create_nutrition_kpi_card, create_price_volatility_kpi_card
 
 
+_BASEMAP_TILE = [
+{
+    "below":"traces",
+    "sourcetype":"raster",
+    "source":[
+        "https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png"
+    ]
+}
+]
+
+
 def _red_graph_loading(children, loading_id=None):
     return dcc.Loading(
         id=loading_id,
@@ -148,7 +159,7 @@ def governance_stakeholders_tab_layout():
         "display": "flex",
         "width": "100%",
         "height": "100vh",
-        "backgroundColor": brand_colors['Light green']
+        "backgroundColor": brand_colors['Teal']
     })
 
 
@@ -277,14 +288,14 @@ def storage_distribution_tab_layout():
                 "flexDirection": "column",
                 "padding": "10px",
                 "margin":"0",
-                "backgroundColor": brand_colors['Light green'],
+                "backgroundColor": brand_colors['Teal'],
                 "marginBottom": "auto" 
             }),
         ], style={
                     "display": "flex", 
                     "width": "100%", 
                     "height": "100%",
-                    "backgroundColor": brand_colors['Light green']
+                    "backgroundColor": brand_colors['Teal']
         })
 
 
@@ -383,7 +394,7 @@ def livelihoods_poverty_equity_tab_layout():
 
                     ], style={
                         "height": "100%",
-                        "backgroundColor": brand_colors['Light green'],
+                        "backgroundColor": brand_colors['Teal'],
                         "border-radius": "0",
                         "margin": "0",
                         "display": "flex",
@@ -400,7 +411,7 @@ def livelihoods_poverty_equity_tab_layout():
         "width": "min(40%)",
         "height": "100%",
         "padding": "10px",
-        "backgroundColor": brand_colors['Light green']
+        "backgroundColor": brand_colors['Teal']
         }),
 
         # Right panel: map, full height
@@ -628,7 +639,7 @@ def sdg_indicator_atlas_tab_layout():
         "display": "flex",
         "width": "100%",
         "height": "100%",
-        "backgroundColor": brand_colors['Light green']
+        "backgroundColor": brand_colors['Teal']
     })
 
 
@@ -665,7 +676,7 @@ def governance_policies_tab_layout():
         "display": "flex",
         "width": "100%",
         "height": "100vh",
-        "backgroundColor": brand_colors['Light green']
+        "backgroundColor": brand_colors['Teal']
     })
 
 
@@ -894,13 +905,13 @@ def diets_nutrition_health_tab_layout():
                             "flex": "1 1 85%",
                             "marginLeft": "14px",
                             "padding": "10px",
-                            "backgroundColor": brand_colors['Light green']})
+                            "backgroundColor": brand_colors['Teal']})
     
         ], style={
                     "display": "flex", 
                     "width": "100%", 
                     "height": "100%",
-                    "backgroundColor": brand_colors['Light green']
+                    "backgroundColor": brand_colors['White']
         })
 
 
@@ -970,7 +981,7 @@ def environment_footprints_tab_layout():
         "display": "flex",
         "width": "100%",
         "height": "100%",
-        "backgroundColor": brand_colors['Light green']
+        "backgroundColor": brand_colors['Teal']
     })
 
 
@@ -1027,7 +1038,7 @@ def economic_resilience_tab_layout(default_view=None):
             ),
         ], style={
             "flex": "1", "height": "100%", "display": "flex", "flexDirection": "column",
-            "backgroundColor": brand_colors['Light green'], "padding": "10px",
+            "backgroundColor": brand_colors['Teal'], "padding": "10px",
             "overflowY": "auto", "boxSizing": "border-box",
         }),
         
@@ -1059,7 +1070,7 @@ def food_accessibility_vendor_properties_tab_layout(selected_city='addis'):
     return html.Div([
             city_selector(selected_city=selected_city, visible=False),  # Hidden but present for callback
             dcc.Store(id="transport-mode", data="walk"),
-            html.Div([sidebar_addis_vendor], style={
+            html.Div([sidebar], style={
                                 "width": "15%",
                                 "height": "100%",
                                 "display": "flex",
@@ -1163,13 +1174,14 @@ def food_accessibility_vendor_properties_tab_layout(selected_city='addis'):
                                             value=[],  # Default to empty (no selection)
                                             multi=True,
                                             placeholder="Choose outlet layers by group",
-                                            style={'zIndex': '12000'}),
+                                            style={'zIndex': '6000'}),
                                     ],
                                     style={
                                         'margin': '2px 0px',
                                         'justifyContent': 'end',
                                         'alignItems': 'center',
-                                        'textAlign': 'center'
+                                        'textAlign': 'center',
+                                        'zIndex': '6000'
                         })],style={
                                     "display": "flex",
                                     "flexDirection": "column",
@@ -1334,14 +1346,9 @@ def food_accessibility_vendor_properties_tab_layout(selected_city='addis'):
                                 id='accessibility-map-addis',
                                 figure=go.Figure().update_layout(
                                     mapbox=dict(
-                                        #layers=[{
-                                        #    "below": "traces",
-                                        #    "sourcetype": "raster",
-                                        #    "source": ["https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}"],
-                                        #}],
                                         style="carto-positron",
-                                        center={"lat": 21.0, "lon": 105.85},
-                                        zoom=9
+                                        center={"lat": 9.0192, "lon": 38.752},
+                                        zoom=11
                                     ),
                                     margin=dict(l=0, r=0, t=0, b=0),
                                     paper_bgcolor=brand_colors['White']

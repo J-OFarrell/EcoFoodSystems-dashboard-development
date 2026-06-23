@@ -45,7 +45,7 @@ _BASEMAP_TILE = [
     "below":"traces",
     "sourcetype":"raster",
     "source":[
-        "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+        "https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png"
     ]
 }
 ]
@@ -266,6 +266,7 @@ brand_colors = {
     "Brown": "#313715",
     "Red": "#A80050",
     "Orange": "#D9A85C",
+    "Teal": "#1d574f",
     "Dark green": "#939f5c",
     "Mid green": "#bbce8a",
     "Light green": "#E8F0DA",
@@ -2172,12 +2173,12 @@ app.layout = html.Div([
         color="#A51E22",  # optional: brand red
         children=html.Div(id="page-content")
     ),
-    dcc.Store(id='selected-city', data='hanoi'),
+    dcc.Store(id='selected-city', data='addis'),  # default city
     dcc.Store(id='atlas-open-tab', data=None),
     dcc.Store(id='sh-table-page-size-store', data=13),
 
     dcc.Interval(id='resize-interval', interval=1000, n_intervals=0),
-    html.Div(id="tab-content", children=landing_page_layout(selected_city='hanoi'), style={"width": "100%",
+    html.Div(id="tab-content", children=landing_page_layout(selected_city='addis'), style={"width": "100%",
                                                                        "height": "100%"})
     # Parent container for full page
 ], style={
@@ -2236,7 +2237,8 @@ def update_bar(selected_variable):
             orientation='h',
             hover_data=['Dist_Name'],
             labels={'Dist_Name': "District", selected_variable: 'Percentage of Deprived Households'},
-            color_discrete_sequence=[brand_colors['Red']]
+            #color_discrete_sequence=[brand_colors['Red']]
+            color_discrete_sequence=["#1d574f"]
         )
 
         # compute bounded height from number of rows for stable layout
@@ -2436,6 +2438,7 @@ def _build_accesibility_figure(
     selected_metric,
     selected_transport_mode,
     selected_other_layer,
+    selected_adm3_id,
     relayout_data,
     outlets_geojson_files_local,
     outlets_path_local,
@@ -2599,14 +2602,33 @@ def _build_accesibility_figure(
                     showscale=False,
                     marker=dict(
                         opacity=1.0,
-                        line=dict(color="#FFFFFF", width=1.5)
+                        line=dict(color=brand_colors["Brown"], width=1.5)
                     ),
                     text=adm3_eth_gdf["ADM3_EN"],
-                    hoverinfo='skip'
+                    hoverinfo='text',
+                ))
+
+        # Add click to highlight functionality 
+        if selected_adm3_id is not None:
+            selected_adm3_id = str(selected_adm3_id)
+            selected_adm3_gdf = adm3_eth_gdf[adm3_eth_gdf["adm3_id"].astype(str) == selected_adm3_id]
+            if not selected_adm3_gdf.empty:
+                fig.add_trace(go.Choroplethmapbox(
+                    geojson=json.loads(selected_adm3_gdf[["adm3_id", "ADM3_EN", "geometry"]].to_json()),
+                    locations=selected_adm3_gdf["adm3_id"],
+                    featureidkey="properties.adm3_id",
+                    z=np.ones(len(selected_adm3_gdf), dtype=float),
+                    colorscale=[[0, "rgba(171, 224, 149, 0.18)"], [1, "rgba(171, 224, 149, 0.18)"]],
+                    showscale=False,
+                    marker=dict(
+                        opacity=0.95,
+                        line=dict(color=brand_colors["Teal"], width=3)
+                    ),
+                    hoverinfo='skip',
                 ))
 
     fig.update_layout(
-        mapbox=dict(style="white-bg", layers=_BASEMAP_TILE, center=center, zoom=zoom),
+        mapbox=dict(style="carto-positron", center=center, zoom=zoom),
         margin=dict(l=0, r=0, t=0, b=0),
         paper_bgcolor=brand_colors['White'],
         showlegend=True if (selected_outlets or selected_isochrones) else False,
@@ -2620,10 +2642,14 @@ def _build_accesibility_figure(
 @app.callback(
     Output('accessibility-map-addis', 'figure'),
     [Input('outlet-travel-time', 'value'), Input("food-outlets-isochrones", "value"), #Input("choropleth-select", "value"), 
-     Input("transport-mode", "data"), Input("contextual-layer-select", "value")],
+     Input("transport-mode", "data"), Input("contextual-layer-select", "value"), Input("accessibility-map-addis", "clickData")],
     [State('accessibility-map-addis', 'relayoutData')]
 )
-def update_accesibility_map(selected_travel_time, selected_outlets, selected_transport_mode, selected_other_layer, relayout_data):
+def update_accesibility_map(selected_travel_time, selected_outlets, selected_transport_mode, selected_other_layer, click_data, relayout_data):
+    selected_adm3_id = None
+    if click_data and click_data.get('points'):
+        selected_adm3_id = click_data['points'][0].get('location')
+
     # Add defensive defaults for None values
     selected_travel_time = selected_travel_time if selected_travel_time is not None else 2
     selected_transport_mode = selected_transport_mode if selected_transport_mode else "walk"
@@ -2634,6 +2660,7 @@ def update_accesibility_map(selected_travel_time, selected_outlets, selected_tra
         None,
         selected_transport_mode,
         selected_other_layer,
+        selected_adm3_id,
         relayout_data,
         outlets_geojson_files_addis,
         #isochrones_geojson_files_addis,
@@ -3093,27 +3120,13 @@ def update_addis_policies_leadership_view(selected_view):
 @app.callback(
     Output("tab-content", "children"),
     [
-        Input("tab-home", "n_clicks"),
-        Input("tab-1-stakeholders", "n_clicks"),
-        Input("tab-2-supply", "n_clicks"),
-        Input("tab-3-sustainability", "n_clicks"),
-        Input("tab-4-poverty", "n_clicks"),
-        Input("tab-5-labour", "n_clicks"),
-        Input("tab-6-resilience", "n_clicks"),
-        Input("tab-7-food-environments", "n_clicks"),
-        Input("tab-8-losses", "n_clicks"),
-        Input("tab-9-policies", "n_clicks"),
-        Input("tab-10-nutrition", "n_clicks"),
-        Input("tab-11-footprints", "n_clicks"),
-        Input("tab-12-behaviour", "n_clicks"),
-        Input("atlas-top-button", "n_clicks"),
         Input("city-selector", "value"),
         Input("atlas-open-tab", "data"),
-        Input({"type": "atlas-home-btn", "index": ALL}, "n_clicks"),
+        #Input({"type": "atlas-home-btn", "index": ALL}, "n_clicks"),
     ],
     [State("selected-city", "data")]
 )
-def render_tab_content(n_home, n1, n2, n3, n4, n5, n6, n7, n8, n9, n10, n11, n12, n_atlas_top, city_value, atlas_open_tab, _atlas_home_btn, selected_city):
+def render_tab_content(city_value, atlas_open_tab, selected_city):
 
     def _with_stubs(layout):
         """Wrap a non-landing layout with hidden tab stubs so all callback inputs exist."""
@@ -3294,64 +3307,85 @@ def render_tab_content(n_home, n1, n2, n3, n4, n5, n6, n7, n8, n9, n10, n11, n12
 
 @app.callback(
     [
-        Output("pillar-collapse-diets", "is_open"),
-        Output("pillar-collapse-environment", "is_open"),
-        Output("pillar-collapse-livelihoods", "is_open"),
-        Output("pillar-collapse-governance", "is_open"),
-        Output("pillar-collapse-resilience", "is_open"),
+        Output("pillar-collapse-drivers", "is_open"),
+        Output("pillar-collapse-food-supply-chains", "is_open"),
+        Output("pillar-collapse-food-environments", "is_open"),
+        Output("pillar-collapse-individual-factors", "is_open"),
+        Output("pillar-collapse-cross-cutting-issues", "is_open"),
+        Output("pillar-collapse-outcomes", "is_open"),
     ],
     [
-        Input("pillar-toggle-diets", "n_clicks"),
-        Input("pillar-toggle-environment", "n_clicks"),
-        Input("pillar-toggle-livelihoods", "n_clicks"),
-        Input("pillar-toggle-governance", "n_clicks"),
-        Input("pillar-toggle-resilience", "n_clicks"),
+        Input("pillar-toggle-drivers", "n_clicks"),
+        Input("pillar-toggle-food-supply-chains", "n_clicks"),
+        Input("pillar-toggle-food-environments", "n_clicks"),
+        Input("pillar-toggle-individual-factors", "n_clicks"),
+        Input("pillar-toggle-cross-cutting-issues", "n_clicks"),
+        Input("pillar-toggle-outcomes", "n_clicks"),
     ],
     [
-        State("pillar-collapse-diets", "is_open"),
-        State("pillar-collapse-environment", "is_open"),
-        State("pillar-collapse-livelihoods", "is_open"),
-        State("pillar-collapse-governance", "is_open"),
-        State("pillar-collapse-resilience", "is_open"),
+        State("pillar-collapse-drivers", "is_open"),
+        State("pillar-collapse-food-supply-chains", "is_open"),
+        State("pillar-collapse-food-environments", "is_open"),
+        State("pillar-collapse-individual-factors", "is_open"),
+        State("pillar-collapse-cross-cutting-issues", "is_open"),
+        State("pillar-collapse-outcomes", "is_open"),
     ],
     prevent_initial_call=True,
 )
 def toggle_sidebar_pillars(
-    n_diets,
-    n_environment,
-    n_livelihoods,
-    n_governance,
-    n_resilience,
-    open_diets,
-    open_environment,
-    open_livelihoods,
-    open_governance,
-    open_resilience,
+    n_drivers,
+    n_food_supply_chains,
+    n_food_environments,
+    n_individual_factors,
+    n_cross_cutting_issues,
+    n_outcomes,
+    open_drivers,
+    open_food_supply_chains,
+    open_food_environments,
+    open_individual_factors,
+    open_cross_cutting_issues,
+    open_outcomes,
 ):
     ctx = dash.callback_context
     if not ctx.triggered:
-        return open_diets, open_environment, open_livelihoods, open_governance, open_resilience
+        return (
+            open_drivers,
+            open_food_supply_chains,
+            open_food_environments,
+            open_individual_factors,
+            open_cross_cutting_issues,
+            open_outcomes,
+        )
 
     trigger_id = ctx.triggered[0]['prop_id'].split('.')[0]
     states = {
-        "diets": open_diets,
-        "environment": open_environment,
-        "livelihoods": open_livelihoods,
-        "governance": open_governance,
-        "resilience": open_resilience,
+        "drivers": open_drivers,
+        "food-supply-chains": open_food_supply_chains,
+        "food-environments": open_food_environments,
+        "individual-factors": open_individual_factors,
+        "cross-cutting-issues": open_cross_cutting_issues,
+        "outcomes": open_outcomes,
     }
 
     key_map = {
-        "pillar-toggle-diets": "diets",
-        "pillar-toggle-environment": "environment",
-        "pillar-toggle-livelihoods": "livelihoods",
-        "pillar-toggle-governance": "governance",
-        "pillar-toggle-resilience": "resilience",
+        "pillar-toggle-drivers": "drivers",
+        "pillar-toggle-food-supply-chains": "food-supply-chains",
+        "pillar-toggle-food-environments": "food-environments",
+        "pillar-toggle-individual-factors": "individual-factors",
+        "pillar-toggle-cross-cutting-issues": "cross-cutting-issues",
+        "pillar-toggle-outcomes": "outcomes",
     }
     clicked_key = key_map.get(trigger_id)
 
     if clicked_key is None:
-        return open_diets, open_environment, open_livelihoods, open_governance, open_resilience
+        return (
+            open_drivers,
+            open_food_supply_chains,
+            open_food_environments,
+            open_individual_factors,
+            open_cross_cutting_issues,
+            open_outcomes,
+        )
 
     # Accordion behavior: only one pillar open at a time.
     new_states = {}
@@ -3362,11 +3396,12 @@ def toggle_sidebar_pillars(
             new_states[key] = False
 
     return (
-        new_states["diets"],
-        new_states["environment"],
-        new_states["livelihoods"],
-        new_states["governance"],
-        new_states["resilience"],
+        new_states["drivers"],
+        new_states["food-supply-chains"],
+        new_states["food-environments"],
+        new_states["individual-factors"],
+        new_states["cross-cutting-issues"],
+        new_states["outcomes"],
     )
 
 
@@ -3508,7 +3543,7 @@ def update_map_on_bar_click_hanoi(clickData, selected_variable):
         color_continuous_scale="YlOrRd",
         opacity=0.7,
         labels=labels,
-        mapbox_style="white-bg",
+        mapbox_style="carto-positron",
         zoom=zoom,
         center=center
     )
@@ -3519,7 +3554,7 @@ def update_map_on_bar_click_hanoi(clickData, selected_variable):
         paper_bgcolor=brand_colors['White'],
         plot_bgcolor=brand_colors['White'],
         margin=dict(l=0, r=0, t=0, b=0),
-        mapbox=dict(style="white-bg", layers=_BASEMAP_TILE, center=center, zoom=zoom)
+        mapbox=dict(style="carto-positron", center=center, zoom=zoom)
     )
 
     fig.update_traces(
@@ -3729,7 +3764,7 @@ def _build_drought_map_cached(slider_idx, indicator):
     slopes_df = region_ctx["slopes_df"]
 
     _map_layout = dict(
-        mapbox=dict(style="white-bg", layers=_BASEMAP_TILE, center={"lat": 16.0, "lon": 106.0}, zoom=5),
+        mapbox=dict(style="carto-positron", center={"lat": 16.0, "lon": 106.0}, zoom=5),
         margin=dict(l=0, r=0, t=0, b=0),
         showlegend=False,
         coloraxis_showscale=False,
@@ -3990,7 +4025,7 @@ def _build_lulc_map_cached(indicator):
     lulc_map_center = lulc_ctx["map_center"]
 
     map_layout = dict(
-        mapbox=dict(style="white-bg", layers=_BASEMAP_TILE, center=lulc_map_center, zoom=9),
+        mapbox=dict(style="carto-positron", center=lulc_map_center, zoom=9),
         margin=dict(l=0, r=0, t=0, b=0),
         showlegend=False,
     )
@@ -4041,8 +4076,7 @@ def _build_lulc_map_cached(indicator):
             mapbox=dict(
                 center={"lat": float((miny + maxy) / 2.0), "lon": float((minx + maxx) / 2.0)},
                 zoom=9,
-                style="white-bg",
-                layers=_BASEMAP_TILE,
+                style="carto-positron",
             )
         )
 

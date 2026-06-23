@@ -13,61 +13,50 @@ from config import brand_colors
 
 # ========================== Sidebar ==========================
 
-_SIDEBAR_PILLARS = [
-    {
-        "key": "diets",
-        "label": "Diets, Nutrition & Health",
-        "items": [
-            ("Nutrition & Health", "tab-10-nutrition", "nutrition"),
-            ("Food Environments", "tab-7-food-environments", "food-environments"),
-        ],
-    },
-    {
-        "key": "environment",
-        "label": "Environment, Natural Resources & Production",
-        "items": [
-            ("Sustainability Metrics", "tab-3-sustainability", "sustainability"),
-            ("Environmental Footprints", "tab-11-footprints", "footprints"),
-            ("Food Losses & Waste", "tab-8-losses", "losses"),
-        ],
-    },
-    {
-        "key": "livelihoods",
-        "label": "Livelihoods, Poverty & Equity",
-        "items": [
-            ("Multidimensional Poverty", "tab-4-poverty", "poverty"),
-            ("Labour, Skills & Green Jobs", "tab-5-labour", "labour"),
-        ],
-    },
-    {
-        "key": "governance",
-        "label": "Governance",
-        "items": [
-            ("Policies & Regulation", "tab-9-policies", "policies"),
-            ("Food Systems Stakeholders", "tab-1-stakeholders", "stakeholders"),
-            ("Food Flows & Supply Chains", "tab-2-supply", "supply"),
-            ("Behaviour Change Tool", "tab-12-behaviour", "behaviour"),
-        ],
-    },
-    {
-        "key": "resilience",
-        "label": "Resilience",
-        "items": [
-            ("Resilience Indicators", "tab-6-resilience", "resilience"),
-        ],
-    },
-]
-
-_TAB_BG_KEY_BY_ID = {
-    tab_id: bg_key
-    for pillar in _SIDEBAR_PILLARS
-    for _, tab_id, bg_key in pillar['items']
-}
 
 _ATLAS_CSV_PATH = os.path.join(
     os.path.dirname(os.path.abspath(__file__)),
-    "EcoFoodSystems_indicator_architecture - 260326 - Hanoi_rewritten_descriptions_final.csv",
+    "EcoFoodSystems_FCD_aligned.csv",
 )
+
+ATLAS_COLUMNS = [
+    "FCD Primary Pillar",
+    "FCD Sub-domain",
+    "Indicator name",
+]
+
+_SIDEBAR_PILLARS = [
+    {"key": "drivers", "label": "Drivers"},
+    {"key": "food-supply-chains", "label": "Food Supply Chains"},
+    {"key": "food-environments", "label": "Food Environments"},
+    {"key": "individual-factors", "label": "Individual Factors"},
+    {"key": "cross-cutting-issues", "label": "Cross-Cutting Issues"},
+    {"key": "outcomes", "label": "Outcomes"},
+]
+
+_PRIMARY_LABEL_TO_KEY = {
+    "drivers": "drivers",
+    "food supply chains": "food-supply-chains",
+    "food environments": "food-environments",
+    "individual factors": "individual-factors",
+    "cross-cutting issues": "cross-cutting-issues",
+    "outcomes": "outcomes",
+}
+
+_TAB_BG_KEY_BY_ID = {
+    "tab-1-stakeholders": "stakeholders",
+    "tab-2-supply": "supply",
+    "tab-3-sustainability": "sustainability",
+    "tab-4-poverty": "poverty",
+    "tab-5-labour": "labour",
+    "tab-6-resilience": "resilience",
+    "tab-7-food-environments": "food-environments",
+    "tab-8-losses": "losses",
+    "tab-9-policies": "policies",
+    "tab-10-nutrition": "nutrition",
+    "tab-11-footprints": "footprints",
+    "tab-12-behaviour": "behaviour",
+}
 
 
 def _load_indicator_atlas_records(csv_path):
@@ -140,6 +129,24 @@ def _record_pillar_key(rec):
     return None
 
 
+def _record_primary_pillar_key(rec):
+    primary = str(rec.get('FCD Primary Pillar', '')).strip().lower().replace('&', 'and')
+    primary = ' '.join(primary.split())
+    mapped = _PRIMARY_LABEL_TO_KEY.get(primary)
+    if mapped:
+        return mapped
+
+    fallback = _record_pillar_key(rec)
+    fallback_map = {
+        'diets': 'food-environments',
+        'environment': 'drivers',
+        'livelihoods': 'individual-factors',
+        'governance': 'cross-cutting-issues',
+        'resilience': 'outcomes',
+    }
+    return fallback_map.get(fallback)
+
+
 def _record_target_tab(rec):
     domain = (rec.get('Domain / Sub-theme') or '').lower()
     name = (rec.get('Indicator name') or '').lower()
@@ -207,13 +214,15 @@ def make_sidebar(selected_city='hanoi', dark=False):
 
     atlas_records = _load_indicator_atlas_records(_ATLAS_CSV_PATH)
 
-    pillar_indicator_items = {p['key']: [] for p in _SIDEBAR_PILLARS}
+    pillar_subdomain_items = {p['key']: {} for p in _SIDEBAR_PILLARS}
     seen_by_pillar = {p['key']: set() for p in _SIDEBAR_PILLARS}
 
     for idx, rec in enumerate(atlas_records):
-        pillar_key = _record_pillar_key(rec)
-        if pillar_key not in pillar_indicator_items:
+        pillar_key = _record_primary_pillar_key(rec)
+        if pillar_key not in pillar_subdomain_items:
             continue
+
+        subdomain = (rec.get('FCD Sub-domain') or '').strip() or 'Other'
 
         indicator_name = (rec.get('Indicator name') or '').strip()
         if not indicator_name:
@@ -232,7 +241,7 @@ def make_sidebar(selected_city='hanoi', dark=False):
         tab_is_coming_soon = tab_backgrounds.get(tab_bg_key or '', '#ffffff') == '#f4f4f4'
         is_disabled = (not available) or tab_is_coming_soon
 
-        pillar_indicator_items[pillar_key].append(
+        indicator_button = (
             html.Button(
                 [
                     html.Span(indicator_name),
@@ -254,12 +263,25 @@ def make_sidebar(selected_city='hanoi', dark=False):
                 },
             )
         )
+        pillar_subdomain_items[pillar_key].setdefault(subdomain, []).append(indicator_button)
 
     pillar_sections = []
     for pillar in _SIDEBAR_PILLARS:
-        sub_buttons = pillar_indicator_items.get(pillar['key'], [])
-        if not sub_buttons:
-            sub_buttons = [
+        subdomain_groups = pillar_subdomain_items.get(pillar['key'], {})
+        subdomain_sections = []
+        for subdomain_name, subdomain_buttons in subdomain_groups.items():
+            subdomain_sections.append(
+                html.Details(
+                    [
+                        html.Summary(subdomain_name, className='dash-sidebar-subdomain-toggle'),
+                        html.Div(subdomain_buttons, className='dash-sidebar-subtab-group'),
+                    ],
+                    className='dash-sidebar-subdomain-card'
+                )
+            )
+
+        if not subdomain_sections:
+            subdomain_sections = [
                 html.Div('No indicators available yet for this city.', className='dash-sidebar-empty-text')
             ]
 
@@ -274,7 +296,7 @@ def make_sidebar(selected_city='hanoi', dark=False):
                     className="dash-sidebar-pillar-toggle",
                 ),
                 dbc.Collapse(
-                    html.Div(sub_buttons, className="dash-sidebar-subtab-group"),
+                    html.Div(subdomain_sections, className="dash-sidebar-subdomain-group"),
                     id=f"pillar-collapse-{pillar['key']}",
                     is_open=False,
                 ),
@@ -288,7 +310,7 @@ def make_sidebar(selected_city='hanoi', dark=False):
         html.Div(home_button, className="dash-sidebar-home-wrap"),
         html.Div(pillar_sections, className="dash-sidebar-pillar-list"),
     ], className=card_class, style={
-        "boxShadow": "0 2px 8px rgba(0,0,0,0.08)",
+        #"boxShadow": "0 2px 8px rgba(0,0,0,0.08)",
         "borderRadius": "12px",
         "padding": "10px",
         "height": "100%",
@@ -301,8 +323,8 @@ def make_sidebar(selected_city='hanoi', dark=False):
     })
 
 
-sidebar_hanoi = make_sidebar('hanoi')
-sidebar_addis = make_sidebar('addis')
+sidebar_hanoi = make_sidebar('hanoi', dark=True)
+sidebar_addis = make_sidebar('addis', dark=True)
 sidebar_addis_vendor = make_sidebar('addis', dark=True)
 sidebar = sidebar_hanoi  # backward-compat for app.py import
 
