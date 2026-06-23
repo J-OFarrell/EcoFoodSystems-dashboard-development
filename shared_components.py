@@ -170,7 +170,7 @@ def _record_target_tab(rec):
         return 'tab-7-food-environments', None
     if 'loss' in text or 'waste' in text:
         return 'tab-8-losses', None
-    if 'policy' in text or 'governance' in text:
+    if 'policies' in text or 'governance' in text:
         return 'tab-9-policies', None
     if 'nutrition' in text or 'health' in text or 'food safety' in text:
         return 'tab-10-nutrition', None

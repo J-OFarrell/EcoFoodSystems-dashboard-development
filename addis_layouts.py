@@ -360,7 +360,7 @@ def livelihoods_poverty_equity_tab_layout():
                     ),
 
                     _red_graph_loading(
-                        dcc.Graph(id='bar-plot',
+                        dcc.Graph(id='bar-plot-addis',
                                 config={"displayModeBar": False, "responsive": True},
                                 style={
                                     "minHeight": 0,
@@ -369,7 +369,7 @@ def livelihoods_poverty_equity_tab_layout():
                                     'padding': '4px',
                                     'margin': '8px',
                                     "border-radius": "8px",
-                                    "box-shadow": "0 2px 8px rgba(0,0,0,0.15)",
+                                    #"box-shadow": "0 2px 8px rgba(0,0,0,0.15)",
                                     "overflowY": "auto"
                                 }),
                         loading_id="loading-bar-plot-addis",
@@ -384,7 +384,7 @@ def livelihoods_poverty_equity_tab_layout():
                     ], style={
                                 "flex": "1 1 auto",
                                 "padding":"6px" ,
-                                "box-shadow": "0 2px 6px rgba(0,0,0,0.1)",
+                                #"box-shadow": "0 2px 6px rgba(0,0,0,0.1)",
                                 "backgroundColor": brand_colors['White'],
                                 "border-radius": "10px",
                                 "overflow": "hidden",
@@ -394,7 +394,7 @@ def livelihoods_poverty_equity_tab_layout():
 
                     ], style={
                         "height": "100%",
-                        "backgroundColor": brand_colors['Teal'],
+                        "backgroundColor": brand_colors['Light Teal'],
                         "border-radius": "0",
                         "margin": "0",
                         "display": "flex",
@@ -411,7 +411,7 @@ def livelihoods_poverty_equity_tab_layout():
         "width": "min(40%)",
         "height": "100%",
         "padding": "10px",
-        "backgroundColor": brand_colors['Teal']
+        "backgroundColor": brand_colors['Light Teal']
         }),
 
         # Right panel: map, full height
@@ -431,7 +431,7 @@ def livelihoods_poverty_equity_tab_layout():
             "height": "100%",
             "padding": "0",
             "margin": "0",
-            "backgroundColor": brand_colors['White'],
+            "backgroundColor": brand_colors['Light Teal'],
             "border-radius": "0",
             "display": "flex",
             "alignItems": "stretch",
@@ -444,7 +444,8 @@ def livelihoods_poverty_equity_tab_layout():
     ], style={
         "display": "flex",
         "width": "100vw",
-        "height": "100vh"
+        "height": "100vh",
+        "backgroundColor": brand_colors['Teal'],
     })
 
 

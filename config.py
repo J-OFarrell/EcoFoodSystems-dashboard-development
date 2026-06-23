@@ -4,12 +4,14 @@ Shared configuration, styles, and constants for EcoFoodSystems Dashboard
 
 # ========================== Brand Colors ==========================
 
+
 brand_colors = {
     'Black': '#333333',
     "Brown": "#313715",
     "Red": "#A80050",
     "Orange": "#D9A85C",
     "Teal": "#1d574f",
+    "Light Teal": "#4e998c",
     "Dark green": "#939f5c",
     "Mid green": "#bbce8a",
     "Light green": "#E8F0DA",

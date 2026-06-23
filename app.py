@@ -267,6 +267,7 @@ brand_colors = {
     "Red": "#A80050",
     "Orange": "#D9A85C",
     "Teal": "#1d574f",
+    "Light Teal": "#4e998c",
     "Dark green": "#939f5c",
     "Mid green": "#bbce8a",
     "Light green": "#E8F0DA",
@@ -2220,7 +2221,7 @@ def store_selected_city(city):
 
 # Linking the dropdown to the bar chart for the MPI page    
 @app.callback(
-    Output('bar-plot', 'figure'),
+    Output('bar-plot-addis', 'figure'),
     Input('variable-dropdown', 'value'),
     prevent_initial_call=False
     
@@ -2238,8 +2239,12 @@ def update_bar(selected_variable):
             hover_data=['Dist_Name'],
             labels={'Dist_Name': "District", selected_variable: 'Percentage of Deprived Households'},
             #color_discrete_sequence=[brand_colors['Red']]
-            color_discrete_sequence=["#1d574f"]
+            #color_discrete_sequence=["#1d574f"]
+            color=selected_variable,
+            color_continuous_scale=["#ffffff", "#D9A85C", "#A80050"]
         )
+        
+        fig.update_coloraxes(showscale=False)
 
         # compute bounded height from number of rows for stable layout
         nrows = df_plot.shape[0]
@@ -2267,7 +2272,7 @@ def update_bar(selected_variable):
 # Adding MPI map and linking it to the bar chart via click
 @app.callback(
     Output('addis-mpi-map', 'figure'),
-    Input('bar-plot', 'clickData'),
+    Input('bar-plot-addis', 'clickData'),
     Input('variable-dropdown', 'value')
 )
 def update_map_on_bar_click(clickData, selected_variable):
@@ -2275,11 +2280,12 @@ def update_map_on_bar_click(clickData, selected_variable):
         "lat": MPI.geometry.centroid.y.mean(),
         "lon": MPI.geometry.centroid.x.mean()
     }
-    zoom = 10
+    zoom = 11
 
     MPI_display = MPI.copy()
     MPI_display['opacity'] = 0.7
     MPI_display['line_width'] = 0.8
+    MPI_display['line_color'] = '#ffffff'
 
     # If a bar is clicked, zoom to that district
     if clickData and 'points' in clickData:
@@ -2295,9 +2301,10 @@ def update_map_on_bar_click(clickData, selected_variable):
             #zoom = max(8, min(12, 12 - area * 150))  # Zoom in closer
             # Highlight: set opacity and line_width for the selected district
 
-            zoom = 10
-            MPI_display.loc[MPI_display['Dist_Name'] == selected_dist, 'opacity'] = 1
+            zoom = 11.5
+            MPI_display.loc[MPI_display['Dist_Name'] == selected_dist, 'opacity'] = 0.2
             MPI_display.loc[MPI_display['Dist_Name'] == selected_dist, 'line_width'] = 2
+            MPI_display.loc[MPI_display['Dist_Name'] == selected_dist, 'line_color'] = "#000000"
 
     # Choose choropleth column: prefer selected variable if present in GeoJSON, else fall back to 'Multidimensional Poverty Index'
     choropleth_col = selected_variable if selected_variable in MPI.columns else ('Multidimensional Poverty Index' if 'Multidimensional Poverty Index' in MPI.columns else None)
@@ -2315,8 +2322,8 @@ def update_map_on_bar_click(clickData, selected_variable):
         locations="Dist_Name",
         featureidkey="properties.Dist_Name",
         color=choropleth_col,
-        color_continuous_scale="YlOrRd",
-        opacity=0.7,
+        color_continuous_scale=["#ffffff", "#D9A85C", "#A80050"],
+        opacity=0.9,
         labels=labels,
         mapbox_style="carto-positron",
         zoom=zoom,
@@ -2336,7 +2343,7 @@ def update_map_on_bar_click(clickData, selected_variable):
     fig.update_traces(
         marker=dict(
             opacity=MPI_display['opacity'],
-            line=dict(width=MPI_display['line_width'], color='black')
+            line=dict(width=MPI_display['line_width'], color=MPI_display['line_color'])
         )
     )
 
