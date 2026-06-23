@@ -3842,7 +3842,7 @@ def update_health_trend_hanoi(selected_variable):
 # ── Drought Indicator callback ────────────────────────────────────────────────────────
 
 @lru_cache(maxsize=64)
-def _build_drought_map_cached(slider_idx, indicator):
+def _build_drought_map_cached(slider_idx, indicator, min_ag_area=0):
     resilience_ctx = _get_resilience_context()
     commune_climate_df = resilience_ctx["commune_climate_df"]
     communes_unique = resilience_ctx["communes_unique"]
@@ -3876,6 +3876,8 @@ def _build_drought_map_cached(slider_idx, indicator):
 
     col = cfg["col"]
     keep_cols = [commune_join_key, col]
+    if col != 'ag_area_ha':
+        keep_cols.append('ag_area_ha')
     if ("shapeName" in commune_climate_df.columns) and ("shapeName" != commune_join_key):
         keep_cols.append("shapeName")
 
@@ -3886,15 +3888,30 @@ def _build_drought_map_cached(slider_idx, indicator):
         df = spei_df[keep_cols].dropna(subset=[col])
         slider_style = {"display": "none"}
         plot_gdf = communes_unique.merge(df, on=commune_join_key, how="left")
+        #print("DEBUG: plot_gdf columns:", plot_gdf.columns)
     else:
+        spei_csv = os.path.join(hanoi_climate_dir, "static_climate_composites.csv")
+        spei_df = pd.read_csv(spei_csv)
+        spei_df[commune_join_key] = spei_df[commune_join_key].astype(str)
+        commune_climate_df = commune_climate_df.merge(spei_df[[commune_join_key, 'ag_area_ha']], on=commune_join_key, how='left')
+        
         df = (
             commune_climate_df[commune_climate_df["quarter"] == quarter][keep_cols]
             .dropna(subset=[col])
         )
         plot_gdf = communes_unique.merge(df, on=commune_join_key, how="left")
+        #print("DEBUG: plot_gdf columns:", plot_gdf.columns)
         slider_style = {"display": "block"}
 
     overlay = plot_gdf[plot_gdf[col].notna()].copy()
+    if 'ag_area_ha' in overlay.columns:
+        if min_ag_area > 0:
+            overlay = overlay[
+                overlay["ag_area_ha"].astype(float) >= min_ag_area
+        ]
+            
+    else:
+        print("DEBUG: plot_gdf columns:", plot_gdf.columns)
 
     hover_label_col = None
     explicit_name_candidates = [
@@ -3997,25 +4014,25 @@ def _build_drought_map_cached(slider_idx, indicator):
     # ── Island overlay (Hoàng Sa / Trường Sa) ─────────────────────────────────
     # Shown in grey with a 'coming soon' tooltip to satisfy Vietnamese law
     # requiring both island groups to be displayed on maps of Vietnam.
-    try:
-        with open(_islands_path) as _f:
-            _islands_geojson = json.load(_f)
-        _island_ids = [feat["properties"]["shapeID"] for feat in _islands_geojson["features"]]
-        _island_names = {feat["properties"]["shapeID"]: feat["properties"]["shapeName"] for feat in _islands_geojson["features"]}
-        fig.add_trace(go.Choroplethmapbox(
-            geojson=_islands_geojson,
-            featureidkey="properties.shapeID",
-            locations=_island_ids,
-            z=[0] * len(_island_ids),
-            text=[_island_names[i] for i in _island_ids],
-            colorscale=[[0, "#AAAAAA"], [1, "#AAAAAA"]],
-            zmin=0, zmax=1,
-            showscale=False,
-            marker=dict(opacity=0.75, line=dict(color="#666666", width=0.5)),
-            hovertemplate="<b>%{text}</b><br>Data coming soon<extra></extra>",
-        ))
-    except Exception as _e:
-        print(f"Island overlay skipped: {_e}")
+    #try:
+    #    with open(_islands_path) as _f:
+    #        _islands_geojson = json.load(_f)
+    #    _island_ids = [feat["properties"]["shapeID"] for feat in _islands_geojson["features"]]
+    #    _island_names = {feat["properties"]["shapeID"]: feat["properties"]["shapeName"] for feat in _islands_geojson["features"]}
+    #    fig.add_trace(go.Choroplethmapbox(
+    #        geojson=_islands_geojson,
+    #        featureidkey="properties.shapeID",
+    #        locations=_island_ids,
+    #        z=[0] * len(_island_ids),
+    #        text=[_island_names[i] for i in _island_ids],
+    #        colorscale=[[0, "#AAAAAA"], [1, "#AAAAAA"]],
+    #        zmin=0, zmax=1,
+    #        showscale=False,
+    #        marker=dict(opacity=0.75, line=dict(color="#666666", width=0.5)),
+    #        hovertemplate="<b>%{text}</b><br>Data coming soon<extra></extra>",
+    #    ))
+    #except Exception as _e:
+    #    print(f"Island overlay skipped: {_e}")
 
     fig.update_layout(**_map_layout)
     return fig.to_json(), quarter, cards_payload, slider_style
@@ -4028,9 +4045,10 @@ def _build_drought_map_cached(slider_idx, indicator):
     Output("date-slider-card", "style"),
     Input("drought-date-slider", "value"),
     Input("climate-indicator-select", "value"),
+    Input("ag-area-filter", "value"),
 )
-def update_drought_map(slider_idx, indicator):
-    fig_json, quarter, cards_payload, slider_style = _build_drought_map_cached(int(slider_idx or 0), indicator or "")
+def update_drought_map(slider_idx, indicator, min_ag_area):
+    fig_json, quarter, cards_payload, slider_style = _build_drought_map_cached(int(slider_idx or 0), indicator or "", float(min_ag_area) or 0)
     cfg = commune_indicator_cfg.get(indicator or "")
 
     cards = [

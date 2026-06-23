@@ -8,8 +8,7 @@ from io import StringIO
 
 from dash import html, dcc
 import dash_bootstrap_components as dbc
-from config import brand_colors
-
+from config import brand_colors, sidebar_colors, hero_gradient
 
 # ========================== Sidebar ==========================
 
@@ -350,7 +349,7 @@ def city_selector(selected_city='addis', visible=True):
                     "fontWeight": "bold",
                     "borderRadius": "10px",
                     "border": "none",
-                    "color": brand_colors['Brown'],
+                    "color": hero_gradient['0%'],
                     "backgroundColor": brand_colors['Mid green'],
                     "padding": "12px 20px",
                     "boxShadow": "0 4px 10px rgba(0,0,0,0.12)",
@@ -359,8 +358,8 @@ def city_selector(selected_city='addis', visible=True):
             )
         ], style={
             "position": "absolute",
-            "left": "2%",
-            "top": "50%",
+            "left": "1%",
+            "top": "70%",
             "transform": "translateY(-50%)",
             "display": "flex" if visible else "none",
             "alignItems": "center",
@@ -369,7 +368,7 @@ def city_selector(selected_city='addis', visible=True):
         # Dropdown selector
         html.Div([
             html.Label("City:", style={
-                "color": brand_colors['Brown'],
+                "color": hero_gradient['0%'],
                 "fontSize": "0.9em",
                 "marginRight": "8px",
                 "fontWeight": "600"
@@ -391,7 +390,7 @@ def city_selector(selected_city='addis', visible=True):
         ], style={
             "position": "absolute",
             "right": "2%",
-            "top": "50%",
+            "top": "60%",
             "transform": "translateY(-50%)",
             "display": "flex" if visible else "none",
             "alignItems": "center",

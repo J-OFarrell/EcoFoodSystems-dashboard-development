@@ -1674,6 +1674,43 @@ def render_spatial_climate_resilience_layout(climate_indicator_options, indicato
                 "boxShadow": "0 2px 6px rgba(0,0,0,0.1)",
                 "backgroundColor": brand_colors['White'], "borderRadius": "10px"
             }),
+            dbc.Card([
+                dbc.CardBody([
+                    html.P(
+                        "Minimum agricultural area (ha):",
+                        style={
+                            "margin": "0 0 8px 0",
+                            "fontSize": "14px",
+                            "fontWeight": "600",
+                            "color": "#1d574f",
+                        },
+                    ),
+
+                    dcc.Slider(
+                        id="ag-area-filter",
+                        min=0,
+                        max=10000,
+                        step=500,
+                        value=0,
+                        marks={
+                            0: "0",
+                            1000: "1k",
+                            2500: "2.5k",
+                            5000: "5k",
+                            7500: "7.5k",
+                            10000: "10k",
+                        },
+                        tooltip={"always_visible": False},
+                    ),
+                ])
+            ], style={
+                "height": "auto",
+                "padding": "6px",
+                "marginBottom": "10px",
+                "boxShadow": "0 2px 6px rgba(0,0,0,0.1)",
+                "backgroundColor": brand_colors['White'],
+                "borderRadius": "10px"
+            }),
 
             dbc.Card([
                 dbc.CardBody([

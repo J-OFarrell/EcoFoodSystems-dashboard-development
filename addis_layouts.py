@@ -332,7 +332,7 @@ def livelihoods_poverty_equity_tab_layout():
         dbc.Card([
                 dbc.CardBody([
                     html.H2("Livelihoods, Poverty, and Equity", style=header_style),
-                    html.H4("Multidimensional Poverty Index", style={**header_style, "fontSize": "16px", "margin": "10px"}),html.Hr(style={"borderTop": f"2px solid {brand_colors['Mid green']}", "margin": "6px 0"}),
+                    html.H4("Multidimensional Poverty Index", style={**header_style, "fontSize": "16px", "margin": "10px"}),
                     html.Hr(style={"borderTop": f"2px solid {brand_colors['Teal']}", "margin": "6px 0"}),
                     html.P("The Multidimensional Poverty Index (MPI) assesses poverty across health, education, and living standards using ten indicators including nutrition, schooling, sanitation, water, electricity, and housing. This spatial analysis maps deprivation levels across Addis Ababa's sub-cities, revealing where households face multiple overlapping disadvantages. These insights identify priority areas for targeted interventions, supporting equitable resource allocation and sustainable poverty reduction strategies aligned with SDG goals.",
                             style={  "margin": "10px 6px", 
