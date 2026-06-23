@@ -214,24 +214,24 @@ def _build_isochrone_union_geojson(isochrones_path_local, selected_isochrones_ke
         iso_filename = f"isochrone_{outlet_category}_{selected_transport_mode}.geojson"
         iso_path = os.path.join(isochrones_path_local, iso_filename)
 
-        print(f"DEBUG: Processing isochrone file: {iso_path} for category '{outlet_category}' with time threshold {selected_time_seconds}")
+        #print(f"DEBUG: Processing isochrone file: {iso_path} for category '{outlet_category}' with time threshold {selected_time_seconds}")
       
         if os.path.exists(iso_path):
             try:
                 gdf = _read_geojson_cached(iso_path)
-                print(f"DEBUG: Loaded GeoDataFrame shape: {gdf.shape}")
+                #print(f"DEBUG: Loaded GeoDataFrame shape: {gdf.shape}")
                 
                 # Filter by selected travel time label (time_seconds column)
                 if 'threshold_s' in gdf.columns:
                     gdf["threshold_s"] = pd.to_numeric(gdf["threshold_s"], errors='coerce')
                     filtered_gdf = gdf[gdf['threshold_s'].astype(int) == int(selected_time_seconds)]
-                    print(f"DEBUG: Filtered GeoDataFrame shape: {filtered_gdf.shape}")
+                    #print(f"DEBUG: Filtered GeoDataFrame shape: {filtered_gdf.shape}")
                     geoms.extend([geom for geom in filtered_gdf.geometry if geom is not None and not geom.is_empty])
                 else:
-                    print(f"DEBUG: No time_seconds or time_label column, including all {len(gdf)} geometries")
+                    #print(f"DEBUG: No time_seconds or time_label column, including all {len(gdf)} geometries")
                     geoms.extend([geom for geom in gdf.geometry if geom is not None and not geom.is_empty])
             except Exception as e:
-                print(f"Error loading isochrone {iso_filename}: {e}")
+                #print(f"Error loading isochrone {iso_filename}: {e}")
                 import traceback
                 traceback.print_exc()
         else:
@@ -243,10 +243,10 @@ def _build_isochrone_union_geojson(isochrones_path_local, selected_isochrones_ke
         union_gdf = gpd.GeoDataFrame({"geometry": [unioned]}, crs="EPSG:4326")
         # Convert to GeoJSON 
         result = union_gdf.to_json()
-        print(f"DEBUG: Successfully created GeoJSON, length={len(result)}")
+        #print(f"DEBUG: Successfully created GeoJSON, length={len(result)}")
         return result
     except Exception as e:
-        print(f"Error unioning isochrone geometries: {e}")
+        #print(f"Error unioning isochrone geometries: {e}")
         import traceback
         traceback.print_exc()
         return None
@@ -758,7 +758,7 @@ def _load_indicator_atlas_records(csv_path):
 
 
 atlas_records = _load_indicator_atlas_records(atlas_csv_path)
-print(f"DEBUG: Loaded {len(atlas_records)} records from indicator atlas CSV, Example: {atlas_records[:1]}")
+#print(f"DEBUG: Loaded {len(atlas_records)} records from indicator atlas CSV, Example: {atlas_records[:1]}")
 
 
 # ── District climate indicators ───────────────────────────────────────────────
@@ -2158,7 +2158,7 @@ def update_bar(selected_variable):
 
 # Adding MPI map and linking it to the bar chart via click
 @app.callback(
-    Output('map', 'figure'),
+    Output('addis-mpi-map', 'figure'),
     Input('bar-plot', 'clickData'),
     Input('variable-dropdown', 'value')
 )
@@ -2351,7 +2351,7 @@ def _build_accesibility_figure(
         2: 900
     }
     selected_time_seconds = slider_to_time_seconds.get(selected_travel_time, 900)
-    print(f"DEBUG: Converting slider value {selected_travel_time} to time_seconds={selected_time_seconds}")
+    #print(f"DEBUG: Converting slider value {selected_travel_time} to time_seconds={selected_time_seconds}")
     
     # Normalize selection
     if selected_outlets and "SELECT_ALL" in selected_outlets:
@@ -2388,11 +2388,11 @@ def _build_accesibility_figure(
 
     # Contextual hex layers containing population data etc. 
     if selected_other_layer:
-        print(f"DEBUG: Attempting to load other layer {selected_other_layer}")
+        #print(f"DEBUG: Attempting to load other layer {selected_other_layer}")
         try:
             other_gdf = hex_vars_addis.copy()
-            print(f"DEBUG: hex_vars_addis columns: {other_gdf.columns}")
-            print(f"DEBUG: selected_other_layer.shape={other_gdf[selected_other_layer].shape}")
+            #print(f"DEBUG: hex_vars_addis columns: {other_gdf.columns}")
+            #print(f"DEBUG: selected_other_layer.shape={other_gdf[selected_other_layer].shape}")
             fig.add_trace(go.Choroplethmapbox(
                 geojson=hex_vars_addis_geojson,
                 locations=other_gdf.h3_id,
@@ -2413,8 +2413,8 @@ def _build_accesibility_figure(
             # Isochrone subdirectory structure: isochrones_path/isochrones_{city_key}_{transport_mode}/
             iso_dir = os.path.join(isochrones_path_local, f"isochrones_{city_key}_{selected_transport_mode}")
             
-            print(f"DEBUG: iso_dir={iso_dir}")
-            print(f"DEBUG: selected_isochrones={tuple(sorted(selected_isochrones))}")
+            #print(f"DEBUG: iso_dir={iso_dir}")
+            #print(f"DEBUG: selected_isochrones={tuple(sorted(selected_isochrones))}")
 
             union_geojson = _build_isochrone_union_geojson(
                 iso_dir,
@@ -2480,8 +2480,8 @@ def _build_accesibility_figure(
             # fallback: ensure layout still defines mapbox
             pass
 
-    print(f"DEBUG: adm3_eth_gdf.columns={adm3_eth_gdf.columns}")
-    print(f"DEBUG: adm3_eth_geojson.keys()={adm3_eth_geojson.keys()}")
+    #print(f"DEBUG: adm3_eth_gdf.columns={adm3_eth_gdf.columns}")
+    #print(f"DEBUG: adm3_eth_geojson.keys()={adm3_eth_geojson.keys()}")
 
     if city_key == "addis":
         fig.add_trace(go.Choroplethmapbox(

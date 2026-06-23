@@ -320,7 +320,8 @@ def livelihoods_poverty_equity_tab_layout():
         html.Div([
         dbc.Card([
                 dbc.CardBody([
-                    html.H2("Multidimensional Poverty Index", style=header_style),
+                    html.H2("Livelihoods, Poverty, and Equity", style=header_style),
+                    html.H4("Multidimensional Poverty Index", style={**header_style, "fontSize": "clamp(0.7em, 1.1vw, 0.9em)", "margin": "10px"}),
                     html.P("The Multidimensional Poverty Index (MPI) assesses poverty across health, education, and living standards using ten indicators including nutrition, schooling, sanitation, water, electricity, and housing. This spatial analysis maps deprivation levels across Addis Ababa's sub-cities, revealing where households face multiple overlapping disadvantages. These insights identify priority areas for targeted interventions, supporting equitable resource allocation and sustainable poverty reduction strategies aligned with SDG goals.",
                             style={  "margin": "10px 6px", 
                                     "fontSize": 'clamp(0.5em, 0.7em, 0.9em)',
@@ -406,7 +407,7 @@ def livelihoods_poverty_equity_tab_layout():
         html.Div([
             _red_graph_loading(
                 dcc.Graph(
-                    id='map',
+                    id='addis-mpi-map',
                     config={"displayModeBar": False, "scrollZoom": True, "responsive": True},
                     style={"height": "100%",
                            "width": "100%",
