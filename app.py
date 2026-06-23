@@ -83,7 +83,7 @@ from addis_layouts import (
     livelihoods_poverty_equity_tab as addis_livelihoods_poverty_equity_tab,
     noncommunicable_diseases_tab as addis_noncommunicable_diseases_tab,
     nutrional_status_tab as addis_nutrional_status_tab,
-    render_addis_policies_leadership_view as addis_render_policies_leadership_view,
+    governance_policies_tab_layout as addis_governance_policies_tab_layout,
 )
 from hanoi_layouts import (
     governance_stakeholders_tab_layout as hanoi_governance_stakeholders_tab_layout,
@@ -607,10 +607,15 @@ metric_direction =      {'density_he': FOOD_ENV_POS_SCALE,
 # Loading supply flow data for Sankey Diagram
 df_sankey = pd.read_csv(os.path.join(hanoi_supply_dir, 'hanoi_supply.csv'))
 
-df_policies_addis = pd.read_csv(os.path.join(addis_policy_dir, 'addis_policy_database.csv')).drop('Unnamed: 0',axis=1)
+df_policies_addis = pd.read_csv(os.path.join(addis_policy_dir, 'addis_policy_database_faolex.csv'))#.drop('Unnamed: 0',axis=1)
 # Ensure link columns render as markdown links in the DataTable
-if 'Document Link' in df_policies_addis.columns:
-    df_policies_addis['Document Link'] = df_policies_addis['Document Link'].apply(
+if 'Document URL' in df_policies_addis.columns:
+    df_policies_addis['Document URL'] = df_policies_addis['Document URL'].apply(
+        lambda x: f'[Link Available]({x})' if x and str(x).startswith('http') else '--'
+    )
+
+if 'Record URL' in df_policies_addis.columns:
+    df_policies_addis['Record URL'] = df_policies_addis['Record URL'].apply(
         lambda x: f'[Link Available]({x})' if x and str(x).startswith('http') else '--'
     )
 
@@ -3120,8 +3125,6 @@ def filter_by_sdg(*args):
     Input('addis-resilience-view-select', 'value'),
     prevent_initial_call=False,
 )
-def update_addis_policies_leadership_view(selected_view):
-    return addis_render_policies_leadership_view(selected_view or 'Socio-Economic Shocks')
 
 # Linking the tabs to page content loading 
 @app.callback(
@@ -3280,6 +3283,11 @@ def render_tab_content(city_value, atlas_open_tab, selected_city):
     
     elif tab_id == "tab-4-poverty":
         return _with_stubs(addis_livelihoods_poverty_equity_tab_layout())
+
+    elif tab_id == "tab-6-resilience":
+        # Addis resilience currently uses the dedicated wrapper tab function.
+        # Sidebar indicator links route here via target='tab-6-resilience'.
+        return _with_stubs(addis_resilience_tab())
     
     elif tab_id == "tab-7-food-environments":
         return _with_stubs(addis_vendor_properties_tab(selected_city=route_city))
@@ -3292,9 +3300,6 @@ def render_tab_content(city_value, atlas_open_tab, selected_city):
     
     elif tab_id == "tab-11-footprints":
         return _with_stubs(addis_environment_footprints_tab_layout())
-    
-    #elif tab_id == "tab-6-resilience":
-    #    return _with_stubs(addis_resilience_tab_layout(default_view=atlas_subview))
     
     elif tab_id == "tab-home":
         return landing_page_layout(

@@ -18,6 +18,21 @@ brand_colors = {
     "White": "#ffffff"
 }
 
+sidebar_colors = {
+'Background (light)' : '#ffffff',
+'Text (light)' : '#313715',
+'Hover (light)' : '#f4f7ee',
+'Background (dark card)' : '#FFFFFF',
+'Text (dark card)' : '#1d574f',
+'Hover (dark card)' : '#E8F3F0'
+}
+
+hero_gradient = {
+    "0%": "#0F2E2A",
+    "50%": "#2A7A6F",
+    "100%": "#5FA89A"
+}
+
 # ========================== Color Palettes ==========================
 
 green_gradient = [

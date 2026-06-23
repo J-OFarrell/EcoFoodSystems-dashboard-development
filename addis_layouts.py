@@ -9,7 +9,7 @@ import dash_bootstrap_components as dbc
 import plotly.graph_objects as go
 import plotly.express as px
 
-from config import brand_colors, header_style, sub_header_style, kpi_card_style_2, card_style
+from config import brand_colors, header_style, sub_header_style, kpi_card_style_2, card_style, hero_gradient, sidebar_colors
 from shared_components import sidebar_addis as sidebar, sidebar_addis_vendor, city_selector
 from dashboard_components import create_nutrition_kpi_card, create_price_volatility_kpi_card
 
@@ -106,7 +106,7 @@ def governance_stakeholders_tab_layout():
                         tooltip_data=[
                             {
                                 col: {
-                                    'value': str(row[col]) if (col.lower() == 'description' or len(str(row[col])) > 120) else '',
+                                    'value': str(row[col]) if (col.lower() == 'description' or len(str(row[col])) > 49) else '',
                                     'type': 'text'
                                 }
                                 for col in df_sh.columns
@@ -332,10 +332,10 @@ def livelihoods_poverty_equity_tab_layout():
         dbc.Card([
                 dbc.CardBody([
                     html.H2("Livelihoods, Poverty, and Equity", style=header_style),
-                    html.H4("Multidimensional Poverty Index", style={**header_style, "fontSize": "clamp(0.7em, 1.1vw, 0.9em)", "margin": "10px"}),
+                    html.H4("Multidimensional Poverty Index", style={**header_style, "fontSize": "16px", "margin": "10px"}),
                     html.P("The Multidimensional Poverty Index (MPI) assesses poverty across health, education, and living standards using ten indicators including nutrition, schooling, sanitation, water, electricity, and housing. This spatial analysis maps deprivation levels across Addis Ababa's sub-cities, revealing where households face multiple overlapping disadvantages. These insights identify priority areas for targeted interventions, supporting equitable resource allocation and sustainable poverty reduction strategies aligned with SDG goals.",
                             style={  "margin": "10px 6px", 
-                                    "fontSize": 'clamp(0.5em, 0.7em, 0.9em)',
+                                    "fontSize": "14px",
                                     "textAlign": "justify",
                                     "whiteSpace": "normal",
                                     })
@@ -581,7 +581,7 @@ def sdg_indicator_atlas_tab_layout():
                         tooltip_data=[
                             {
                                 col: {
-                                    'value': str(row[col]) if (col.lower() in ['abstract', 'title', 'keywords'] or len(str(row[col])) > 20) else '',
+                                    'value': str(row[col]) if (col.lower() in ['abstract', 'title', 'keywords'] or len(str(row[col])) > 40) else '',
                                     'type': 'text'
                                 } for col in display_cols
                             } for row in df_display.to_dict('records')
@@ -648,6 +648,12 @@ def governance_policies_tab_layout():
     """Addis Ababa policies tab layout"""
     import app as main
     df_policies = main.df_policies_addis
+    df_policies = df_policies[['ID', 'Document URL', 'Title', 'Date of original text', 'Language of document',
+        'Primary subjects', 'Domain',
+        'Last amended date', 'Available website',
+        'Country/Territory', 'Regional organizations',
+        'Territorial subdivision', 'Type of text', 'Repealed', 
+        'Abstract','Keywords']]
     
     return html.Div([
         city_selector(selected_city='addis', visible=False),  # Hidden but present for callback
@@ -709,17 +715,25 @@ def _build_policy_documents_content(df_policies, table_id='policies_table'):
                     'maxWidth': '250px',
                     'height': '36px'
                 },
+                style_cell_conditional=[
+                            {
+                                'if': {'column_id': 'Title'},
+                                'width': '30vw',
+                                'minWidth': '30vw',
+                                'maxWidth': '30vw'
+                            }
+                        ], 
                 style_header={
                     'fontWeight': 'bold',
-                    'backgroundColor': brand_colors['Red'],
+                    'backgroundColor': hero_gradient['50%'],
                     'color': 'white',
                     'textAlign': 'center',
                     'fontSize': 'clamp(0.8em, 1vw, 1.1em)'
                 },
                 style_filter={
-                    'backgroundColor': '#f0f0f0',
+                    'backgroundColor': sidebar_colors['Hover (dark card)'],
                     'fontSize': 'clamp(0.64em, 0.85vw, 0.9em)',
-                    'padding': '2px 6px'
+                    'padding': '5px 6px'
                 },
                 style_data_conditional=[
                     {'if': {'row_index': 'odd'}, 'backgroundColor': '#f9f9f9'}
@@ -727,7 +741,7 @@ def _build_policy_documents_content(df_policies, table_id='policies_table'):
                 tooltip_data=[
                     {
                         col: {
-                            'value': str(row[col]) if (col.lower() == 'description' or len(str(row[col])) > 120) else '',
+                            'value': str(row[col]) if (col.lower() == 'description' or len(str(row[col])) > 40) else '',
                             'type': 'text'
                         }
                         for col in df_policies.columns
@@ -737,7 +751,7 @@ def _build_policy_documents_content(df_policies, table_id='policies_table'):
                 css=[
                     {
                         'selector': '.dash-table-tooltip',
-                        'rule': 'position: fixed !important; background-color: ' + brand_colors['Light green'] + '; color: ' + brand_colors['Black'] + '; border: 2px solid ' + brand_colors['Dark green'] + '; padding: 6px; font-size: 14px; box-shadow: 0 4px 8px ' + brand_colors['Black'] + ';'
+                        'rule': 'position: fixed !important; background-color: ' + sidebar_colors['Hover (dark card)'] + '; color: ' + brand_colors['Black'] + '; border: 2px solid ' + hero_gradient['0%'] + '; padding: 6px; font-size: 14px; box-shadow: 0 4px 8px ' + brand_colors['Black'] + ';'
                     },
                     {
                         'selector': '.dash-table-container .dash-spreadsheet-container',
@@ -745,7 +759,7 @@ def _build_policy_documents_content(df_policies, table_id='policies_table'):
                     },
                     {
                         'selector': '.dash-table-container .dash-spreadsheet-container::-webkit-scrollbar',
-                        'rule': 'height: 14px; width: 14px; -webkit-appearance: none;'
+                        'rule': 'height: 14px; width: 24px; -webkit-appearance: none;'
                     },
                     {
                         'selector': '.dash-table-container .dash-spreadsheet-container::-webkit-scrollbar-track',
@@ -753,7 +767,7 @@ def _build_policy_documents_content(df_policies, table_id='policies_table'):
                     },
                     {
                         'selector': '.dash-table-container .dash-spreadsheet-container::-webkit-scrollbar-thumb',
-                        'rule': 'background: ' + brand_colors['Dark green'] + '; border-radius: 8px; border: 2px solid #f0f0f0;'
+                        'rule': 'background: ' + hero_gradient['0%'] + '; border-radius: 8px; border: 2px solid #f0f0f0;'
                     }
                 ],
                 style_table={
@@ -808,43 +822,39 @@ def _build_socio_economic_shocks_content(df_volatility, df_ufpri):
     ])
 
 
-def render_addis_policies_leadership_view(selected_view='Socio-Economic Shocks'):
+def render_addis_resilience_view(selected_view='Socio-Economic Shocks'):
     import app as main
 
-    if selected_view == 'Policy Documents Database':
-        return _build_policy_documents_content(
-            main.df_policies_addis,
-            table_id='policies_table_addis_resilience',
+    if selected_view == 'Socio-Economic Shocks':
+
+        volatility_csv_path = os.path.join(
+            os.path.dirname(__file__),
+            'assets/data/addis/resilience/addis_rolling_price_volatility.csv'
+        )
+        ufpri_csv_path = os.path.join(
+            os.path.dirname(__file__),
+            'assets/data/addis/resilience/addis_ufpri_scores.csv'
         )
 
-    volatility_csv_path = os.path.join(
-        os.path.dirname(__file__),
-        'assets/data/addis/resilience/addis_rolling_price_volatility.csv'
-    )
-    ufpri_csv_path = os.path.join(
-        os.path.dirname(__file__),
-        'assets/data/addis/resilience/addis_ufpri_scores.csv'
-    )
+        try:
+            df_volatility = pd.read_csv(volatility_csv_path)
+        except Exception:
+            df_volatility = pd.DataFrame()
 
-    try:
-        df_volatility = pd.read_csv(volatility_csv_path)
-    except Exception:
-        df_volatility = pd.DataFrame()
+        try:
+            df_ufpri = pd.read_csv(ufpri_csv_path)
+        except Exception:
+            df_ufpri = pd.DataFrame()
 
-    try:
-        df_ufpri = pd.read_csv(ufpri_csv_path)
-    except Exception:
-        df_ufpri = pd.DataFrame()
-
-    return _build_socio_economic_shocks_content(df_volatility, df_ufpri)
+        return _build_socio_economic_shocks_content(df_volatility, df_ufpri)
 
 
-def diets_nutrition_health_tab_layout():
+def diets_nutrition_health_tab_layout(selected_city='addis'):
     """Addis Ababa health & nutrition tab layout"""
     tile_width, lg = 12, 4
     
     return html.Div([
-        city_selector(selected_city='addis', visible=False),  # Hidden but present for callback
+        city_selector(selected_city=selected_city, visible=False),  # Hidden but present for callback
         
                 html.Div([sidebar], style={
                                         "width": "15%",
@@ -906,23 +916,23 @@ def diets_nutrition_health_tab_layout():
                             "flex": "1 1 85%",
                             "marginLeft": "14px",
                             "padding": "10px",
-                            "backgroundColor": brand_colors['Teal']})
+                            "backgroundColor": brand_colors['White']})
     
         ], style={
                     "display": "flex", 
                     "width": "100%", 
                     "height": "100%",
-                    "backgroundColor": brand_colors['White']
+                    "backgroundColor": brand_colors['Teal']
         })
 
 
-def environment_footprints_tab_layout():
+def environment_footprints_tab_layout(selected_city='addis'):
     """Addis Ababa processing and packing (LCA) tab layout"""
     import app as main
     df_lca = main.df_lca
     
     return html.Div([
-        city_selector(selected_city='addis', visible=False),  # Hidden but present for callback
+        city_selector(selected_city=selected_city, visible=False),  # Hidden but present for callback
         
         html.Div([sidebar], style={
             "width": "15%",
@@ -986,21 +996,19 @@ def environment_footprints_tab_layout():
     })
 
 
-def economic_resilience_tab_layout(default_view=None):
+def resilience_tab_layout(selected_city='addis', default_view='Socio-Economic Shocks'):
     """Addis Ababa resilience tab layout with Socio-Economic Shocks (price volatility)"""
     selected_view = default_view or 'Socio-Economic Shocks'
     
     # Define resilience view options
     view_options = [
-        'Policy Documents Database',
         'Socio-Economic Shocks',
         #'Biophysical Shocks (coming soon)',
-        #'Resilience Indicator Trends (coming soon)',
-        #'Land-use & Land-cover (coming soon)'
+        'Resilience Indicator Trends (coming soon)',
     ]
     
     return html.Div([
-        city_selector(selected_city='addis', visible=False),
+        city_selector(selected_city=selected_city, visible=False),
         
         html.Div([sidebar], style={
             "width": "15%",
@@ -1034,7 +1042,7 @@ def economic_resilience_tab_layout(default_view=None):
             # KPI cards container for Socio-Economic Shocks view
             html.Div(
                 id="addis-resilience-view-container",
-                children=render_addis_policies_leadership_view(selected_view),
+                children=render_addis_resilience_view(selected_view),
                 style={"flex": "1", "display": "flex", "minHeight": 0, "flexDirection": "column", "overflowY": "auto"}
             ),
         ], style={
@@ -1043,7 +1051,7 @@ def economic_resilience_tab_layout(default_view=None):
             "overflowY": "auto", "boxSizing": "border-box",
         }),
         
-    ], style={"display": "flex", "width": "100vw", "height": "100%"})
+    ], style={"display": "flex", "width": "100vw", "height": "100%", 'backgroundColor': brand_colors['Teal']})
 
 
 def food_accessibility_vendor_properties_tab_layout(selected_city='addis'):
@@ -1404,7 +1412,7 @@ def income_growth_distribution_tab():
 def policies_leadership_tab():
     """Can repurpose food price resilience indicator tab layout for this piece
     """
-    return economic_resilience_tab_layout(default_view='Socio-Economic Shocks')
+    return governance_policies_tab_layout()
 
 def population_growth_migration_tab():
     return 'coming-soon'
@@ -1455,7 +1463,8 @@ def governance_tab():
 
 def resilience_tab():
     """ Right now the SDG database is the only thing that fits exclusively here"""
-    return sdg_indicator_atlas_tab_layout()
+    return resilience_tab_layout(selected_city='addis', default_view='Socio-Economic Shocks')
+    #return sdg_indicator_atlas_tab_layout()
 
 
 # NEW TAB LAYOUTS ==== OUTCOMES ====
