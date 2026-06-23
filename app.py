@@ -989,12 +989,91 @@ def build_resilience_figure_from_cache(df_counts=None, df_totals=None, size_max=
     return fig
 
 
+def _build_emdat_events_figure(size_max=20):
+    df_counts, _ = _load_emdat_cached()
+    if df_counts is None:
+        empty = go.Figure()
+        empty.add_annotation(text="EMDAT cache not found", showarrow=False, xref='paper', yref='paper', x=0.5, y=0.5, font=dict(size=12))
+        empty.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=350)
+        return empty
+    fig = go.Figure()
+    counts = df_counts.copy()
+    counts["Year"] = pd.to_numeric(counts["Year"], errors="coerce")
+    counts["Count"] = pd.to_numeric(counts["Count"], errors="coerce")
+    counts = counts.dropna(subset=["Year", "Disaster Subtype", "Count"])
+    if not counts.empty:
+        max_count = float(max(counts["Count"].max(), 1.0))
+        size_ref = 2.0 * max_count / (max(size_max, 1) ** 2)
+        for subgroup, sub in counts.groupby("Disaster Subgroup", dropna=False):
+            subgroup_label = "Unknown" if pd.isna(subgroup) else str(subgroup)
+            fig.add_trace(go.Scatter(
+                x=sub["Year"],
+                y=sub["Disaster Subtype"],
+                mode="markers",
+                marker=dict(size=sub["Count"].clip(lower=1), sizemode="area", sizeref=size_ref, sizemin=4),
+                name=subgroup_label,
+                showlegend=False,
+                customdata=np.column_stack([sub["Count"].to_numpy(), np.full(len(sub), subgroup_label)]),
+                hovertemplate="Year: %{x}<br>Subtype: %{y}<br>Subgroup: %{customdata[1]}<br>Count: %{customdata[0]}<extra></extra>",
+            ))
+    fig.update_yaxes(title_text=None, automargin=True, tickfont=dict(size=11))
+    fig.update_xaxes(dtick=1, tickangle=90)
+    fig.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=350, template='plotly_white', showlegend=False)
+    return fig
+
+
+def _build_emdat_affected_figure():
+    _, df_totals = _load_emdat_cached()
+    if df_totals is None:
+        empty = go.Figure()
+        empty.add_annotation(text="EMDAT cache not found", showarrow=False, xref='paper', yref='paper', x=0.5, y=0.5, font=dict(size=12))
+        empty.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=350)
+        return empty
+    fig = go.Figure()
+    totals = df_totals.copy()
+    totals["Year"] = pd.to_numeric(totals["Year"], errors="coerce")
+    totals["TotalAffected"] = pd.to_numeric(totals["TotalAffected"], errors="coerce")
+    totals = totals.dropna(subset=["Year", "TotalAffected"])
+    if not totals.empty:
+        fig.add_trace(go.Bar(
+            x=totals["Year"],
+            y=totals["TotalAffected"],
+            marker_color="orangered",
+            hovertemplate="Year: %{x}<br>Total Affected: %{y:,}<extra></extra>",
+            showlegend=False,
+        ))
+    fig.update_yaxes(title_text="Total Affected", automargin=True, tickformat=",", separatethousands=True, tickfont=dict(size=11))
+    fig.update_xaxes(dtick=1, tickangle=90)
+    fig.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=350, template='plotly_white', showlegend=False)
+    return fig
+
+
 @app.callback(
-    Output('resilience-emdat-graph', 'figure'),
+    Output('resilience-emdat-events-graph', 'figure'),
+    Output('resilience-emdat-affected-graph', 'figure'),
     Input('selected-city', 'data')
 )
 def update_resilience_emdat(selected_city):
-    return build_resilience_figure_from_cache(size_max=20)
+    return _build_emdat_events_figure(size_max=20), _build_emdat_affected_figure()
+
+
+@app.callback(
+    Output('emdat-events-container', 'style'),
+    Output('emdat-affected-container', 'style'),
+    Output('emdat-tab-events', 'className'),
+    Output('emdat-tab-affected', 'className'),
+    Input('emdat-tab-events', 'n_clicks'),
+    Input('emdat-tab-affected', 'n_clicks'),
+    prevent_initial_call=True,
+)
+def toggle_emdat_tab(n_events, n_affected):
+    trigger = ctx.triggered[0]['prop_id'].split('.')[0] if ctx.triggered else 'emdat-tab-events'
+    active = 'affected' if trigger == 'emdat-tab-affected' else 'events'
+    show = {"display": "block"}
+    hide = {"display": "none"}
+    if active == 'events':
+        return show, hide, "emdat-tab-active", "emdat-tab-inactive"
+    return hide, show, "emdat-tab-inactive", "emdat-tab-active"
 
 
 district_indicator_cfg = {
