@@ -42,6 +42,60 @@ _PRIMARY_LABEL_TO_KEY = {
     "outcomes": "outcomes",
 }
 
+_SUBDOMAIN_LABEL_TO_KEY = {
+    "environment and climate change": "environment-climate-change",
+    "income growth and distribution": "income-growth-distribution",
+    "policies & leadership": "policies-leadership",
+    "policies and leadership": "policies-leadership",
+    "population growth and migration": "population-growth-migration",
+    "socio-cultural context": "socio-cultural-context",
+    "food availability": "food-availability",
+    "food accessibility": "food-availability",
+    "food affordability": "food-affordability",
+    "vendor properties": "vendor-properties",
+    "processing and packaging": "processing-packing",
+    "production systems and input supply": "production-systems-input-supply",
+    "retail and marketing": "retail-markerting",
+    "storage and distribution": "storage-distrbution",
+    "economic": "economic",
+    "governance": "governance",
+    "resilience": "resilience",
+    "food security": "food-security",
+    "livelihoods": "livelihoods-poverty-equity",
+    "livelihoods, poverty and equity": "livelihoods-poverty-equity",
+    "noncommunicable diseases": "noncommunicable-diseases",
+    "nutritional status": "nutrional-status",
+}
+
+_COMING_SOON_SUBDOMAINS_BY_CITY = {
+    'addis': {
+        'environment-climate-change',
+        'population-growth-migration',
+        'socio-cultural-context',
+        'food-availability',
+        'food-affordability',
+        'production-systems-input-supply',
+        'retail-markerting',
+        'storage-distrbution',
+        'economic',
+        'food-security',
+        'noncommunicable-diseases',
+    },
+    'hanoi': {
+        'population-growth-migration',
+        'socio-cultural-context',
+        'food-availability',
+        'food-affordability',
+        'vendor-properties',
+        'processing-packing',
+        'production-systems-input-supply',
+        'retail-markerting',
+        'economic',
+        'food-security',
+        'noncommunicable-diseases',
+    },
+}
+
 _TAB_BG_KEY_BY_ID = {
     "tab-1-stakeholders": "stakeholders",
     "tab-2-supply": "supply",
@@ -146,7 +200,35 @@ def _record_primary_pillar_key(rec):
     return fallback_map.get(fallback)
 
 
+def _normalize_subdomain_label(value):
+    normalized = str(value or '').strip().lower().replace('&', 'and')
+    return ' '.join(normalized.split())
+
+
+def _subdomain_key_from_record(rec):
+    fcd_subdomain = _normalize_subdomain_label(rec.get('FCD Sub-domain'))
+    mapped = _SUBDOMAIN_LABEL_TO_KEY.get(fcd_subdomain)
+    if mapped:
+        return mapped
+
+    if fcd_subdomain.startswith('livelihood'):
+        return 'livelihoods-poverty-equity'
+
+    return None
+
+
+def _is_subdomain_coming_soon(selected_city, subdomain_key):
+    city_key = selected_city if selected_city in ('addis', 'hanoi') else 'hanoi'
+    return subdomain_key in _COMING_SOON_SUBDOMAINS_BY_CITY.get(city_key, set())
+
+
 def _record_target_tab(rec):
+    # Primary routing follows the new FCD Sub-domain taxonomy so sidebar
+    # behavior matches landing-page subdomain navigation.
+    subdomain_key = _subdomain_key_from_record(rec)
+    if subdomain_key:
+        return 'subdomain', subdomain_key
+
     domain = (rec.get('Domain / Sub-theme') or '').lower()
     name = (rec.get('Indicator name') or '').lower()
     text = f"{domain} {name}"
@@ -238,7 +320,11 @@ def make_sidebar(selected_city='hanoi', dark=False):
         # Tab-level availability from city config also gates indicator action buttons.
         tab_bg_key = _TAB_BG_KEY_BY_ID.get(target_tab)
         tab_is_coming_soon = tab_backgrounds.get(tab_bg_key or '', '#ffffff') == '#f4f4f4'
-        is_disabled = (not available) or tab_is_coming_soon
+        subdomain_is_coming_soon = False
+        if target_tab == 'subdomain' and target_subview:
+            subdomain_is_coming_soon = _is_subdomain_coming_soon(selected_city, target_subview)
+
+        is_disabled = (not available) or tab_is_coming_soon or subdomain_is_coming_soon
 
         indicator_button = (
             html.Button(

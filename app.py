@@ -91,9 +91,10 @@ from hanoi_layouts import (
     livelihoods_poverty_equity_tab_layout as hanoi_livelihoods_poverty_equity_tab_layout,
     food_affordability_tab_layout as hanoi_food_affordability_tab_layout,
     diets_nutrition_health_tab_layout as hanoi_diets_nutrition_health_tab_layout,
-    governance_policies_tab_layout as hanoi_governance_policies_tab_layout,
+    #governance_policies_tab_layout as hanoi_policies_leadership_tab,
+    policies_leadership_tab as hanoi_policies_leadership_tab,
     sdg_indicator_atlas_tab_layout as hanoi_fcd_indicator_atlas_tab_layout,
-    resilience_tab_layout_hanoi,
+    climate_resilience_tab_layout as hanoi_climate_resilience_tab,
     environment_climate_change_tab as hanoi_environment_climate_change_tab,
     income_growth_distribution_tab as hanoi_income_growth_distribution_tab,
     policies_leadership_tab as hanoi_policies_leadership_tab,
@@ -108,7 +109,7 @@ from hanoi_layouts import (
     storage_distrbution_tab as hanoi_storage_distrbution_tab,
     economic_tab as hanoi_economic_tab,
     governance_tab as hanoi_governance_tab,
-    resilience_tab as hanoi_resilience_tab,
+    temporal_resilience_tab as hanoi_temporal_resilience_tab,
     food_security_tab as hanoi_food_security_tab,
     livelihoods_poverty_equity_tab as hanoi_livelihoods_poverty_equity_tab,
     noncommunicable_diseases_tab as hanoi_noncommunicable_diseases_tab,
@@ -331,6 +332,7 @@ hanoi_nutrition_dir = os.path.join(hanoi_root, "nutrition")
 hanoi_food_env_dir = os.path.join(hanoi_root, "food_environment")
 hanoi_resilience_dir = os.path.join(hanoi_root, "resilience")
 hanoi_climate_dir = os.path.join(hanoi_resilience_dir, "precomputed_hanoi_climate_vars")
+hanoi_infrastructure_dir = os.path.join(hanoi_resilience_dir, "osm_infrastructure")
 #atlas_csv_path = os.path.join(homepath, "EcoFoodSystems_indicator_architecture - 260326 - Hanoi_rewritten_descriptions_final.csv")
 atlas_csv_path = os.path.join(homepath, "EcoFoodSystems_FCD_aligned.csv")
 
@@ -1082,6 +1084,40 @@ def toggle_emdat_tab(n_events, n_affected):
     return hide, show, "emdat-tab-inactive", "emdat-tab-active"
 
 
+@app.callback(
+    Output("resilience-indicator-pillar-collapse-1", "is_open"),
+    Output("resilience-indicator-pillar-collapse-2", "is_open"),
+    Output("resilience-indicator-pillar-collapse-3", "is_open"),
+    Input("resilience-indicator-pillar-toggle-1", "n_clicks"),
+    Input("resilience-indicator-pillar-toggle-2", "n_clicks"),
+    Input("resilience-indicator-pillar-toggle-3", "n_clicks"),
+    State("resilience-indicator-pillar-collapse-1", "is_open"),
+    State("resilience-indicator-pillar-collapse-2", "is_open"),
+    State("resilience-indicator-pillar-collapse-3", "is_open"),
+    prevent_initial_call=True,
+)
+def toggle_resilience_indicator_pillars(n1, n2, n3, open1, open2, open3):
+    ctx = dash.callback_context
+    if not ctx.triggered:
+        return open1, open2, open3
+
+    trigger_id = ctx.triggered[0]["prop_id"].split(".")[0]
+    state_map = {
+        "resilience-indicator-pillar-toggle-1": open1,
+        "resilience-indicator-pillar-toggle-2": open2,
+        "resilience-indicator-pillar-toggle-3": open3,
+    }
+
+    if trigger_id not in state_map:
+        return open1, open2, open3
+
+    if trigger_id == "resilience-indicator-pillar-toggle-1":
+        return (not bool(open1)), open2, open3
+    if trigger_id == "resilience-indicator-pillar-toggle-2":
+        return open1, (not bool(open2)), open3
+    return open1, open2, (not bool(open3))
+
+
 commune_indicator_cfg = {
     "ag_area_ha":                    {"col": "ag_area_ha",                  "label": "Agricultural Area (ha)",                  "colorscale": "YlGn",     "diverging": False, "vmin": "0", "vmax": "10000" },   
     "grace_trend":                   {"col": "grace_trend",                 "label": "Terrestrial Water Storage Anomaly (mm)",  "colorscale": "RdYlBu",   "diverging": True, "vmin": "-30", "vmax": "30" },
@@ -1634,14 +1670,13 @@ _COMING_SOON_SUBDOMAINS_BY_CITY = {
         'noncommunicable-diseases',
     },
     'hanoi': {
-        'policies-leadership',
         'population-growth-migration',
         'socio-cultural-context',
         'food-availability',
         'food-affordability',
         'vendor-properties',
         'processing-packing',
-        'production-systems-input-supply',
+        #'production-systems-input-supply',
         'retail-markerting',
         'economic',
         'food-security',
@@ -1719,7 +1754,7 @@ def _resolve_subdomain_layout(route_city, subdomain_key):
     if route_city == 'hanoi':
         if subdomain_key == 'environment-climate-change':
             resilience_ctx = _get_resilience_context()
-            return resilience_tab_layout_hanoi(list(resilience_ctx['all_quarters']), default_view='Biophysical shocks')
+            return hanoi_climate_resilience_tab(list(resilience_ctx['all_quarters']), default_view='Biophysical shocks')
         if subdomain_key == 'income-growth-distribution':
             return hanoi_income_growth_distribution_tab()
         if subdomain_key == 'policies-leadership':
@@ -1747,7 +1782,7 @@ def _resolve_subdomain_layout(route_city, subdomain_key):
         if subdomain_key == 'governance':
             return hanoi_governance_tab()
         if subdomain_key == 'resilience':
-            return hanoi_resilience_tab()
+            return hanoi_temporal_resilience_tab()
         if subdomain_key == 'food-security':
             return hanoi_food_security_tab()
         if subdomain_key == 'livelihoods-poverty-equity':
@@ -2259,12 +2294,12 @@ app.layout = html.Div([
         color="#A51E22",  # optional: brand red
         children=html.Div(id="page-content")
     ),
-    dcc.Store(id='selected-city', data='addis'),  # default city
+    dcc.Store(id='selected-city', data='hanoi'),  # default city
     dcc.Store(id='atlas-open-tab', data=None),
     dcc.Store(id='sh-table-page-size-store', data=13),
 
     dcc.Interval(id='resize-interval', interval=1000, n_intervals=0),
-    html.Div(id="tab-content", children=landing_page_layout(selected_city='addis'), style={"width": "100%",
+    html.Div(id="tab-content", children=landing_page_layout(selected_city='hanoi'), style={"width": "100%",
                                                                        "height": "100%"})
     # Parent container for full page
 ], style={
@@ -3330,11 +3365,11 @@ def render_tab_content(city_value, atlas_open_tab, selected_city):
             return _with_stubs(hanoi_livelihoods_poverty_equity_tab_layout())
         elif tab_id == "tab-6-resilience":
             resilience_ctx = _get_resilience_context()
-            return _with_stubs(resilience_tab_layout_hanoi(list(resilience_ctx["all_quarters"]), default_view=atlas_subview or 'Biophysical shocks'))
+            return _with_stubs(hanoi_climate_resilience_tab(list(resilience_ctx["all_quarters"]), default_view=atlas_subview or 'Biophysical shocks'))
         elif tab_id == "tab-7-food-environments":
             return _with_stubs(hanoi_food_affordability_tab_layout())
         elif tab_id == "tab-9-policies":
-            return _with_stubs(hanoi_governance_policies_tab_layout())
+            return _with_stubs(hanoi_policies_leadership_tab())
         elif tab_id == "tab-10-nutrition":
             return _with_stubs(hanoi_diets_nutrition_health_tab_layout())
         elif tab_id == "tab-home":
@@ -3496,7 +3531,6 @@ def toggle_sidebar_pillars(
         new_states["outcomes"],
     )
 
-
 @app.callback(
     Output("atlas-open-tab", "data"),
     [
@@ -3542,6 +3576,17 @@ def open_atlas_target_tab(_atlas_btn_clicks, _sidebar_btn_clicks, _home_btn_clic
     target_tab = trig_obj.get("target")
     if not target_tab:
         return dash.no_update
+
+    if target_tab == "subdomain":
+        subdomain_key = trig_obj.get("subdomain") or trig_obj.get("subview")
+        if not subdomain_key:
+            return dash.no_update
+        return {
+            "tab": "subdomain",
+            "subdomain": subdomain_key,
+            "city": trig_obj.get("city") or None,
+        }
+
     return {
         "tab": target_tab,
         "subview": trig_obj.get("subview") or None,
@@ -3842,7 +3887,7 @@ def update_health_trend_hanoi(selected_variable):
 # ── Drought Indicator callback ────────────────────────────────────────────────────────
 
 @lru_cache(maxsize=64)
-def _build_drought_map_cached(slider_idx, indicator, min_ag_area=0):
+def _build_drought_map_cached(slider_idx, indicator, min_ag_area=0, infrastructure_layers=()):
     resilience_ctx = _get_resilience_context()
     commune_climate_df = resilience_ctx["commune_climate_df"]
     communes_unique = resilience_ctx["communes_unique"]
@@ -3854,6 +3899,14 @@ def _build_drought_map_cached(slider_idx, indicator, min_ag_area=0):
     region_ctx = _get_region_quarterly_context()
     region_quarterly = region_ctx["region_quarterly"]
     slopes_df = region_ctx["slopes_df"]
+
+    if isinstance(infrastructure_layers, str):
+        infrastructure_layers = (infrastructure_layers,)
+    infrastructure_layers = tuple(
+        str(layer).strip().lower()
+        for layer in (infrastructure_layers or ())
+        if str(layer).strip()
+    )
 
     _map_layout = dict(
         mapbox=dict(style="carto-positron", center={"lat": 16.0, "lon": 106.0}, zoom=5),
@@ -3992,6 +4045,49 @@ def _build_drought_map_cached(slider_idx, indicator, min_ag_area=0):
             ),
         ))
 
+    if infrastructure_layers:
+        for idx, infrastructure_layer in enumerate(infrastructure_layers):
+            layer_path = os.path.join(hanoi_infrastructure_dir, f"waterway_{infrastructure_layer}.geojson")
+            if not os.path.exists(layer_path):
+                continue
+
+            try:
+                osm_layer = gpd.read_file(layer_path).to_crs("EPSG:4326")
+            except Exception:
+                continue
+
+            # Extract coordinates interleaved with None to separate line segments.
+            lats = []
+            lons = []
+            for geom in osm_layer.geometry:
+                if geom.geom_type == 'LineString':
+                    coords = np.array(geom.coords)
+                    lats.extend(coords[:, 1])
+                    lons.extend(coords[:, 0])
+                    lats.append(None)
+                    lons.append(None)
+                elif geom.geom_type in ['MultiLineString', 'GeometryCollection']:
+                    for line in geom.geoms:
+                        if line.geom_type == 'LineString':
+                            coords = np.array(line.coords)
+                            lats.extend(coords[:, 1])
+                            lons.extend(coords[:, 0])
+                            lats.append(None)
+                            lons.append(None)
+
+            if not lats:
+                continue
+
+            fig.add_trace(go.Scattermapbox(
+                lat=lats,
+                lon=lons,
+                mode='lines',
+                line=dict(width=1.5, color=brand_colors['Teal']),
+                opacity=0.7,
+                hoverinfo='skip',
+                name=f"{infrastructure_layer} infrastructure",
+            ))
+
     cards_payload = []
     if col in region_quarterly.columns:
         for region in sorted(region_quarterly["region"].unique()):
@@ -4041,32 +4137,47 @@ def _build_drought_map_cached(slider_idx, indicator, min_ag_area=0):
 @app.callback(
     Output("drought-map-container", "children"),
     Output("drought-slider-label", "children"),
-    Output("region-kpi-cards", "children"),
     Output("date-slider-card", "style"),
+    #Output("region-kpi-cards", "children"),
     Input("drought-date-slider", "value"),
     Input("climate-indicator-select", "value"),
     Input("ag-area-filter", "value"),
+    Input("infrastructure-layer-select", "value"),
 )
-def update_drought_map(slider_idx, indicator, min_ag_area):
-    fig_json, quarter, cards_payload, slider_style = _build_drought_map_cached(int(slider_idx or 0), indicator or "", float(min_ag_area) or 0)
+def update_drought_map(slider_idx, indicator, min_ag_area, infrastructure_layer):
+    if isinstance(infrastructure_layer, (list, tuple, set)):
+        selected_layers = tuple(
+            str(layer).strip().lower()
+            for layer in infrastructure_layer
+            if str(layer).strip()
+        )
+    elif infrastructure_layer:
+        selected_layers = (str(infrastructure_layer).strip().lower(),)
+    else:
+        selected_layers = tuple()
+
+    fig_json, quarter, cards_payload, slider_style = _build_drought_map_cached(
+        int(slider_idx or 0),
+        indicator or "",
+        float(min_ag_area) or 0,
+        selected_layers,
+    )
     cfg = commune_indicator_cfg.get(indicator or "")
 
-    cards = [
-        dbc.Col(
-            make_region_kpi_card(
-                payload["region"],
-                payload["quarter_value"],
-                payload["all_values"],
-                payload["all_quarters"],
-                payload["slope"],
-                payload["indicator_label"],
-                cfg=cfg,
-            ),
-            md=3,
-            style={"display": "flex"},
-        )
-        for payload in cards_payload
-    ]
+    #cards = [
+    #    dbc.Col(
+    #        make_region_kpi_card(
+    #            payload["region"],
+    #            payload["quarter_value"],
+    #            payload["all_values"],
+    #            payload["all_quarters"],
+    #            payload["slope"],
+    #            payload["indicator_label"],
+    #            cfg=cfg,
+    #        ),
+    #        md=3,
+    #        style={"display": "flex"},
+    #    )
 
     return (
         dcc.Graph(
@@ -4075,8 +4186,8 @@ def update_drought_map(slider_idx, indicator, min_ag_area):
             style={"height": "100%", "width": "100%"},
         ),
         quarter,
-        dbc.Row(cards),
         slider_style,
+        #dbc.Row(cards),
     )
 
 
@@ -4109,6 +4220,11 @@ def update_resilience_view_layout(view_selection, spatial_data):
     spatial_data = spatial_data or {}
     climate_indicator_options = spatial_data.get("climate_indicator_options", [])
     indicator_descriptions = spatial_data.get("indicator_descriptions", {})
+    infrastructure_options = spatial_data.get("infrastructure_options") or [
+        {'value': 'canal_drain_ditch', 'label': 'Irrigation Canals / Drainage Ditches'},
+        {'value': 'rivers', 'label': 'Rivers'},
+        {'value': 'streams', 'label': 'Streams'},
+    ]
 
     n_raw = spatial_data.get("n", 1)
     try:
@@ -4122,6 +4238,7 @@ def update_resilience_view_layout(view_selection, spatial_data):
     return render_spatial_climate_resilience_layout(
         climate_indicator_options,
         indicator_descriptions,
+        infrastructure_options,
         n,
         quarter_marks,
     )

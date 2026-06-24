@@ -12,7 +12,7 @@ import plotly.graph_objects as go
 import plotly.express as px
 import json
 
-from config import brand_colors, header_style, kpi_card_style_2, card_style
+from config import brand_colors, header_style, kpi_card_style_2, card_style, hero_gradient, sidebar_colors
 from shared_components import sidebar_hanoi as sidebar, city_selector
 from dashboard_components import create_nutrition_kpi_card, create_nutrition_kpi_card_hanoi
 
@@ -67,7 +67,7 @@ def governance_stakeholders_tab_layout():
                             {"name": str(i), "id": str(i), "presentation": "markdown"} if i == "Website" else {"name": str(i), "id": str(i)}
                             for i in df_sh_hanoi.columns
                         ],
-                        page_size=14,
+                        page_size=15,
                         page_action='native',
                         filter_action='native',
                         sort_action='native',
@@ -84,12 +84,25 @@ def governance_stakeholders_tab_layout():
                             'maxWidth': '320px',
                             'height': '36px'                          
                         },
+                        style_cell_conditional=[
+                            {
+                                'if': {'column_id': 'Organisation Name'},
+                                'width': '40vw',
+                                'minWidth': '40vw',
+                                'maxWidth': '40vw'
+                            }
+                        ],
                         style_header={
                             'fontWeight': 'bold',
-                            'backgroundColor': brand_colors['Red'],
+                            'backgroundColor': hero_gradient['50%'],
                             'color': 'white',
                             'textAlign': 'center',
                             'fontSize': 'clamp(0.8em, 1vw, 1.1em)'
+                        },
+                        style_filter={
+                            'backgroundColor': sidebar_colors['Hover (dark card)'],
+                            'fontSize': 'clamp(0.64em, 0.85vw, 0.9em)',
+                            'padding': '5px 6px'
                         },
                         style_data_conditional=[
                             {'if': {'row_index': 'odd'}, 'backgroundColor': '#f9f9f9'}
@@ -97,7 +110,7 @@ def governance_stakeholders_tab_layout():
                         tooltip_data=[
                             {
                                 col: {
-                                    'value': str(row[col]) if (col.lower() in ['Abstract', 'Title', 'Keywords'] or len(str(row[col])) > 20) else '',
+                                    'value': str(row[col]) if (col.lower() in ['abstract', 'title', 'keywords'] or len(str(row[col])) > 20) else '',
                                     'type': 'text'
                                 }
                                 for col in df_sh_hanoi.columns
@@ -105,9 +118,9 @@ def governance_stakeholders_tab_layout():
                         ],
                         tooltip_duration=4000,
                         css=[
-                            {
+                        {
                                 'selector': '.dash-table-tooltip',
-                                'rule': 'position: fixed !important; background-color: ' + brand_colors['Light green'] + '; color: ' + brand_colors['Black'] + '; border: 2px solid ' + brand_colors['Dark green'] + '; padding: 6px; font-size: 14px; box-shadow: 0 4px 8px ' + brand_colors['Black'] + ';'
+                                'rule': 'position: fixed !important; background-color: ' + sidebar_colors['Hover (dark card)'] + '; color: ' + brand_colors['Black'] + '; border: 2px solid ' + hero_gradient['0%'] + '; padding: 6px; font-size: 14px; box-shadow: 0 4px 8px ' + brand_colors['Black'] + ';'
                             },
                             {
                                 'selector': '.dash-table-container .dash-spreadsheet-container',
@@ -115,7 +128,7 @@ def governance_stakeholders_tab_layout():
                             },
                             {
                                 'selector': '.dash-table-container .dash-spreadsheet-container::-webkit-scrollbar',
-                                'rule': 'height: 14px; width: 14px; -webkit-appearance: none;'
+                                'rule': 'height: 14px; width: 24px; -webkit-appearance: none;'
                             },
                             {
                                 'selector': '.dash-table-container .dash-spreadsheet-container::-webkit-scrollbar-track',
@@ -123,7 +136,7 @@ def governance_stakeholders_tab_layout():
                             },
                             {
                                 'selector': '.dash-table-container .dash-spreadsheet-container::-webkit-scrollbar-thumb',
-                                'rule': 'background: ' + brand_colors['Dark green'] + '; border-radius: 8px; border: 2px solid #f0f0f0;'
+                                'rule': 'background: ' + hero_gradient['0%'] + '; border-radius: 8px; border: 2px solid #f0f0f0;'
                             }
                         ],
                         style_table={
@@ -1094,129 +1107,6 @@ def sdg_indicator_atlas_tab_layout():
         "backgroundColor": brand_colors['Teal']
     })
 
-
-def governance_policies_tab_layout():
-    """Hanoi policies tab layout"""
-    import app as main
-    df_policies = main.df_policies_hanoi
-    
-    return html.Div([
-        city_selector(selected_city='hanoi', visible=False),  # Hidden but present for callback
-        
-        html.Div([sidebar], style={
-            "width": "15%",
-            "height": "100%",
-            "display": "flex",
-            "vertical-align": 'top',
-            "flexDirection": "column",
-            "justifyContent": "flex-start"
-        }),
-
-        # Main content area
-        html.Div([
-            dbc.Card([
-                dbc.CardHeader(html.H3("Food System Policies Database", style=header_style)),
-                dbc.CardBody([
-                    dash_table.DataTable(
-                        id='policies_table',
-                        data=df_policies.to_dict('records'),
-                        columns=[
-                            {"name": str(col), "id": str(col), "presentation": "markdown"} if any(k in str(col).lower() for k in ['link', 'website', 'url']) else {"name": str(col), "id": str(col)}
-                            for col in df_policies.columns
-                        ],
-                        page_size=14,
-                        page_action='native',
-                        filter_action='native',
-                        sort_action='native',
-                        sort_mode='multi',
-                        style_cell={
-                            'textAlign': 'left',
-                            'padding': '2px 6px',
-                            'whiteSpace': 'nowrap',
-                            'overflow': 'hidden',
-                            'textOverflow': 'ellipsis',
-                            'fontSize': 'clamp(0.64em, 0.85vw, 0.9em)',
-                            'lineHeight': '1.1',
-                            'minWidth': '120px',
-                            'maxWidth': '250px',
-                            'height': '36px'
-                        },
-                        style_header={
-                            'fontWeight': 'bold',
-                            'backgroundColor': brand_colors['Red'],
-                            'color': 'white',
-                            'textAlign': 'center',
-                            'fontSize': 'clamp(0.8em, 1vw, 1.1em)'
-                        },
-                        style_filter={
-                            'backgroundColor': '#f0f0f0',
-                            'fontSize': 'clamp(0.64em, 0.85vw, 0.9em)',
-                            'padding': '2px 6px'
-                        },
-                        style_data_conditional=[
-                            {'if': {'row_index': 'odd'}, 'backgroundColor': '#f9f9f9'}
-                        ],
-                        tooltip_data=[
-                            {
-                                col: {
-                                    'value': str(row[col]) if (col.lower() in ['Abstract', 'Title', 'Keywords'] or len(str(row[col])) > 20) else '',
-                                    'type': 'text'
-                                }
-                                for col in df_policies.columns
-                            } for row in df_policies.to_dict('records')
-                        ],
-                        tooltip_duration=4000,
-                        css=[
-                            {
-                                'selector': '.dash-table-tooltip',
-                                'rule': 'position: fixed !important; background-color: ' + brand_colors['Light green'] + '; color: ' + brand_colors['Black'] + '; border: 2px solid ' + brand_colors['Dark green'] + '; padding: 6px; font-size: 14px; box-shadow: 0 4px 8px ' + brand_colors['Black'] + ';'
-                            },
-                            {
-                                'selector': '.dash-table-container .dash-spreadsheet-container',
-                                'rule': 'overflow-x: scroll !important; scrollbar-width: auto;'
-                            },
-                            {
-                                'selector': '.dash-table-container .dash-spreadsheet-container::-webkit-scrollbar',
-                                'rule': 'height: 14px; width: 14px; -webkit-appearance: none;'
-                            },
-                            {
-                                'selector': '.dash-table-container .dash-spreadsheet-container::-webkit-scrollbar-track',
-                                'rule': 'background: #f0f0f0; border-radius: 8px;'
-                            },
-                            {
-                                'selector': '.dash-table-container .dash-spreadsheet-container::-webkit-scrollbar-thumb',
-                                'rule': 'background: ' + brand_colors['Dark green'] + '; border-radius: 8px; border: 2px solid #f0f0f0;'
-                            }
-                        ],
-                        style_table={
-                            'overflowX': 'scroll',
-                            'width': '100%',
-                            'height': '100%',
-                            'overflowY': 'auto'
-                        }
-                    ,
-                        style_as_list_view=True
-                    )
-                ], style={"flex": "1", "display": "flex", "flexDirection": "column", "minHeight": "0"})
-            ], style={"height": "100%", "padding": "10px", "box-shadow": "0 2px 6px rgba(0,0,0,0.1)", "backgroundColor": brand_colors['White'], "border-radius": "10px", "display": "flex", "flexDirection": "column"}),
-        ], style={
-            "flex": "1 1 85%",
-            "height": "96vh",
-            "display": "flex",
-            "flexDirection": "column",
-            "overflow": "hidden",
-            "border-radius": "10px",
-            "margin": "10px 10px 10px 10px"
-        })
-
-    ], style={
-        "display": "flex",
-        "width": "100%",
-        "height": "100vh",
-        "backgroundColor": brand_colors['Teal']
-    })
-
-
 def _format_indicator_value(value):
     if value is None or pd.isna(value):
         return "N/A"
@@ -1329,15 +1219,43 @@ def _build_temporal_pillar_section(title, csv_filename, line_color, pillar_num, 
         df = pd.read_csv(data_path)
     except Exception as exc:
         return dbc.Card([
-            dbc.CardBody([
-                html.H3(title, style={
-                    "color": brand_colors['Brown'],
+            html.Button(
+                [
+                    html.Span(title),
+                    html.Span("▼", style={"fontSize": "0.85em", "opacity": 0.8}),
+                ],
+                id=f"resilience-indicator-pillar-toggle-{pillar_num}",
+                n_clicks=0,
+                style={
+                    "width": "100%",
+                    "display": "flex",
+                    "justifyContent": "space-between",
+                    "alignItems": "center",
+                    "padding": "10px 12px",
+                    "border": "none",
+                    "backgroundColor": hero_gradient['50%'],
+                    "color": brand_colors['White'],
                     "fontWeight": "bold",
-                    "marginBottom": "8px",
-                }),
-                html.P(f"Could not load {csv_filename}: {exc}", style={"color": brand_colors['Red']})
-            ])
-        ], style={"padding": "8px", "marginBottom": "12px", "backgroundColor": brand_colors['White'], "borderRadius": "10px"})
+                    "fontSize": "1.0em",
+                    "borderRadius": "8px 8px 0 0",
+                    "cursor": "pointer",
+                    "textAlign": "left",
+                },
+            ),
+            dbc.Collapse(
+                dbc.CardBody([
+                    html.P(f"Could not load {csv_filename}: {exc}", style={"color": brand_colors['Red']})
+                ]),
+                id=f"resilience-indicator-pillar-collapse-{pillar_num}",
+                is_open=False,
+            ),
+        ], style={
+            "padding": "8px",
+            "marginBottom": "12px",
+            "backgroundColor": brand_colors['White'],
+            "borderRadius": "10px",
+            "boxShadow": "0 2px 6px rgba(0,0,0,0.1)",
+        })
 
     sort_cols = [c for c in ["Year", "Quarter", "Month"] if c in df.columns]
     if sort_cols:
@@ -1390,7 +1308,7 @@ def _build_temporal_pillar_section(title, csv_filename, line_color, pillar_num, 
             df_plot[col] = numeric_vals
             cards.append(
                 dbc.Col(
-                    _create_resilience_temporal_kpi_card(df_plot, col, time_labels, brand_colors['Dark green'], unit=unit, source=source),
+                    _create_resilience_temporal_kpi_card(df_plot, col, time_labels, brand_colors['Teal'], unit=unit, source=source),
                     xs=12,
                     md=6,
                     lg=4,
@@ -1407,7 +1325,7 @@ def _build_temporal_pillar_section(title, csv_filename, line_color, pillar_num, 
                             "fontWeight": "bold",
                             "margin": "0",
                         }),
-                        style={"backgroundColor": brand_colors['Mid green'], "borderRadius": "7px 7px 0 0"}
+                        style={"backgroundColor": hero_gradient['50%'], "borderRadius": "7px 7px 0 0"}
                     ),
                     dbc.CardBody([
                         dbc.Row(cards, className="g-3")
@@ -1415,28 +1333,47 @@ def _build_temporal_pillar_section(title, csv_filename, line_color, pillar_num, 
                 ], style={
                     "marginBottom": "12px",
                     "borderRadius": "8px",
-                    "backgroundColor": brand_colors['Teal'],
+                    "backgroundColor": sidebar_colors['Hover (dark card)'],
                     "border": f"1px solid {brand_colors['Mid green']}",
                     "boxShadow": "0 1px 4px rgba(0,0,0,0.08)",
                 })
             )
 
-    body_children = [
-        html.H3(title, style={
-            "color": brand_colors['Brown'],
-            "fontWeight": "bold",
-            "marginBottom": "14px",
-            "borderBottom": f"3px solid {brand_colors['Mid green']}",
-            "paddingBottom": "8px"
-        })
-    ]
+    body_children = []
     if section_children:
         body_children.extend(section_children)
     else:
         body_children.append(html.P("No numeric indicators available."))
 
     return dbc.Card([
-        dbc.CardBody(body_children)
+        html.Button(
+            [
+                html.Span(title),
+                html.Span("▼", style={"fontSize": "0.85em", "opacity": 0.8}),
+            ],
+            id=f"resilience-indicator-pillar-toggle-{pillar_num}",
+            n_clicks=0,
+            style={
+                "width": "100%",
+                "display": "flex",
+                "justifyContent": "space-between",
+                "alignItems": "center",
+                "padding": "10px 12px",
+                "border": "none",
+                "backgroundColor": hero_gradient['50%'],
+                "color": brand_colors['White'],
+                "fontWeight": "bold",
+                "fontSize": "1.0em",
+                "borderRadius": "8px 8px 0 0",
+                "cursor": "pointer",
+                "textAlign": "left",
+            },
+        ),
+        dbc.Collapse(
+            dbc.CardBody(body_children),
+            id=f"resilience-indicator-pillar-collapse-{pillar_num}",
+            is_open=True,
+        )
     ], style={
         "padding": "8px",
         "marginBottom": "14px",
@@ -1468,7 +1405,7 @@ def _load_sos_data():
 
 def _create_sos_figure(pillar_num, title, res_ann, show_legend=False):
     """Create a Plotly Safe Operating Space chart for one pillar."""
-    mid_green = brand_colors['Mid green']   # #bbce8a
+    mid_green = brand_colors['Teal']        # #bbce8a
     red = brand_colors['Red']               # #A80050
     dark = brand_colors['Brown']            # #313715
 
@@ -1503,7 +1440,7 @@ def _create_sos_figure(pillar_num, title, res_ann, show_legend=False):
     fig.add_trace(go.Scatter(
         x=years, y=sos_vals,
         fill='tonexty',
-        fillcolor='rgba(187,206,138,0.35)',
+        fillcolor=sidebar_colors['Hover (dark card)'],
         mode='lines',
         line=dict(color=mid_green, width=1.5, dash='dot'),
         name='Safe Operating Space',
@@ -1596,7 +1533,7 @@ def render_temporal_resilience_layout():
                 "margin": "0",
             }),
             style={
-                "backgroundColor": brand_colors['Dark green'],
+                "backgroundColor": hero_gradient['50%'],
                 "borderRadius": "9px 9px 0 0"
             }
         ),
@@ -1621,11 +1558,11 @@ def render_temporal_resilience_layout():
                 )
                 for num, label in pillar_labels
             ], className="g-2")
-        ], style={"padding": "12px"})
+        ], style={"padding": "12px", 'borderRadius':'10px'})
     ], style={
         "marginBottom": "14px",
         "borderRadius": "10px",
-        "backgroundColor": brand_colors['White'],
+        "backgroundColor": sidebar_colors['Hover (dark card)'],
         "boxShadow": "0 2px 6px rgba(0,0,0,0.1)",
     })
 
@@ -1641,11 +1578,11 @@ def render_temporal_resilience_layout():
         "height": "100%",
         "overflowY": "auto",
         "padding": "6px",
-        "backgroundColor": brand_colors['Teal']
+        "backgroundColor": sidebar_colors['Hover (dark card)']
     })
 
 
-def render_spatial_climate_resilience_layout(climate_indicator_options, indicator_descriptions, n, quarter_marks):
+def render_spatial_climate_resilience_layout(climate_indicator_options, indicator_descriptions, infrastructure_options, n, quarter_marks):
     """Spatial (map) sub-layout for the resilience tab."""
     return html.Div([
 
@@ -1757,8 +1694,12 @@ def render_spatial_climate_resilience_layout(climate_indicator_options, indicato
             dbc.Card([
                 dbc.CardBody([
                     html.P("Select a date:",
-                           style={"margin": "6px", "fontSize": 'clamp(0.7em, 1em, 1.0em)',
-                                  "textAlign": "center", "fontStyle": "italic"}),
+                           style={
+                            "margin": "0 0 8px 0",
+                            "fontSize": "14px",
+                            "fontWeight": "600",
+                            "color": "#1d574f",
+                        },),
                     html.Label(
                         id="drought-slider-label",
                         style={
@@ -1783,12 +1724,36 @@ def render_spatial_climate_resilience_layout(climate_indicator_options, indicato
                 "backgroundColor": brand_colors['White'], "borderRadius": "10px"
             }),
 
-            html.Div(id="region-kpi-cards", className="mt-3", style={
-                "backgroundColor": "#FFFFFF",
-                "borderRadius": "12px",
+            # Additional drop-down to add contextual infastructure layers (e.g., roads, rivers, etc.) can be added here if needed.
+
+            dbc.Card([
+                dbc.CardBody([
+                    html.P("Select additional infastructure contextual layers:",
+                           style={"margin": "0 0 8px 0", "fontSize": "14px",
+                                  "fontWeight": "600", "color": "#1d574f", "fontStyle": "normal"}),
+                    dcc.Dropdown(
+                        id="infrastructure-layer-select",
+                        options=infrastructure_options,
+                        value=[],
+                        multi=True,
+                        clearable=True,
+                        style={"zIndex": "2000", "marginBottom": "10px"}
+                    )
+                ], style={"padding": "16px 20px"})
+            ], style={
+                "height": "auto", "padding": "0", "marginBottom": "10px",
                 "boxShadow": "0 2px 12px rgba(0,0,0,0.08)",
-                "padding": "10px",
+                "backgroundColor": brand_colors['White'], "borderRadius": "12px",
+                "zIndex": "2000", "position": "relative"
             }),
+
+
+            #html.Div(id="region-kpi-cards", className="mt-3", style={
+            #    "backgroundColor": "#FFFFFF",
+            #    "borderRadius": "12px",
+            #    "boxShadow": "0 2px 12px rgba(0,0,0,0.08)",
+            #    "padding": "10px",
+            #}),
 
             # EMDAT natural disasters summary — tabbed
             dbc.Card([
@@ -1836,7 +1801,6 @@ def render_spatial_climate_resilience_layout(climate_indicator_options, indicato
                 "backgroundColor": brand_colors['White'], "border-radius": "10px",
                 "display": "flex", "flexDirection": "column"
             }),
-
         ], style={
             "width": "min(50%)", "height": "100%", "padding": "10px",
             "backgroundColor": "#F8FAF8", "borderRadius": "0", "margin": "0",
@@ -1922,7 +1886,7 @@ def render_lulc_resilience_layout(lulc_indicator_options):
             }),
         ], style={
             "width": "min(50%)", "height": "100%", "padding": "10px",
-            "backgroundColor": brand_colors['Teal'], "borderRadius": "0", "margin": "0",
+            "backgroundColor": brand_colors['White'], "borderRadius": "0", "margin": "0",
             "display": "flex", "flexDirection": "column", "justifyContent": "flex-start",
             "overflowY": "auto", "boxSizing": "border-box", "position": "relative",
         }),
@@ -1951,7 +1915,7 @@ def render_lulc_resilience_layout(lulc_indicator_options):
     ], style={"display": "flex", "width": "100%", "height": "100%"})
 
 
-def resilience_tab_layout_hanoi(all_quarters, default_view='Biophysical shocks'):
+def climate_resilience_tab_layout(all_quarters, default_view='Biophysical shocks'):
     """Hà Nội climate tab layout - Multi-dimensional Climate Stress Indicators"""
 
     n = len(all_quarters)
@@ -1969,19 +1933,22 @@ def resilience_tab_layout_hanoi(all_quarters, default_view='Biophysical shocks')
         {"label": "── Vegetation ──", "value": "divider_veg", "disabled": True},
         {"label": "Vegetative Stress (VCI)", "value": "vci_severe_pct"},
         {"label": "Vegetation Drought Resistance", "value": "drought_resistance"},
+        {"label": "Vegetation Flood Resistance (coming soon)", "value": "flood_resistance", "disabled": True},
+        {'label': "Vegetation Heat Resistance (coming soon)", "value": "heat_resistance", "disabled": True},
+        {'label': "Agricultural Resilience Index (coming soon)", "value": "ag_resilience_index", "disabled": True},
         {"label": "── Water ──", "value": "divider_water", "disabled": True},
         {"label": "Water Storage Anomalies", "value": "grace_trend"},
         {"label": "Soil Moisture Stress (coming soon)", "value": "soil_moisture", "disabled": True},
         {"label": "── Precipitation Deficit (SPEI) ──", "value": "divider_spei", "disabled": True},
-        {"label": "Short-term Moderate Drought", "value": "class_-3_months_SPEI3"},
+        {"label": "Short-term Moderate Drought", "value": "class_-1_months_SPEI3"},
         {"label": "Short-term Severe Drought", "value": "class_-2_months_SPEI3"},
-        {"label": "Short-term Extreme Drought", "value": "class_-1_months_SPEI3"},
-        {"label": "Seasonal Moderate Drought", "value": "class_-3_months_SPEI6"},
+        {"label": "Short-term Extreme Drought", "value": "class_-3_months_SPEI3"},
+        {"label": "Seasonal Moderate Drought", "value": "class_-1_months_SPEI6"},
         {"label": "Seasonal Severe Drought", "value": "class_-2_months_SPEI6"},
-        {"label": "Seasonal Extreme Drought", "value": "class_-1_months_SPEI6"},
-        {"label": "Long-term Moderate Drought", "value": "class_-3_months_SPEI12"},
+        {"label": "Seasonal Extreme Drought", "value": "class_-3_months_SPEI6"},
+        {"label": "Long-term Moderate Drought", "value": "class_-1_months_SPEI12"},
         {"label": "Long-term Severe Drought", "value": "class_-2_months_SPEI12"},
-        {"label": "Long-term Extreme Drought", "value": "class_-1_months_SPEI12"},
+        {"label": "Long-term Extreme Drought", "value": "class_-3_months_SPEI12"},
     ]
 
     indicator_descriptions = {
@@ -2001,15 +1968,21 @@ def resilience_tab_layout_hanoi(all_quarters, default_view='Biophysical shocks')
         "class_-1_months_SPEI12": "SPEI-12 Extreme Drought captures the long-duration water balance deficits aggregated by number of months since 1990.",
     }
 
+    infrastructure_options = [
+        {'value': 'canal_drain_ditch', 'label': 'Irrigation Canals / Drainage Ditches'},
+        {'value': 'rivers', 'label': 'Rivers'},
+        {'value': 'streams', 'label': 'Streams'}
+    ]
+
     view_options = ['Biophysical shocks', 'Land-use & Land-cover']
     selected_view = default_view if default_view in view_options else 'Biophysical shocks'
 
     if selected_view == 'Biophysical shocks':
-        initial_view_content = render_spatial_climate_resilience_layout(climate_indicator_options, indicator_descriptions, n, quarter_marks)
+        initial_view_content = render_spatial_climate_resilience_layout(climate_indicator_options, indicator_descriptions, infrastructure_options, n, quarter_marks)
     elif selected_view == 'Land-use & Land-cover':
         initial_view_content = render_lulc_resilience_layout([])
     else:
-        initial_view_content = render_spatial_climate_resilience_layout(climate_indicator_options, indicator_descriptions, n, quarter_marks)
+        initial_view_content = render_spatial_climate_resilience_layout(climate_indicator_options, indicator_descriptions, infrastructure_options, n, quarter_marks)
 
     return html.Div([
         city_selector(selected_city='hanoi', visible=False),
@@ -2019,6 +1992,7 @@ def resilience_tab_layout_hanoi(all_quarters, default_view='Biophysical shocks')
             "quarter_marks": quarter_marks,
             "climate_indicator_options": climate_indicator_options,
             "indicator_descriptions": indicator_descriptions,
+            "infrastructure_options": infrastructure_options,
         }),
         html.Script(f"window.quarterLookup = {json.dumps(all_quarters)};"),
 
@@ -2055,6 +2029,38 @@ def resilience_tab_layout_hanoi(all_quarters, default_view='Biophysical shocks')
         ], style={
             "flex": "1", "height": "100%", "display": "flex", "flexDirection": "column",
             "backgroundColor": "#F8FAF8", "padding": "10px",
+            "overflowY": "auto", "boxSizing": "border-box",
+        }),
+
+    ], style={"display": "flex", "width": "100vw", "height": "100%"})
+
+
+def temporal_resilience_tab():
+    """ We need to find a way to combine the sustainability metrics database with additional resliene indicators for Hanoi
+    For now we can just use the temporal reslience layout as a placeholder until we redistribute
+    """
+    return html.Div([
+        city_selector(selected_city='hanoi', visible=False),
+
+        html.Div([sidebar], style={
+            "width": "15%",
+            "height": "100%",
+            "display": "flex",
+            "vertical-align": 'top',
+            "flexDirection": "column",
+            "justifyContent": "flex-start",
+        }),
+
+        # ── Content area: toggle + dynamic view container ────────
+        html.Div([
+            html.Div(
+                id="resilience-view-container",
+                children=render_temporal_resilience_layout(),
+                style={"flex": "1", "display": "flex", "minHeight": 0}
+            ),
+        ], style={
+            "flex": "1", "height": "100%", "display": "flex", "flexDirection": "column",
+            "backgroundColor": brand_colors['Teal'], "padding": "10px",
             "overflowY": "auto", "boxSizing": "border-box",
         }),
 
@@ -2125,11 +2131,23 @@ def environment_climate_change_tab(all_quarters, default_view='Biophysical shock
         "class_-1_months_SPEI12": "SPEI-12 Extreme Drought captures the long-duration water balance deficits aggregated by number of months since 1990.",
     }
 
+    infrastructure_options = [
+        {'value': 'canal_drain_ditch', 'label': 'Irrigation Canals / Drainage Ditches'},
+        {'value': 'rivers', 'label': 'Rivers'},
+        {'value': 'streams', 'label': 'Streams'}
+    ]
+
     view_options = ['Biophysical shocks', 'Land-use & Land-cover']
     selected_view = default_view if default_view in view_options else 'Biophysical shocks'
 
     if selected_view == 'Biophysical shocks':
-        initial_view_content = render_temporal_resilience_layout()
+        initial_view_content = render_spatial_climate_resilience_layout(
+            climate_indicator_options,
+            indicator_descriptions,
+            infrastructure_options,
+            n,
+            quarter_marks,
+        )
     elif selected_view == 'Land-use & Land-cover':
         initial_view_content = render_lulc_resilience_layout([])
 
@@ -2141,6 +2159,7 @@ def environment_climate_change_tab(all_quarters, default_view='Biophysical shock
             "quarter_marks": quarter_marks,
             "climate_indicator_options": climate_indicator_options,
             "indicator_descriptions": indicator_descriptions,
+            "infrastructure_options": infrastructure_options,
         }),
         html.Script(f"window.quarterLookup = {json.dumps(all_quarters)};"),
 
@@ -2188,9 +2207,133 @@ def income_growth_distribution_tab():
     return livelihoods_poverty_equity_tab_layout() 
 
 def policies_leadership_tab():
-    """Can repurpose food price resilience indicator tab layout for this piece but not available yet for Hanoi
-    """
-    return 'coming-soon'
+    """Hanoi policies tab layout"""
+    import app as main
+    df_policies = main.df_policies_hanoi
+    
+    return html.Div([
+        city_selector(selected_city='hanoi', visible=False),  # Hidden but present for callback
+        
+        html.Div([sidebar], style={
+            "width": "15%",
+            "height": "100%",
+            "display": "flex",
+            "vertical-align": 'top',
+            "flexDirection": "column",
+            "justifyContent": "flex-start"
+        }),
+
+        # Main content area
+        html.Div([
+            dbc.Card([
+                dbc.CardHeader(html.H3("Food System Policies Database", style=header_style)),
+                dbc.CardBody([
+                    dash_table.DataTable(
+                        id='policies_table',
+                        data=df_policies.to_dict('records'),
+                        columns=[
+                            {"name": str(col), "id": str(col), "presentation": "markdown"} if any(k in str(col).lower() for k in ['link', 'website', 'url']) else {"name": str(col), "id": str(col)}
+                            for col in df_policies.columns
+                        ],
+                        page_size=14,
+                        page_action='native',
+                        filter_action='native',
+                        sort_action='native',
+                        sort_mode='multi',
+                        style_cell={
+                            'textAlign': 'left',
+                            'padding': '2px 6px',
+                            'whiteSpace': 'nowrap',
+                            'overflow': 'hidden',
+                            'textOverflow': 'ellipsis',
+                            'fontSize': 'clamp(0.64em, 0.85vw, 0.9em)',
+                            'lineHeight': '1.1',
+                            'minWidth': '120px',
+                            'maxWidth': '250px',
+                            'height': '36px'
+                        },
+                        style_cell_conditional=[
+                                    {
+                                        'if': {'column_id': 'Title'},
+                                        'width': '30vw',
+                                        'minWidth': '30vw',
+                                        'maxWidth': '30vw'
+                                    }
+                                ], 
+                        style_header={
+                            'fontWeight': 'bold',
+                            'backgroundColor': hero_gradient['50%'],
+                            'color': 'white',
+                            'textAlign': 'center',
+                            'fontSize': 'clamp(0.8em, 1vw, 1.1em)'
+                        },
+                        style_filter={
+                            'backgroundColor': sidebar_colors['Hover (dark card)'],
+                            'fontSize': 'clamp(0.64em, 0.85vw, 0.9em)',
+                            'padding': '5px 6px'
+                        },
+                        style_data_conditional=[
+                            {'if': {'row_index': 'odd'}, 'backgroundColor': '#f9f9f9'}
+                        ],
+                        tooltip_data=[
+                            {
+                                col: {
+                                    'value': str(row[col]) if (col.lower() == 'description' or len(str(row[col])) > 40) else '',
+                                    'type': 'text'
+                                }
+                                for col in df_policies.columns
+                            } for row in df_policies.to_dict('records')
+                        ],
+                        tooltip_duration=4000,
+                        css=[
+                            {
+                                'selector': '.dash-table-tooltip',
+                                'rule': 'position: fixed !important; background-color: ' + sidebar_colors['Hover (dark card)'] + '; color: ' + brand_colors['Black'] + '; border: 2px solid ' + hero_gradient['0%'] + '; padding: 6px; font-size: 14px; box-shadow: 0 4px 8px ' + brand_colors['Black'] + ';'
+                            },
+                            {
+                                'selector': '.dash-table-container .dash-spreadsheet-container',
+                                'rule': 'overflow-x: scroll !important; scrollbar-width: auto;'
+                            },
+                            {
+                                'selector': '.dash-table-container .dash-spreadsheet-container::-webkit-scrollbar',
+                                'rule': 'height: 14px; width: 24px; -webkit-appearance: none;'
+                            },
+                            {
+                                'selector': '.dash-table-container .dash-spreadsheet-container::-webkit-scrollbar-track',
+                                'rule': 'background: #f0f0f0; border-radius: 8px;'
+                            },
+                            {
+                                'selector': '.dash-table-container .dash-spreadsheet-container::-webkit-scrollbar-thumb',
+                                'rule': 'background: ' + hero_gradient['0%'] + '; border-radius: 8px; border: 2px solid #f0f0f0;'
+                            }
+                        ],
+                        style_table={
+                            'overflowX': 'scroll',
+                            'width': '100%',
+                            'height': '100%',
+                            'overflowY': 'auto'
+                        },
+                        style_as_list_view=True
+                    )
+                ], style={"flex": "1", "display": "flex", "flexDirection": "column", "minHeight": "0"})
+            ], style={"height": "100%", "padding": "10px", "box-shadow": "0 2px 6px rgba(0,0,0,0.1)", "backgroundColor": brand_colors['White'], "border-radius": "10px", "display": "flex", "flexDirection": "column"}),
+        ], style={
+            "flex": "1 1 85%",
+            "height": "96vh",
+            "display": "flex",
+            "flexDirection": "column",
+            "overflow": "hidden",
+            "border-radius": "10px",
+            "margin": "10px 10px 10px 10px"
+        })
+
+    ], style={
+        "display": "flex",
+        "width": "100%",
+        "height": "100vh",
+        "backgroundColor": brand_colors['Teal']
+    })
+
 
 def population_growth_migration_tab():
     """ Will need to move some of the temporal resilience pieces here under new classification scheme
@@ -2227,7 +2370,7 @@ def processing_packing_tab():
 def production_systems_input_supply_tab():
     """ Only data available for Hanoi right now is from repurposing vars from resilience temporal trends
     """
-    return "coming-soon"
+    return temporal_resilience_tab()
 
 def retail_markerting_tab():
     """ Only data available for Hanoi right now is from repurposing vars from resilience temporal trends
@@ -2248,41 +2391,8 @@ def economic_tab():
 # NEW TAB LAYOUTS ==== CROSS-CUTTING FACTORS ====
 
 def governance_tab():
-    """
-    Will need to combine policies and stakeholder database pages, perhaps sub-tab dropdown
-    """
     return governance_stakeholders_tab_layout()
 
-def resilience_tab():
-    """ We need to find a way to combine the sustainability metrics database with additional resliene indicators for Hanoi
-    For now we can just use the temporal reslience layout as a placeholder until we redistribute
-    """
-    return html.Div([
-        city_selector(selected_city='hanoi', visible=False),
-
-        html.Div([sidebar], style={
-            "width": "15%",
-            "height": "100%",
-            "display": "flex",
-            "vertical-align": 'top',
-            "flexDirection": "column",
-            "justifyContent": "flex-start",
-        }),
-
-        # ── Content area: toggle + dynamic view container ────────
-        html.Div([
-            html.Div(
-                id="resilience-view-container",
-                children=render_temporal_resilience_layout(),
-                style={"flex": "1", "display": "flex", "minHeight": 0}
-            ),
-        ], style={
-            "flex": "1", "height": "100%", "display": "flex", "flexDirection": "column",
-            "backgroundColor": brand_colors['Teal'], "padding": "10px",
-            "overflowY": "auto", "boxSizing": "border-box",
-        }),
-
-    ], style={"display": "flex", "width": "100vw", "height": "100%"})
 
 
 # NEW TAB LAYOUTS ==== OUTCOMES ====
