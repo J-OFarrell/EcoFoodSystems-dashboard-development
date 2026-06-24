@@ -1659,7 +1659,7 @@ def render_spatial_climate_resilience_layout(climate_indicator_options, indicato
                         options=climate_indicator_options,
                         value="ag_area_ha",  # Default value
                         clearable=False,
-                        style={"zIndex": "2000", "marginBottom": "10px"}
+                        style={"zIndex": "4000", "marginBottom": "10px"}
                     ),
                     dbc.Card([
                         dbc.CardBody([
@@ -1680,14 +1680,14 @@ def render_spatial_climate_resilience_layout(climate_indicator_options, indicato
                         "height": "auto", "padding": "0", "marginBottom": "0",
                         "backgroundColor": "#1d574f", "borderRadius": "8px",
                         "border": "none", "borderLeft": "4px solid #4e998c",
-                        "overflow": "hidden",
+                        "overflow": "hidden"
                     }),
                 ], style={"padding": "16px 20px"})
             ], style={
                 "height": "auto", "padding": "0", "marginBottom": "10px",
                 "boxShadow": "0 2px 12px rgba(0,0,0,0.08)",
                 "backgroundColor": brand_colors['White'], "borderRadius": "12px",
-                "zIndex": "2000", "position": "relative"
+                "position": "relative"
             }),
 
             # ── Date slider ──────────────────────────────────────
@@ -1744,9 +1744,8 @@ def render_spatial_climate_resilience_layout(climate_indicator_options, indicato
                 "height": "auto", "padding": "0", "marginBottom": "10px",
                 "boxShadow": "0 2px 12px rgba(0,0,0,0.08)",
                 "backgroundColor": brand_colors['White'], "borderRadius": "12px",
-                "zIndex": "2000", "position": "relative"
+                "zIndex": "100", "position": "relative"
             }),
-
 
             #html.Div(id="region-kpi-cards", className="mt-3", style={
             #    "backgroundColor": "#FFFFFF",

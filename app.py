@@ -4027,6 +4027,8 @@ def _build_drought_map_cached(slider_idx, indicator, min_ag_area=0, infrastructu
         if cb_tickvals is not None:
             colorbar_map.update(dict(tickmode='array', tickvals=cb_tickvals, ticktext=cb_ticktext))
 
+        choro_opacity = 0.78 if not infrastructure_layers else 0.5
+
         fig.add_trace(go.Choroplethmapbox(
             geojson=resilience_base_geojson,
             featureidkey=commune_featureidkey,
@@ -4035,7 +4037,7 @@ def _build_drought_map_cached(slider_idx, indicator, min_ag_area=0, infrastructu
             text=overlay[hover_label_col].astype(str) if hover_label_col else overlay[commune_join_key].astype(str),
             colorscale=cfg["colorscale"],
             zmin=zmin, zmax=zmax,
-            marker=dict(opacity=0.78, line=dict(color="white", width=0.4)),
+            marker=dict(opacity=choro_opacity, line=dict(color="white", width=0.4)),
             showscale=True,
             colorbar=colorbar_map,
             hovertemplate=(
