@@ -590,92 +590,114 @@ body, * {
 .dash-sidebar-card--dark .dash-sidebar-pillar-card {
     background-color: transparent !important;
     border: none !important;
+    border-radius: 0 !important;
+    overflow: visible !important;
 }
 
-/* Pillar section header buttons */
+/* Pillar list — no extra gap or padding; dividers are handled via sibling selector */
+.dash-sidebar-card--dark .dash-sidebar-pillar-list {
+    gap: 0 !important;
+    padding: 0 !important;
+}
+
+/* Thin divider above each pillar group except the first */
+.dash-sidebar-card--dark .dash-sidebar-pillar-list .dash-sidebar-pillar-card + .dash-sidebar-pillar-card {
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+/* Pillar section header — plain non-interactive text label */
 .dash-sidebar-card--dark .dash-sidebar-pillar-toggle {
-    color: #ffffffe8 !important;
+    width: 100%;
+    text-align: left;
+    border: none !important;
     background: transparent !important;
+    color: #FFFFFF !important;
     font-size: 15px !important;
-    font-weight: 600 !important;
-    padding: 16px 14px !important;
-    border-radius: 8px !important;
-    border-color: rgba(255, 255, 255, 0.15) !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.5px !important;
+    text-transform: uppercase;
+    padding: 16px 16px 6px 16px !important;
+    border-radius: 0 !important;
+    cursor: default !important;
+    pointer-events: none;
     opacity: 1 !important;
-    transition: all 0.2s ease !important;
-    cursor: pointer !important;
+    transition: none !important;
+    display: block;
+    line-height: 1.2;
 }
 
 .dash-sidebar-card--dark .dash-sidebar-pillar-toggle:hover {
-    background-color: #E8F3F0 !important;
-    color: #1d574f !important;
-}
-
-/* Active pillar — collapse is open */
-.dash-sidebar-card--dark .dash-sidebar-pillar-card:has(.collapse.show) .dash-sidebar-pillar-toggle {
-    background-color: #2A7A6F !important;
+    background: transparent !important;
     color: #FFFFFF !important;
 }
 
-/* Individual indicator buttons inside a collapsed pillar */
+/* Indicator buttons — active/available */
 .dash-sidebar-card--dark .dash-sidebar-subtab-btn {
+    width: calc(100% - 16px) !important;
+    display: block !important;
+    text-align: left;
+    border: none !important;
+    border-left: 3px solid transparent !important;
+    border-radius: 6px !important;
+    background: rgba(255, 255, 255, 0.1) !important;
     color: #FFFFFF !important;
-    background: #e8f3f09c !important;
-    border-color: rgba(255, 255, 255, 0.15) !important;
-    font-size: 12px !important;
-    font-weight: 600 !important;
-    padding: 16px 14px !important;
-    border-radius: 8px !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    line-height: 1.3;
+    padding: 10px 12px 10px 24px !important;
+    margin: 3px 8px !important;
     opacity: 1 !important;
     transition: all 0.2s ease !important;
     cursor: pointer !important;
+    box-shadow: none !important;
 }
 
 .dash-sidebar-card--dark .dash-sidebar-subtab-btn:hover:not(:disabled) {
-    background-color: #E8F3F0 !important;
-    color: #1d574f !important;
+    background: rgba(255, 255, 255, 0.18) !important;
+    border-left-color: #bbce8a !important;
+    color: #FFFFFF !important;
 }
 
-/* Adding styling for sub-domain dropdown group to match the dark sidebar theme */
-.dash-sidebar-subdomain-group {
-    padding: 8px !important;
-    max-height: 42vh !important;
-    overflow-y: auto !important;
-    border-radius: 8px !important;
+/* Active / focused indicator */
+.dash-sidebar-card--dark .dash-sidebar-subtab-btn.active,
+.dash-sidebar-card--dark .dash-sidebar-subtab-btn:focus {
+    background: rgba(255, 255, 255, 0.2) !important;
+    border-left-color: #4e998c !important;
+    font-weight: 700 !important;
+    color: #FFFFFF !important;
+    outline: none !important;
 }
 
+/* Coming soon / disabled indicator buttons */
+.dash-sidebar-card--dark .dash-sidebar-subtab-btn:disabled,
+.dash-sidebar-card--dark .dash-sidebar-subtab-btn[disabled] {
+    opacity: 0.35 !important;
+    cursor: not-allowed !important;
+    color: #bbce8a !important;
+    background: transparent !important;
+    border-left: 3px solid transparent !important;
+}
+
+/* "Coming soon" sub-label inside disabled buttons */
+.dash-sidebar-card--dark .dash-landing-btn-coming-soon {
+    font-size: 11px !important;
+    font-style: italic !important;
+    font-weight: normal !important;
+    color: rgba(255, 255, 255, 0.4) !important;
+    opacity: 1 !important;
+    display: block;
+    margin-top: 3px;
+    letter-spacing: 0;
+}
+
+/* Indicator list container — flat, no scroll cap */
 .dash-sidebar-card--dark .dash-sidebar-subtab-group {
     display: flex !important;
     flex-direction: column !important;
-    gap: 4px !important;
-    padding: 4px 0 !important;
-}
-
-/* Sub-domain Details/Summary in dark sidebar */
-.dash-sidebar-card--dark .dash-sidebar-subdomain-group {
-    background: transparent !important;
-    padding: 4px 0 !important;
-}
-
-.dash-sidebar-card--dark .dash-sidebar-subdomain-card {
-    background: transparent !important;
-    border: none !important;
-}
-
-.dash-sidebar-card--dark .dash-sidebar-subdomain-toggle {
-    color: rgba(255, 255, 255, 0.7) !important;
-    background: rgba(255, 255, 255, 0.07) !important;
-    font-size: 0.72em !important;
-    font-weight: 700 !important;
-    letter-spacing: 0.06em !important;
-    padding: 7px 12px !important;
-    border-radius: 6px !important;
-    cursor: pointer !important;
-}
-
-.dash-sidebar-card--dark .dash-sidebar-subdomain-toggle:hover {
-    background: rgba(255, 255, 255, 0.14) !important;
-    color: #FFFFFF !important;
+    gap: 0 !important;
+    padding: 0 0 8px 0 !important;
+    max-height: none !important;
+    overflow-y: visible !important;
 }
 
 /* Home button: white bg, dark teal text */
@@ -687,6 +709,20 @@ body, * {
 .dash-sidebar-card--dark .dash-sidebar-home-btn:hover {
     background-color: #E8F3F0 !important;
     color: #1d574f !important;
+}
+
+/* Custom thin scrollbar for the sidebar */
+.dash-sidebar-card--dark::-webkit-scrollbar {
+    width: 4px;
+}
+
+.dash-sidebar-card--dark::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 2px;
+}
+
+.dash-sidebar-card--dark::-webkit-scrollbar-track {
+    background: transparent;
 }
 
 /* ===================== Vendor page transport toggle buttons ===================== */

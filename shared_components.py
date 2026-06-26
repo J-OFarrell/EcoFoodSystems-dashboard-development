@@ -268,37 +268,28 @@ def make_sidebar(selected_city='hanoi', dark=False):
     pillar_sections = []
     for pillar in _SIDEBAR_PILLARS:
         subdomain_groups = pillar_subdomain_items.get(pillar['key'], {})
-        subdomain_sections = []
-        for subdomain_name, subdomain_buttons in subdomain_groups.items():
-            subdomain_sections.append(
-                html.Details(
-                    [
-                        html.Summary(subdomain_name, className='dash-sidebar-subdomain-toggle'),
-                        html.Div(subdomain_buttons, className='dash-sidebar-subtab-group'),
-                    ],
-                    className='dash-sidebar-subdomain-card'
-                )
-            )
 
-        if not subdomain_sections:
-            subdomain_sections = [
+        all_indicator_buttons = []
+        for subdomain_buttons in subdomain_groups.values():
+            all_indicator_buttons.extend(subdomain_buttons)
+
+        if not all_indicator_buttons:
+            all_indicator_buttons = [
                 html.Div('No indicators available yet for this city.', className='dash-sidebar-empty-text')
             ]
 
         pillar_sections.append(
             html.Div([
                 html.Button(
-                    [
-                        html.Span(pillar["label"]),
-                    ],
+                    [html.Span(pillar["label"])],
                     id=f"pillar-toggle-{pillar['key']}",
                     n_clicks=0,
                     className="dash-sidebar-pillar-toggle",
                 ),
                 dbc.Collapse(
-                    html.Div(subdomain_sections, className="dash-sidebar-subdomain-group"),
+                    html.Div(all_indicator_buttons, className="dash-sidebar-subtab-group"),
                     id=f"pillar-collapse-{pillar['key']}",
-                    is_open=False,
+                    is_open=True,
                 ),
             ], className="dash-sidebar-pillar-card")
         )
@@ -310,9 +301,8 @@ def make_sidebar(selected_city='hanoi', dark=False):
         html.Div(home_button, className="dash-sidebar-home-wrap"),
         html.Div(pillar_sections, className="dash-sidebar-pillar-list"),
     ], className=card_class, style={
-        #"boxShadow": "0 2px 8px rgba(0,0,0,0.08)",
         "borderRadius": "0px",
-        "padding": "10px",
+        "padding": "8px 0",
         "height": "100%",
         "width": "100%",
         "display": "flex",
