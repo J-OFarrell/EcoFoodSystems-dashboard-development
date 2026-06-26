@@ -408,17 +408,18 @@ body, * {
 .dash-sidebar-subdomain-group {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 6px;
     padding: 6px 0;
     max-height: 42vh;
     overflow-y: auto;
 }
 
 .dash-sidebar-subdomain-card {
-    border: none;
-    background: #ffffffc8;
+    border: 1px solid rgba(49, 55, 21, 0.12);
+    background: #ffffffd9;
+    border-radius: 8px;
     line-height: 1.25;
-    padding: 4px 2px;
+    padding: 3px;
     box-shadow: 0 1px 4px rgba(0,0,0,0.06);
 }
 
@@ -437,6 +438,17 @@ body, * {
 
 .dash-sidebar-subdomain-toggle:hover {
     background: rgba(147, 159, 92, 0.35);
+}
+
+.dash-sidebar-subdomain-toggle::after {
+    content: "▸";
+    float: right;
+    color: rgba(49, 55, 21, 0.65);
+    transition: transform 0.2s ease;
+}
+
+.dash-sidebar-subdomain-card[open] .dash-sidebar-subdomain-toggle::after {
+    transform: rotate(90deg);
 }
 
 /* ===================== Hero tab bar ===================== */
@@ -629,6 +641,7 @@ body, * {
 .dash-sidebar-card--dark .dash-sidebar-pillar-toggle:hover {
     background: transparent !important;
     color: #FFFFFF !important;
+    border-left-color: #E8F0DA !important;
 }
 
 /* Indicator buttons — active/available */
@@ -698,6 +711,40 @@ body, * {
     padding: 0 0 8px 0 !important;
     max-height: none !important;
     overflow-y: visible !important;
+}
+
+/* Sub-domain Details/Summary in dark sidebar */
+.dash-sidebar-card--dark .dash-sidebar-subdomain-group {
+    background: transparent !important;
+    padding: 6px 2px !important;
+}
+
+.dash-sidebar-card--dark .dash-sidebar-subdomain-card {
+    background: rgba(7, 32, 29, 0.16) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 8px !important;
+    box-shadow: none !important;
+}
+
+.dash-sidebar-card--dark .dash-sidebar-subdomain-toggle {
+    color: rgba(255, 255, 255, 0.82) !important;
+    background: rgba(255, 255, 255, 0.09) !important;
+    border-left: 3px solid rgba(255, 255, 255, 0.34) !important;
+    font-size: 0.76em !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.06em !important;
+    padding: 8px 12px !important;
+    border-radius: 6px !important;
+    cursor: pointer !important;
+}
+
+.dash-sidebar-card--dark .dash-sidebar-subdomain-toggle:hover {
+    background: rgba(255, 255, 255, 0.14) !important;
+    color: #FFFFFF !important;
+}
+
+.dash-sidebar-card--dark .dash-sidebar-subdomain-toggle::after {
+    color: rgba(255, 255, 255, 0.78) !important;
 }
 
 /* Home button: white bg, dark teal text */
@@ -819,3 +866,4 @@ body, * {
 .emdat-tab-inactive:hover {
     background: linear-gradient(135deg, #bbce8a 0%, #939f5c 100%);
 }
+
