@@ -404,6 +404,16 @@ body, * {
     padding: 4px 2px;
 }
 
+.dash-sidebar-subdomain-header {
+    font-size: 12px;
+    font-weight: 600;
+    color: #3f4620;
+    opacity: 0.75;
+    padding: 8px 8px 4px 16px;
+    letter-spacing: 0.04em;
+    line-height: 1.2;
+}
+
 /* Sub-domain details/summary group */
 .dash-sidebar-subdomain-group {
     display: flex;
@@ -614,51 +624,50 @@ body, * {
 
 /* Thin divider above each pillar group except the first */
 .dash-sidebar-card--dark .dash-sidebar-pillar-list .dash-sidebar-pillar-card + .dash-sidebar-pillar-card {
-    border-top: 1px solid rgba(255, 255, 255, 0.15);
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
 }
 
-/* Pillar section header — plain non-interactive text label */
+/* Pillar section header — clickable to expand/collapse */
 .dash-sidebar-card--dark .dash-sidebar-pillar-toggle {
     width: 100%;
     text-align: left;
     border: none !important;
     background: transparent !important;
     color: #FFFFFF !important;
-    font-size: 15px !important;
+    font-size: 14px !important;
     font-weight: 700 !important;
     letter-spacing: 0.5px !important;
     text-transform: uppercase;
-    padding: 16px 16px 6px 16px !important;
+    padding: 12px 16px !important;
     border-radius: 0 !important;
-    cursor: default !important;
-    pointer-events: none;
-    opacity: 1 !important;
-    transition: none !important;
+    cursor: pointer !important;
+    opacity: 0.85 !important;
+    transition: opacity 0.2s ease !important;
     display: block;
     line-height: 1.2;
 }
 
 .dash-sidebar-card--dark .dash-sidebar-pillar-toggle:hover {
     background: transparent !important;
+    opacity: 1 !important;
     color: #FFFFFF !important;
-    border-left-color: #E8F0DA !important;
 }
 
 /* Indicator buttons — active/available */
 .dash-sidebar-card--dark .dash-sidebar-subtab-btn {
-    width: calc(100% - 16px) !important;
+    width: calc(100% - 28px) !important;
     display: block !important;
     text-align: left;
     border: none !important;
     border-left: 3px solid transparent !important;
     border-radius: 6px !important;
-    background: rgba(255, 255, 255, 0.1) !important;
+    background: rgba(255, 255, 255, 0.08) !important;
     color: #FFFFFF !important;
     font-size: 13px !important;
     font-weight: 500 !important;
     line-height: 1.3;
-    padding: 10px 12px 10px 24px !important;
-    margin: 3px 8px !important;
+    padding: 9px 12px !important;
+    margin: 2px 8px 2px 20px !important;
     opacity: 1 !important;
     transition: all 0.2s ease !important;
     cursor: pointer !important;
@@ -666,15 +675,15 @@ body, * {
 }
 
 .dash-sidebar-card--dark .dash-sidebar-subtab-btn:hover:not(:disabled) {
-    background: rgba(255, 255, 255, 0.18) !important;
+    background: rgba(255, 255, 255, 0.16) !important;
     border-left-color: #bbce8a !important;
     color: #FFFFFF !important;
 }
 
-/* Active / focused indicator */
+/* Currently selected indicator */
 .dash-sidebar-card--dark .dash-sidebar-subtab-btn.active,
 .dash-sidebar-card--dark .dash-sidebar-subtab-btn:focus {
-    background: rgba(255, 255, 255, 0.2) !important;
+    background: rgba(255, 255, 255, 0.18) !important;
     border-left-color: #4e998c !important;
     font-weight: 700 !important;
     color: #FFFFFF !important;
@@ -689,6 +698,7 @@ body, * {
     color: #bbce8a !important;
     background: transparent !important;
     border-left: 3px solid transparent !important;
+    pointer-events: none !important;
 }
 
 /* "Coming soon" sub-label inside disabled buttons */
@@ -703,14 +713,28 @@ body, * {
     letter-spacing: 0;
 }
 
-/* Indicator list container — flat, no scroll cap */
+/* Vertical line connector container */
 .dash-sidebar-card--dark .dash-sidebar-subtab-group {
     display: flex !important;
     flex-direction: column !important;
     gap: 0 !important;
-    padding: 0 0 8px 0 !important;
+    padding: 4px 0 8px 0 !important;
+    margin-left: 16px !important;
+    border-left: 2px solid rgba(255, 255, 255, 0.2) !important;
     max-height: none !important;
     overflow-y: visible !important;
+}
+
+/* Subdomain group header — non-clickable label inside expanded pillar */
+.dash-sidebar-card--dark .dash-sidebar-subdomain-header {
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    color: rgba(255, 255, 255, 0.75) !important;
+    padding: 10px 8px 4px 32px !important;
+    letter-spacing: 0.04em !important;
+    text-transform: none;
+    line-height: 1.2;
+    cursor: default;
 }
 
 /* Sub-domain Details/Summary in dark sidebar */

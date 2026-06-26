@@ -354,12 +354,16 @@ def make_sidebar(selected_city='hanoi', dark=False):
     for pillar in _SIDEBAR_PILLARS:
         subdomain_groups = pillar_subdomain_items.get(pillar['key'], {})
 
-        all_indicator_buttons = []
-        for subdomain_buttons in subdomain_groups.values():
-            all_indicator_buttons.extend(subdomain_buttons)
+        group_content = []
+        for subdomain_label, buttons in subdomain_groups.items():
+            if subdomain_label and subdomain_label != 'Other':
+                group_content.append(
+                    html.Div(subdomain_label, className="dash-sidebar-subdomain-header")
+                )
+            group_content.extend(buttons)
 
-        if not all_indicator_buttons:
-            all_indicator_buttons = [
+        if not group_content:
+            group_content = [
                 html.Div('No indicators available yet for this city.', className='dash-sidebar-empty-text')
             ]
 
@@ -372,9 +376,9 @@ def make_sidebar(selected_city='hanoi', dark=False):
                     className="dash-sidebar-pillar-toggle",
                 ),
                 dbc.Collapse(
-                    html.Div(all_indicator_buttons, className="dash-sidebar-subtab-group"),
+                    html.Div(group_content, className="dash-sidebar-subtab-group"),
                     id=f"pillar-collapse-{pillar['key']}",
-                    is_open=True,
+                    is_open=False,
                 ),
             ], className="dash-sidebar-pillar-card")
         )
