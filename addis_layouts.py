@@ -144,14 +144,14 @@ def governance_stakeholders_tab_layout():
                         style_as_list_view=True
                     )
                 ], style={"flex": "1", "display": "flex", "flexDirection": "column", "minHeight": "0"})
-            ], style={"height": "100%", "padding": "10px", "box-shadow": "0 2px 6px rgba(0,0,0,0.1)", "backgroundColor": brand_colors['White'], "border-radius": "10px", "display": "flex", "flexDirection": "column"}),
+            ], style={"height": "100%", "padding": "10px", "boxShadow": "0 2px 12px rgba(0,0,0,0.08)", "backgroundColor": "#FFFFFF", "borderRadius": "12px", "display": "flex", "flexDirection": "column"}),
         ], style={
             "flex": "1 1 85%",
             "height": "96vh",
             "display": "flex",
             "flexDirection": "column",
             "overflow": "hidden",
-            "border-radius": "10px",
+            "borderRadius": "12px",
             "margin": "10px 10px 10px 10px"
         })
 
@@ -159,7 +159,7 @@ def governance_stakeholders_tab_layout():
         "display": "flex",
         "width": "100%",
         "height": "100vh",
-        "backgroundColor": brand_colors['Teal']
+        "backgroundColor": "#F8FAF8"
     })
 
 
@@ -279,23 +279,23 @@ def storage_distribution_tab_layout():
                                        "height":"10%"}),
 
                     ],style={"display": "flex", "flexDirection": "column", "height": "100%"})
-                ],style={**card_style, "height": "90vh", "width":"60vw"}),
+                ],style={**card_style, "height": "90vh", "width":"60vw", "borderRadius": "12px", "boxShadow": "0 2px 12px rgba(0,0,0,0.08)"}),
 
             ], style={
-                "flex": "1 1 60%",  
+                "flex": "1 1 60%",
                 "height": "calc(100vh - 20px)",
                 "display": "flex",
                 "flexDirection": "column",
                 "padding": "10px",
                 "margin":"0",
-                "backgroundColor": brand_colors['Teal'],
-                "marginBottom": "auto" 
+                "backgroundColor": "#FFFFFF",
+                "marginBottom": "auto"
             }),
         ], style={
-                    "display": "flex", 
-                    "width": "100%", 
+                    "display": "flex",
+                    "width": "100%",
                     "height": "100%",
-                    "backgroundColor": brand_colors['Teal']
+                    "backgroundColor": "#F8FAF8"
         })
 
 
@@ -342,11 +342,11 @@ def livelihoods_poverty_equity_tab_layout():
                                     })
                             ])
                             ], style={  "flex": "0 0 auto",
-                                        "padding":"6px" ,
-                                        "margin-bottom": "5px",
-                                        "box-shadow": "0 2px 6px rgba(0,0,0,0.1)",
-                                        "backgroundColor": brand_colors['White'],
-                                        "border-radius": "10px"}),
+                                        "padding":"6px",
+                                        "marginBottom": "16px",
+                                        "boxShadow": "0 2px 12px rgba(0,0,0,0.08)",
+                                        "backgroundColor": "#FFFFFF",
+                                        "borderRadius": "12px"}),
 
         html.Div([
             dbc.Card([
@@ -384,10 +384,10 @@ def livelihoods_poverty_equity_tab_layout():
                                     })
                     ], style={
                                 "flex": "1 1 auto",
-                                "padding":"6px" ,
-                                #"box-shadow": "0 2px 6px rgba(0,0,0,0.1)",
-                                "backgroundColor": brand_colors['White'],
-                                "border-radius": "10px",
+                                "padding":"6px",
+                                "boxShadow": "0 2px 12px rgba(0,0,0,0.08)",
+                                "backgroundColor": "#FFFFFF",
+                                "borderRadius": "12px",
                                 "overflow": "hidden",
                                 "display": "flex",
                                 "flexDirection": "column"
@@ -395,13 +395,13 @@ def livelihoods_poverty_equity_tab_layout():
 
                     ], style={
                         "height": "100%",
-                        "backgroundColor": brand_colors['Light Teal'],
-                        "border-radius": "0",
+                        "backgroundColor": "#FFFFFF",
+                        "borderRadius": "0",
                         "margin": "0",
                         "display": "flex",
                         "flexDirection": "column",
                         "justifyContent": "flex-start",
-                        "box-sizing": "border-box",
+                        "boxSizing": "border-box",
                         "zIndex": 2,
                         "position": "relative",
                     }),
@@ -412,7 +412,7 @@ def livelihoods_poverty_equity_tab_layout():
         "width": "min(40%)",
         "height": "100%",
         "padding": "10px",
-        "backgroundColor": brand_colors['Light Teal']
+        "backgroundColor": "#FFFFFF"
         }),
 
         # Right panel: map, full height
@@ -432,12 +432,12 @@ def livelihoods_poverty_equity_tab_layout():
             "height": "100%",
             "padding": "0",
             "margin": "0",
-            "backgroundColor": brand_colors['Light Teal'],
-            "border-radius": "0",
+            "backgroundColor": "#FFFFFF",
+            "borderRadius": "0",
             "display": "flex",
             "alignItems": "stretch",
             "justifyContent": "center",
-            "box-sizing": "border-box",
+            "boxSizing": "border-box",
             "zIndex": 1000,
             "position": "relative",
         })
@@ -446,7 +446,7 @@ def livelihoods_poverty_equity_tab_layout():
         "display": "flex",
         "width": "100vw",
         "height": "100vh",
-        "backgroundColor": brand_colors['Teal'],
+        "backgroundColor": "#F8FAF8",
     })
 
 
@@ -523,13 +523,13 @@ def sdg_indicator_atlas_tab_layout():
                     ])
                 ])
             ], style={
-                "marginBottom": "15px",
-                "box-shadow": "0 2px 6px rgba(0,0,0,0.1)",
-                "backgroundColor": brand_colors['White'],
-                "border-radius": "10px",
+                "marginBottom": "16px",
+                "boxShadow": "0 2px 12px rgba(0,0,0,0.08)",
+                "backgroundColor": "#FFFFFF",
+                "borderRadius": "12px",
                 "padding": "10px"
             }),
-            
+
             # Table
             dbc.Card([
                 dbc.CardHeader(html.H3("Sustainability Metrics & Indicators", style=header_style)),
@@ -623,9 +623,9 @@ def sdg_indicator_atlas_tab_layout():
             ], style={
                 "height": "auto",
                 "overflowY":"auto",
-                "box-shadow": "0 2px 6px rgba(0,0,0,0.1)",
-                "backgroundColor": brand_colors['White'],
-                "border-radius": "10px",
+                "boxShadow": "0 2px 12px rgba(0,0,0,0.08)",
+                "backgroundColor": "#FFFFFF",
+                "borderRadius": "12px",
                 "padding": "10px"
             }),
         ], style={
@@ -634,14 +634,15 @@ def sdg_indicator_atlas_tab_layout():
             "display": "flex",
             "flexDirection": "column",
             "overflow": 'auto',
-            "border-radius": "10px",
+            "borderRadius": "12px",
+            "backgroundColor": "#FFFFFF",
             'margin': "10px 10px 10px 10px"
         })
     ], style={
         "display": "flex",
         "width": "100%",
         "height": "100%",
-        "backgroundColor": brand_colors['Teal']
+        "backgroundColor": "#F8FAF8"
     })
 
 
@@ -677,14 +678,15 @@ def governance_policies_tab_layout():
             "display": "flex",
             "flexDirection": "column",
             "overflow": "hidden",
-            "border-radius": "10px",
+            "borderRadius": "12px",
+            "backgroundColor": "#FFFFFF",
             'margin': "10px 10px 10px 10px"
         })
     ], style={
         "display": "flex",
         "width": "100%",
         "height": "100vh",
-        "backgroundColor": brand_colors['Teal']
+        "backgroundColor": "#F8FAF8"
     })
 
 
@@ -782,9 +784,9 @@ def _build_policy_documents_content(df_policies, table_id='policies_table'):
         ], style={"flex": "1", "display": "flex", "flexDirection": "column", "minHeight": "0"})
     ], style={
         "height": "100%",
-        "box-shadow": "0 2px 6px rgba(0,0,0,0.1)",
-        "backgroundColor": brand_colors['White'],
-        "border-radius": "10px",
+        "boxShadow": "0 2px 12px rgba(0,0,0,0.08)",
+        "backgroundColor": "#FFFFFF",
+        "borderRadius": "12px",
         "padding": "10px",
         "display": "flex",
         "flexDirection": "column"
@@ -917,13 +919,13 @@ def diets_nutrition_health_tab_layout(selected_city='addis'):
                             "flex": "1 1 85%",
                             "marginLeft": "14px",
                             "padding": "10px",
-                            "backgroundColor": brand_colors['White']})
-    
+                            "backgroundColor": "#FFFFFF"})
+
         ], style={
-                    "display": "flex", 
-                    "width": "100%", 
+                    "display": "flex",
+                    "width": "100%",
                     "height": "100%",
-                    "backgroundColor": brand_colors['Teal']
+                    "backgroundColor": "#F8FAF8"
         })
 
 
@@ -966,18 +968,18 @@ def environment_footprints_tab_layout(selected_city='addis'):
                     )
                 ])
             ], style={
-                "marginBottom": "20px",
-                "box-shadow": "0 2px 6px rgba(0,0,0,0.1)",
-                "backgroundColor": brand_colors['White'],
-                "border-radius": "10px",
+                "marginBottom": "16px",
+                "boxShadow": "0 2px 12px rgba(0,0,0,0.08)",
+                "backgroundColor": "#FFFFFF",
+                "borderRadius": "12px",
                 "padding": "10px"
             }),
-            
+
             # Container for food item cards (populated by callback)
             html.Div(id='food-items-container', style={
                 "display": "grid",
                 "gridTemplateColumns": "repeat(auto-fill, minmax(300px, 1fr))",
-                "gap": "15px",
+                "gap": "16px",
                 "width": "100%"
             }),
 
@@ -985,15 +987,16 @@ def environment_footprints_tab_layout(selected_city='addis'):
             "flex": "1 1 85%",
             "overflowY":'auto',
             "padding": "20px",
+            "backgroundColor": "#FFFFFF",
             "display": "flex",
             "flexDirection": "column"
         })
-        
+
     ], style={
         "display": "flex",
         "width": "100%",
         "height": "100%",
-        "backgroundColor": brand_colors['Teal']
+        "backgroundColor": "#F8FAF8"
     })
 
 
@@ -1034,12 +1037,12 @@ def resilience_tab_layout(selected_city='addis', default_view='Socio-Economic Sh
                     style={"zIndex": "2000", "marginBottom": "0", 'fontSize': 'clamp(0.8em, 1em, 1.4em)', 'width': '100%'}
                 ),
                 style={
-                    "height": "auto", "padding": "6px", "marginBottom": "10px",
-                    "boxShadow": "0 2px 6px rgba(0,0,0,0.1)",
-                    "backgroundColor": brand_colors['White'], "borderRadius": "10px"
+                    "height": "auto", "padding": "6px", "marginBottom": "16px",
+                    "boxShadow": "0 2px 12px rgba(0,0,0,0.08)",
+                    "backgroundColor": "#FFFFFF", "borderRadius": "12px"
                 }
             ),
-            
+
             # KPI cards container for Socio-Economic Shocks view
             html.Div(
                 id="addis-resilience-view-container",
@@ -1048,11 +1051,11 @@ def resilience_tab_layout(selected_city='addis', default_view='Socio-Economic Sh
             ),
         ], style={
             "flex": "1", "height": "100%", "display": "flex", "flexDirection": "column",
-            "backgroundColor": brand_colors['Teal'], "padding": "10px",
+            "backgroundColor": "#FFFFFF", "padding": "10px",
             "overflowY": "auto", "boxSizing": "border-box",
         }),
-        
-    ], style={"display": "flex", "width": "100vw", "height": "100%", 'backgroundColor': brand_colors['Teal']})
+
+    ], style={"display": "flex", "width": "100vw", "height": "100%", "backgroundColor": "#F8FAF8"})
 
 
 def food_accessibility_vendor_properties_tab_layout(selected_city='addis'):
@@ -1317,15 +1320,15 @@ def food_accessibility_vendor_properties_tab_layout(selected_city='addis'):
                     "width": "min(40%)",
                     "height": "100%",
                     "padding": "10px",
-                    "backgroundColor": "#1d574f",
-                    "border-radius": "0",
+                    "backgroundColor": "#FFFFFF",
+                    "borderRadius": "0",
                     "margin": "0",
-                    "box-shadow": "0 2px 8px rgba(0,0,0,0.05)",
+                    "boxShadow": "0 2px 8px rgba(0,0,0,0.05)",
                     "display": "flex",
                     "flexDirection": "column",
                     "justifyContent": "flex-start",
                     "overflowY": "auto",
-                    "box-sizing": "border-box",
+                    "boxSizing": "border-box",
                     "position": "relative",
                 }),
 
@@ -1389,7 +1392,7 @@ def food_accessibility_vendor_properties_tab_layout(selected_city='addis'):
                     "display": "flex",
                     "width": "100%",
                     "height": "100%",
-                    "backgroundColor": "#1d574f"
+                    "backgroundColor": "#F8FAF8"
         })
 
 
