@@ -315,34 +315,34 @@ homepath = os.path.dirname(os.path.abspath(__file__))
 data_root = os.path.join(homepath, "assets", "data")
 
 addis_root = os.path.join(data_root, "addis")
-addis_mpi_dir = os.path.join(addis_root, "mpi")
-addis_stakeholders_dir = os.path.join(addis_root, "stakeholders")
-addis_food_env_dir = os.path.join(addis_root, "food_environment")
-addis_policy_dir = os.path.join(addis_root, "policy")
-addis_environment_dir = os.path.join(addis_root, "environment")
-addis_adm3_dir = os.path.join(addis_root, "aa_adm3_updated")
+addis_mpi_dir = os.path.join(addis_root, "drivers_income-growth-and-distribution")
+addis_stakeholders_dir = os.path.join(addis_root, "cross-cutting-issues_governance")
+addis_food_env_dir = os.path.join(addis_root, "food-environments_vendor-properties")
+addis_policy_dir = os.path.join(addis_root, "drivers_policies-and-leadership")
+addis_environment_dir = os.path.join(addis_root, "drivers_environment-and-climate-change")
+addis_adm3_dir = os.path.join(addis_root, "drivers_income-growth-and-distribution_adm3")
 
 hanoi_root = os.path.join(data_root, "hanoi")
-hanoi_mpi_dir = os.path.join(hanoi_root, "mpi")
-hanoi_stakeholders_dir = os.path.join(hanoi_root, "stakeholders")
-hanoi_policy_dir = os.path.join(hanoi_root, "policy")
-hanoi_supply_dir = os.path.join(hanoi_root, "supply_chain")
-hanoi_affordability_dir = os.path.join(hanoi_root, "affordability")
-hanoi_nutrition_dir = os.path.join(hanoi_root, "nutrition")
-hanoi_food_env_dir = os.path.join(hanoi_root, "food_environment")
-hanoi_resilience_dir = os.path.join(hanoi_root, "resilience")
+hanoi_mpi_dir = os.path.join(hanoi_root, "drivers_income-growth-and-distribution")
+hanoi_stakeholders_dir = os.path.join(hanoi_root, "cross-cutting-issues_governance")
+hanoi_policy_dir = os.path.join(hanoi_root, "drivers_policies-and-leadership")
+hanoi_supply_dir = os.path.join(hanoi_root, "food-supply-chains_production-systems-and-input-supply")
+hanoi_affordability_dir = os.path.join(hanoi_root, "food-environments_food-affordability")
+hanoi_nutrition_dir = os.path.join(hanoi_root, "outcomes_nutritional-status")
+hanoi_food_env_dir = os.path.join(hanoi_root, "food-environments_vendor-properties")
+hanoi_resilience_dir = os.path.join(hanoi_root, "cross-cutting-issues_resilience")
 hanoi_climate_dir = os.path.join(hanoi_resilience_dir, "precomputed_hanoi_climate_vars")
 hanoi_infrastructure_dir = os.path.join(hanoi_resilience_dir, "osm_infrastructure")
 #atlas_csv_path = os.path.join(homepath, "EcoFoodSystems_indicator_architecture - 260326 - Hanoi_rewritten_descriptions_final.csv")
 atlas_csv_path = os.path.join(homepath, "EcoFoodSystems_FCD_aligned.csv")
 
 # Loading and Formatting MPI Data
-MPI = gpd.read_file(os.path.join(addis_mpi_dir, "addis_districts_MPI.geojson"))#.set_index('Dist_Name')
+MPI = gpd.read_file(os.path.join(addis_mpi_dir, "addis_drv_igd_mpi_boundaries.geojson"))#.set_index('Dist_Name')
 MPI['Multidimensional Poverty Index'] = MPI['Multidimensional Poverty Index'].astype(float)
 MPI['Dist_Name'] = MPI['Dist_Name'].astype(str)
 geojson = json.loads(MPI.to_json())
 
-adm3_eth_gdf = gpd.read_file(os.path.join(addis_adm3_dir, "aa_adm3_updated.geojson")).to_crs("EPSG:4326")
+adm3_eth_gdf = gpd.read_file(os.path.join(addis_adm3_dir, "addis_drv_igd_adm3_boundaries.geojson")).to_crs("EPSG:4326")
 adm3_eth_gdf = adm3_eth_gdf.reset_index(drop=True)
 adm3_eth_gdf["adm3_id"] = adm3_eth_gdf.index.astype(str)
 adm3_eth_geojson = json.loads(adm3_eth_gdf[["adm3_id", "ADM3_EN", "geometry"]].to_json())
@@ -359,7 +359,7 @@ for _col in MPI.columns:
         geo_vars.append(_col)
 
 # Loading and Formatting MPI CSV Data (fallback)
-df_mpi = pd.read_csv(os.path.join(addis_mpi_dir, "addis_mpi_long.csv"))
+df_mpi = pd.read_csv(os.path.join(addis_mpi_dir, "addis_drv_igd_mpi_indicators_long.csv"))
 vars_csv = list(df_mpi['Variable'].unique())
 # Universal list of MPI variables (source of truth for dropdown ordering)
 mpi_vars = [
@@ -376,7 +376,7 @@ mpi_vars = [
 variables = [v for v in mpi_vars if v in MPI.columns]
 
 # Loading and Formatting Food Systems Stakeholders Data
-df_sh = pd.read_csv(os.path.join(addis_stakeholders_dir, "addis_stakeholders_cleaned.csv")).dropna(how='any').astype(str)
+df_sh = pd.read_csv(os.path.join(addis_stakeholders_dir, "addis_cci_gov_stk_database_cleaned.csv")).dropna(how='any').astype(str)
 df_sh.rename(columns={'Area of Activity (Food Systems Value Chain)': 'Area of Activity'}, inplace=True)
 
 # Format Website column as clickable markdown links
@@ -483,13 +483,13 @@ accessibility_outlet_options_addis = _build_accessibility_outlet_options_addis(o
 # Loading GeoJSON files for Isochrones (30-minute accessibility polygons)
 isochrones_path = os.path.join(addis_food_env_dir, "isochrones_addis_all")
 #isochrones_geojson_files_addis = sorted(os.listdir(isochrones_path)) if os.path.exists(isochrones_path) else []
-summary_stats_path_addis = os.path.join(addis_food_env_dir, "addis_HRSL_diet_env_subcities.geojson")
+summary_stats_path_addis = os.path.join(addis_food_env_dir, "addis_fev_vp_fenv_subcity_summary.geojson")
 gdf_summary_stats_addis = gpd.read_file(summary_stats_path_addis).to_crs('EPSG:4326')
 #walking_segments_addis = gpd.read_file(os.path.join(addis_food_env_dir, "addis_walking_segments_lst_canopy.geojson")).to_crs('EPSG:4326')
-hex_vars_addis = gpd.read_file(os.path.join(addis_food_env_dir, "population_othervars_hexgrid.geojson")).to_crs('EPSG:4326')
+hex_vars_addis = gpd.read_file(os.path.join(addis_food_env_dir, "addis_fev_vp_fenv_hexgrid_population.geojson")).to_crs('EPSG:4326')
 hex_vars_addis_geojson = json.loads(hex_vars_addis.to_crs("EPSG:4326").to_json())
 
-accessibility_zonal_stats_path_addis = os.path.join(addis_food_env_dir, "accessibility_zonal_stats_percentage.csv")
+accessibility_zonal_stats_path_addis = os.path.join(addis_food_env_dir, "addis_fev_vp_fenv_accessibility_stats.csv")
 
 
 def _load_accessibility_zonal_stats(path):
@@ -607,9 +607,9 @@ metric_direction =      {'density_he': FOOD_ENV_POS_SCALE,
                         'mean_lst': HOT_SCALE}
 
 # Loading supply flow data for Sankey Diagram
-df_sankey = pd.read_csv(os.path.join(hanoi_supply_dir, 'hanoi_supply.csv'))
+df_sankey = pd.read_csv(os.path.join(hanoi_supply_dir, 'hanoi_fsc_psis_supply_flows.csv'))
 
-df_policies_addis = pd.read_csv(os.path.join(addis_policy_dir, 'addis_policy_database_faolex.csv'))#.drop('Unnamed: 0',axis=1)
+df_policies_addis = pd.read_csv(os.path.join(addis_policy_dir, 'addis_drv_pl_pol_faolex.csv'))#.drop('Unnamed: 0',axis=1)
 # Ensure link columns render as markdown links in the DataTable
 if 'Document URL' in df_policies_addis.columns:
     df_policies_addis['Document URL'] = df_policies_addis['Document URL'].apply(
@@ -626,7 +626,7 @@ if 'Available website' in df_policies_addis.columns:
         lambda x: f'[Link Available]({x})' if x and str(x).startswith('http') else '--'
     )
 
-df_indicators = pd.read_csv(os.path.join(addis_policy_dir, 'addis_policy_database_expanded_sdg.csv'))
+df_indicators = pd.read_csv(os.path.join(addis_policy_dir, 'addis_drv_pl_pol_expanded_sdg.csv'))
 
 # Create SDG logos as list of numbers for rendering
 def get_sdg_numbers(row):
@@ -642,18 +642,18 @@ def get_sdg_numbers(row):
 
 df_indicators['SDG Numbers'] = df_indicators.apply(get_sdg_numbers, axis=1)
 
-df_env = pd.read_csv(os.path.join(addis_environment_dir, 'addis_lca_pivot.csv'))
+df_env = pd.read_csv(os.path.join(addis_environment_dir, 'addis_drv_ecc_env_lca_pivot.csv'))
 df_lca = df_env  # Alias for compatibility
 
 # -------------------------- Loading Hanoi Data ------------------------- #
 
 # Hanoi MPI Data (commune level)
-MPI_hanoi = gpd.read_file(os.path.join(hanoi_mpi_dir, "hanoi_communes.geojson"))
+MPI_hanoi = gpd.read_file(os.path.join(hanoi_mpi_dir, "hanoi_drv_igd_mpi_boundaries_communes.geojson"))
 MPI_hanoi['Name'] = MPI_hanoi['Name'].astype(str)
 MPI_hanoi['ma_xa'] = MPI_hanoi['ma_xa'].astype(str)
 
 # Load long-format MPI CSV and pivot to wide, then merge into GeoDataFrame
-df_mpi_hanoi = pd.read_csv(os.path.join(hanoi_mpi_dir, "hanoi_communes_MPI_long.csv"))
+df_mpi_hanoi = pd.read_csv(os.path.join(hanoi_mpi_dir, "hanoi_drv_igd_mpi_indicators_long.csv"))
 df_mpi_wide = df_mpi_hanoi.pivot_table(index='Name', columns='Variable', values='Value').reset_index()
 df_mpi_wide.columns.name = None
 MPI_hanoi = MPI_hanoi.merge(df_mpi_wide, on='Name', how='left')
@@ -671,7 +671,7 @@ for _col in MPI_hanoi.columns:
 geojson_hanoi = json.loads(MPI_hanoi.to_json())
 
 # Hanoi Stakeholders Data
-df_sh_hanoi = pd.read_csv(os.path.join(hanoi_stakeholders_dir, "hanoi_stakeholders.csv")).dropna(how='any').astype(str)
+df_sh_hanoi = pd.read_csv(os.path.join(hanoi_stakeholders_dir, "hanoi_cci_gov_stk_database.csv")).dropna(how='any').astype(str)
 
 if 'Website' in df_sh_hanoi.columns:
     df_sh_hanoi['Website'] = df_sh_hanoi['Website'].apply(
@@ -679,7 +679,7 @@ if 'Website' in df_sh_hanoi.columns:
     )
 
 # Hanoi policy database
-df_policies_hanoi = pd.read_csv(os.path.join(hanoi_policy_dir, 'hanoi_policy_database_cleaned.csv'))#.drop('Unnamed: 0',axis=1)
+df_policies_hanoi = pd.read_csv(os.path.join(hanoi_policy_dir, 'hanoi_drv_pl_pol_database_cleaned.csv'))#.drop('Unnamed: 0',axis=1)
 
 if 'Document Link' in df_policies_hanoi.columns:
     df_policies_hanoi['Document Link'] = df_policies_hanoi['Document Link'].apply(
@@ -691,12 +691,12 @@ if 'Document Link' in df_policies_hanoi.columns:
     )
 
 # Loading GeoJSON files for Food Outlets
-outlets_path_hanoi = os.path.join(hanoi_food_env_dir, "jsons_hanoi_foodoutlets")
-outlets_geojson_files_hanoi = sorted(os.listdir(outlets_path_hanoi))
+#outlets_path_hanoi = os.path.join(hanoi_food_env_dir, "jsons_hanoi_foodoutlets")
+#outlets_geojson_files_hanoi = sorted(os.listdir(outlets_path_hanoi))
 
 # Hanoi food-environment choropleth (minified base geometry + values CSV when available)
-food_env_path_hanoi = os.path.join(hanoi_food_env_dir, "hanoi_diet_env_mapping.geojson")
-food_env_values_path_hanoi = os.path.join(hanoi_food_env_dir, "hanoi_diet_env_mapping_values.csv")
+food_env_path_hanoi = os.path.join(hanoi_food_env_dir, "hanoi_fev_vp_fenv_subcity_summary.geojson")
+food_env_values_path_hanoi = os.path.join(hanoi_food_env_dir, "hanoi_fev_vp_fenv_indicators.csv")
 gdf_food_env_hanoi = None
 try:
     gdf_food_env_hanoi = _load_food_env_layer(
@@ -712,10 +712,10 @@ isochrones_path_hanoi = os.path.join(hanoi_food_env_dir, "isochrones_hanoi")
 isochrones_geojson_files_hanoi = sorted(os.listdir(isochrones_path_hanoi)) if os.path.exists(isochrones_path_hanoi) else []
 
 # Hanoi affordability data
-df_affordability_hanoi = pd.read_csv(os.path.join(hanoi_affordability_dir, 'hanoi_affordability_cleaned.csv'))
+df_affordability_hanoi = pd.read_csv(os.path.join(hanoi_affordability_dir, 'hanoi_fev_aff_afford_indicators_cleaned.csv'))
 
 # Hanoi dietary data
-df_diet_2_hanoi = pd.read_csv(os.path.join(hanoi_nutrition_dir, 'hanoi_health_nutrition_cleaned.csv'))
+df_diet_2_hanoi = pd.read_csv(os.path.join(hanoi_nutrition_dir, 'hanoi_out_ns_nut_health_indicators_cleaned.csv'))
 
 
 def _load_indicator_atlas_records(csv_path):
@@ -771,14 +771,14 @@ atlas_records = _load_indicator_atlas_records(atlas_csv_path)
 
 
 # ── commune climate indicators ───────────────────────────────────────────────
-_climate_csv  = os.path.join(hanoi_climate_dir, "vietnam_climate_resilience_quarterly_v1.csv")
-_communes_path = os.path.join(hanoi_climate_dir, "resilience_communes_base_2025.geojson")
-_islands_path = os.path.join(hanoi_resilience_dir, "vnm_islands.geojson")
+_climate_csv  = os.path.join(hanoi_climate_dir, "hanoi_env_clim_resilience_quarterly_v1.csv")
+_communes_path = os.path.join(hanoi_climate_dir, "hanoi_env_clim_boundaries_communes_2025.geojson")
+_islands_path = os.path.join(hanoi_resilience_dir, "hanoi_cci_res_clim_vietnam_islands.geojson")
 
-_lulc_stats_csv = os.path.join(hanoi_resilience_dir, "lulc_stats.csv")
-_communes_geojson_path = os.path.join(hanoi_mpi_dir, "hanoi_communes.geojson")
-_region_quarterly_path = os.path.join(hanoi_climate_dir, "regional_quarterly_climate.csv")
-_slopes_path = os.path.join(hanoi_climate_dir, "regional_indicator_slopes.csv")
+_lulc_stats_csv = os.path.join(hanoi_resilience_dir, "hanoi_cci_res_lulc_statistics.csv")
+_communes_geojson_path = os.path.join(hanoi_mpi_dir, "hanoi_drv_igd_mpi_boundaries_communes.geojson")
+_region_quarterly_path = os.path.join(hanoi_climate_dir, "hanoi_env_clim_regional_quarterly.csv")
+_slopes_path = os.path.join(hanoi_climate_dir, "hanoi_env_clim_regional_slopes.csv")
 
 
 @lru_cache(maxsize=1)
@@ -876,10 +876,10 @@ def _get_region_quarterly_context():
     }
 
 # Paths for cached EMDAT parquet files (resilience)
-EMDAT_COUNTS_PQ = os.path.join(hanoi_resilience_dir, "emdat_counts.parquet")
-EMDAT_TOTALS_PQ = os.path.join(hanoi_resilience_dir, "emdat_totals.parquet")
-EMDAT_COUNTS_CSV = os.path.join(hanoi_resilience_dir, "emdat_counts.csv")
-EMDAT_TOTALS_CSV = os.path.join(hanoi_resilience_dir, "emdat_totals.csv")
+EMDAT_COUNTS_PQ = os.path.join(hanoi_resilience_dir, "hanoi_cci_res_clim_emdat_counts.parquet")
+EMDAT_TOTALS_PQ = os.path.join(hanoi_resilience_dir, "hanoi_cci_res_clim_emdat_totals.parquet")
+EMDAT_COUNTS_CSV = os.path.join(hanoi_resilience_dir, "hanoi_cci_res_clim_emdat_counts.csv")
+EMDAT_TOTALS_CSV = os.path.join(hanoi_resilience_dir, "hanoi_cci_res_clim_emdat_totals.csv")
 
 def _load_emdat_cached():
     if os.path.exists(EMDAT_COUNTS_PQ) and os.path.exists(EMDAT_TOTALS_PQ):
@@ -1751,6 +1751,14 @@ def _render_subdomain_hub_layout(selected_city, section_title):
 
 
 def _resolve_subdomain_layout(route_city, subdomain_key):
+    # Check if subdomain is marked as coming soon
+    if _is_subdomain_coming_soon(route_city, subdomain_key):
+        return html.Div([
+            html.H3('Coming Soon', style={'textAlign': 'center', 'color': '#9ca3af', 'marginTop': '40px'}),
+            html.P('This section is currently under development. Check back soon!', 
+                   style={'textAlign': 'center', 'color': '#9ca3af', 'fontSize': '16px'})
+        ], style={'padding': '20px'})
+    
     if route_city == 'hanoi':
         if subdomain_key == 'environment-climate-change':
             resilience_ctx = _get_resilience_context()
@@ -2294,12 +2302,12 @@ app.layout = html.Div([
         color="#A51E22",  # optional: brand red
         children=html.Div(id="page-content")
     ),
-    dcc.Store(id='selected-city', data='hanoi'),  # default city
+    dcc.Store(id='selected-city', data='addis'),  # default city
     dcc.Store(id='atlas-open-tab', data=None),
     dcc.Store(id='sh-table-page-size-store', data=13),
 
     dcc.Interval(id='resize-interval', interval=1000, n_intervals=0),
-    html.Div(id="tab-content", children=landing_page_layout(selected_city='hanoi'), style={"width": "100%",
+    html.Div(id="tab-content", children=landing_page_layout(selected_city='addis'), style={"width": "100%",
                                                                        "height": "100%"})
     # Parent container for full page
 ], style={
@@ -3240,6 +3248,9 @@ def filter_by_sdg(*args):
     Input('addis-resilience-view-select', 'value'),
     prevent_initial_call=False,
 )
+def update_addis_resilience_view(selected_view):
+    from addis_layouts import render_addis_resilience_view
+    return render_addis_resilience_view(selected_view)
 
 # Linking the tabs to page content loading 
 @app.callback(
@@ -3887,7 +3898,7 @@ def update_health_trend_hanoi(selected_variable):
 # ── Drought Indicator callback ────────────────────────────────────────────────────────
 
 @lru_cache(maxsize=64)
-def _build_drought_map_cached(slider_idx, indicator, min_ag_area=0, infrastructure_layers=()):
+def _build_drought_map_cached(slider_idx, indicator, min_ag_area=0, infrastructure_layers=(), selected_district=None):
     resilience_ctx = _get_resilience_context()
     commune_climate_df = resilience_ctx["commune_climate_df"]
     communes_unique = resilience_ctx["communes_unique"]
@@ -3913,6 +3924,8 @@ def _build_drought_map_cached(slider_idx, indicator, min_ag_area=0, infrastructu
         margin=dict(l=0, r=0, t=0, b=0),
         showlegend=False,
         coloraxis_showscale=False,
+        uirevision="resilience-map-ui",
+        mapbox_uirevision="resilience-map-ui",
     )
 
     if not all_quarters:
@@ -3935,7 +3948,7 @@ def _build_drought_map_cached(slider_idx, indicator, min_ag_area=0, infrastructu
         keep_cols.append("shapeName")
 
     if isinstance(indicator, str) and (indicator.startswith("class_") or indicator in ("ag_area_ha", "drought_resistance")):
-        spei_csv = os.path.join(hanoi_climate_dir, "static_climate_composites.csv")
+        spei_csv = os.path.join(hanoi_climate_dir, "hanoi_env_clim_static_composites.csv")
         spei_df = pd.read_csv(spei_csv)
         spei_df[commune_join_key] = spei_df[commune_join_key].astype(str)
         df = spei_df[keep_cols].dropna(subset=[col])
@@ -3943,7 +3956,7 @@ def _build_drought_map_cached(slider_idx, indicator, min_ag_area=0, infrastructu
         plot_gdf = communes_unique.merge(df, on=commune_join_key, how="left")
         #print("DEBUG: plot_gdf columns:", plot_gdf.columns)
     else:
-        spei_csv = os.path.join(hanoi_climate_dir, "static_climate_composites.csv")
+        spei_csv = os.path.join(hanoi_climate_dir, "hanoi_env_clim_static_composites.csv")
         spei_df = pd.read_csv(spei_csv)
         spei_df[commune_join_key] = spei_df[commune_join_key].astype(str)
         commune_climate_df = commune_climate_df.merge(spei_df[[commune_join_key, 'ag_area_ha']], on=commune_join_key, how='left')
@@ -4090,6 +4103,41 @@ def _build_drought_map_cached(slider_idx, indicator, min_ag_area=0, infrastructu
                 name=f"{infrastructure_layer} infrastructure",
             ))
 
+    selected_key = str(selected_district).strip() if selected_district is not None else ""
+    if selected_key and selected_key in plot_gdf[commune_join_key].astype(str).values:
+        selected_geom_series = plot_gdf.loc[
+            plot_gdf[commune_join_key].astype(str) == selected_key,
+            "geometry",
+        ]
+        if not selected_geom_series.empty:
+            selected_geom = selected_geom_series.iloc[0]
+            boundary_traces = []
+
+            def _append_polygon_boundary(poly):
+                if poly is None or poly.is_empty:
+                    return
+                x, y = poly.exterior.xy
+                boundary_traces.append(go.Scattermapbox(
+                    lon=list(x),
+                    lat=list(y),
+                    mode='lines',
+                    line=dict(color=brand_colors['White'], width=3),
+                    hoverinfo='skip',
+                    showlegend=False,
+                    name='selected-boundary',
+                ))
+
+            geom_type = getattr(selected_geom, "geom_type", "")
+            if geom_type == "Polygon":
+                _append_polygon_boundary(selected_geom)
+            elif geom_type == "MultiPolygon":
+                for poly in selected_geom.geoms:
+                    _append_polygon_boundary(poly)
+
+            # Draw selected boundary last so it remains the top-most map layer.
+            for boundary_trace in boundary_traces:
+                fig.add_trace(boundary_trace)
+
     cards_payload = []
     if col in region_quarterly.columns:
         for region in sorted(region_quarterly["region"].unique()):
@@ -4137,7 +4185,7 @@ def _build_drought_map_cached(slider_idx, indicator, min_ag_area=0, infrastructu
 
 
 @app.callback(
-    Output("drought-map-container", "children"),
+    Output("resilience-map", "figure"),
     Output("drought-slider-label", "children"),
     Output("date-slider-card", "style"),
     #Output("region-kpi-cards", "children"),
@@ -4145,8 +4193,9 @@ def _build_drought_map_cached(slider_idx, indicator, min_ag_area=0, infrastructu
     Input("climate-indicator-select", "value"),
     Input("ag-area-filter", "value"),
     Input("infrastructure-layer-select", "value"),
+    Input("selected-district", "data"),
 )
-def update_drought_map(slider_idx, indicator, min_ag_area, infrastructure_layer):
+def update_drought_map(slider_idx, indicator, min_ag_area, infrastructure_layer, selected_district):
     if isinstance(infrastructure_layer, (list, tuple, set)):
         selected_layers = tuple(
             str(layer).strip().lower()
@@ -4163,6 +4212,7 @@ def update_drought_map(slider_idx, indicator, min_ag_area, infrastructure_layer)
         indicator or "",
         float(min_ag_area) or 0,
         selected_layers,
+        str(selected_district).strip() if selected_district else None,
     )
     cfg = commune_indicator_cfg.get(indicator or "")
 
@@ -4182,15 +4232,35 @@ def update_drought_map(slider_idx, indicator, min_ag_area, infrastructure_layer)
     #    )
 
     return (
-        dcc.Graph(
-            figure=_figure_from_json(fig_json),
-            config={"displayModeBar": False, "scrollZoom": True},
-            style={"height": "100%", "width": "100%"},
-        ),
+        _figure_from_json(fig_json),
         quarter,
         slider_style,
         #dbc.Row(cards),
     )
+
+
+@app.callback(
+    Output("selected-district", "data"),
+    Input("resilience-map", "clickData"),
+    State("selected-district", "data"),
+    prevent_initial_call=True,
+)
+def persist_selected_district(click_data, prev_selected):
+    if not click_data or not click_data.get("points"):
+        return prev_selected
+
+    point = click_data["points"][0]
+    clicked = point.get("location") or point.get("text") or point.get("hovertext")
+    if clicked is None:
+        return prev_selected
+
+    clicked_key = str(clicked).strip()
+    prev_key = str(prev_selected).strip() if prev_selected else ""
+
+    # Click-to-toggle: clicking the same district again clears selection.
+    if clicked_key == prev_key:
+        return None
+    return clicked_key
 
 
 @app.callback(

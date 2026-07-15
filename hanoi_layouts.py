@@ -286,7 +286,8 @@ def storage_distribution_tab_layout():
             "padding": "10px",
             "margin-left":"20px",
             "alignItems": "center",
-            "marginBottom": "auto" 
+            "marginBottom": "auto",
+            "overflowY": "auto",
         }),
 
         # Sankey + Slider (right)
@@ -346,14 +347,14 @@ def storage_distribution_tab_layout():
             "flexDirection": "column",
             "padding": "10px",
             "margin":"0",
-            "backgroundColor": brand_colors['Teal'],
+            "backgroundColor": sidebar_colors['Hover (dark card)'],
             "marginBottom": "auto" 
         }),
     ], style={
         "display": "flex", 
         "width": "100%", 
         "height": "100%",
-        "backgroundColor": brand_colors['Teal']
+        "backgroundColor": sidebar_colors['Hover (dark card)'],
     })
 
 
@@ -633,11 +634,11 @@ def diets_nutrition_health_tab_layout():
         # KPI cards (left)
         html.Div([
             html.H3("Children under 5 years", style={
-                        "color": brand_colors['Brown'],
+                        "color": sidebar_colors['Hover (light)'],
                         "fontWeight": "bold",
                         "marginTop": "20px",
                         "marginBottom": "15px",
-                        "borderBottom": f"3px solid {brand_colors['Mid green']}",
+                        "borderBottom": f"3px solid {hero_gradient['100%']}",
                         "paddingBottom": "10px"
                     }),
             dbc.Row([
@@ -671,11 +672,11 @@ def diets_nutrition_health_tab_layout():
                     ]),
 
             html.H3("Women of reproductive age", style={
-                        "color": brand_colors['Brown'],
+                        "color": sidebar_colors['Hover (light)'],
                         "fontWeight": "bold",
                         "marginTop": "20px",
                         "marginBottom": "15px",
-                        "borderBottom": f"3px solid {brand_colors['Mid green']}",
+                        "borderBottom": f"3px solid {hero_gradient['100%']}",
                         "paddingBottom": "10px"
                     }),
 
@@ -1130,7 +1131,7 @@ def _build_temporal_time_labels(df):
 def _load_resilience_metadata_df():
     metadata_path = os.path.join(
         os.path.dirname(__file__),
-        "assets", "data", "hanoi", "resilience", "resilience_indicators_ref.csv"
+        "assets", "data", "archive", "hanoi", "resilience", "resilience_indicators_ref.csv"
     )
     try:
         ref_df = pd.read_csv(metadata_path)
@@ -1212,7 +1213,7 @@ def _create_resilience_temporal_kpi_card(df, indicator_col, time_labels, line_co
 def _build_temporal_pillar_section(title, csv_filename, line_color, pillar_num, ref_df):
     data_path = os.path.join(
         os.path.dirname(__file__),
-        "assets", "data", "hanoi", "resilience", csv_filename
+        "assets", "data", "archive", "hanoi", "resilience", csv_filename
     )
 
     try:
@@ -1387,7 +1388,7 @@ def _load_sos_data():
     """Load Resilience_SOS.csv and return annual-averaged DataFrame."""
     sos_path = os.path.join(
         os.path.dirname(__file__),
-        "assets", "data", "hanoi", "resilience", "Resilience_SOS.csv"
+        "assets", "data", "hanoi", "cross-cutting-issues_resilience", "hanoi_cci_res_clim_sos_indicators.csv"
     )
     try:
         df = pd.read_csv(sos_path)
@@ -1823,6 +1824,12 @@ def render_spatial_climate_resilience_layout(climate_indicator_options, indicato
                 ),
                 children=html.Div(
                     id="drought-map-container",
+                    children=dcc.Graph(
+                        id="resilience-map",
+                        figure=go.Figure(),
+                        config={"displayModeBar": False, "scrollZoom": True},
+                        style={"height": "100%", "width": "100%"},
+                    ),
                     style={"height": "100%", "width": "100%"},
                 ),
             ),
@@ -1985,6 +1992,7 @@ def climate_resilience_tab_layout(all_quarters, default_view='Biophysical shocks
 
     return html.Div([
         city_selector(selected_city='hanoi', visible=False),
+        dcc.Store(id="selected-district", data=None),
         dcc.Store(id="climate-indicator-descriptions", data=indicator_descriptions),
         dcc.Store(id="resilience-spatial-data", data={
             "n": n,
@@ -2152,6 +2160,7 @@ def environment_climate_change_tab(all_quarters, default_view='Biophysical shock
 
     return html.Div([
         city_selector(selected_city='hanoi', visible=False),
+        dcc.Store(id="selected-district", data=None),
         dcc.Store(id="climate-indicator-descriptions", data=indicator_descriptions),
         dcc.Store(id="resilience-spatial-data", data={
             "n": n,

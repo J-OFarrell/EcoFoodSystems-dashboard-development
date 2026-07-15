@@ -792,8 +792,6 @@ def _build_policy_documents_content(df_policies, table_id='policies_table'):
 
 
 def _build_socio_economic_shocks_content(df_volatility, df_ufpri):
-    if df_volatility.empty or df_ufpri.empty:
-        return html.Div("No price volatility or UFPRI data available.", style={"color": "#999"})
 
     commodities = sorted(df_volatility['commodity'].unique())
     kpi_cards = []
@@ -823,18 +821,101 @@ def _build_socio_economic_shocks_content(df_volatility, df_ufpri):
     ])
 
 
-def render_addis_resilience_view(selected_view='Socio-Economic Shocks'):
+def _build_sustainability_metrics_content():
+    """Build sustainability metrics table content for resilience tab"""
     import app as main
+    df_indicators = main.df_indicators
+    display_cols = ['Dimensions', 'Components', 'Indicators', 'SDG impact area/target', 'SDG Numbers']
+    df_display = df_indicators[display_cols]
+    
+    return dbc.Card([
+        dbc.CardHeader(html.H3("Sustainability Metrics & Indicators", style=header_style)),
+        dbc.CardBody([
+            dash_table.DataTable(
+                id='indicators_table_resilience',
+                data=df_display.to_dict('records'),
+                columns=[
+                    {"name": "SDG Goals" if col == "SDG Numbers" else str(col), "id": str(col)} 
+                    for col in display_cols
+                ],
+                page_size=14,
+                page_action='native',
+                filter_action='native',
+                sort_action='native',
+                sort_mode='multi',
+                style_cell={
+                    'textAlign': 'left',
+                    'padding': '8px',
+                    'whiteSpace': 'nowrap',
+                    'overflow': 'hidden',
+                    'textOverflow': 'ellipsis',
+                    'fontSize': 'clamp(0.7em, 1vw, 1em)',
+                    'minWidth': '120px',
+                    'maxWidth': '250px',
+                },
+                style_cell_conditional=[
+                    {
+                        'if': {'column_id': 'SDG Numbers'},
+                        'minWidth': '100px',
+                        'maxWidth': '150px',
+                        'textAlign': 'center',
+                    }
+                ],
+                style_header={
+                    'fontWeight': 'bold',
+                    'backgroundColor': brand_colors['Red'],
+                    'color': 'white',
+                    'textAlign': 'center',
+                    'fontSize': 'clamp(0.8em, 1vw, 1.1em)'
+                },
+                style_filter={
+                    'backgroundColor': '#f0f0f0',
+                    'fontSize': 'clamp(0.7em, 0.9vw, 0.95em)',
+                    'padding': '5px'
+                },
+                style_data_conditional=[
+                    {'if': {'row_index': 'odd'}, 'backgroundColor': '#f9f9f9'}
+                ],
+                tooltip_data=[
+                    {
+                        col: {
+                            'value': str(row[col]) if (col.lower() in ['abstract', 'title', 'keywords'] or len(str(row[col])) > 40) else '',
+                            'type': 'text'
+                        } for col in display_cols
+                    } for row in df_display.to_dict('records')
+                ],
+                tooltip_duration=None,
+                style_table={
+                    'overflowX': 'scroll',
+                    'width': '100%',
+                    'height': '100%',
+                    'overflowY': 'auto'
+                },
+                style_as_list_view=True
+            )
+        ], style={"height": "100%", "display": "flex", "flexDirection": "column", "overflowY": "auto", "overflowX": "auto"})
+    ], style={
+        "height": "100%",
+        "box-shadow": "0 2px 6px rgba(0,0,0,0.1)",
+        "backgroundColor": brand_colors['White'],
+        "border-radius": "10px",
+        "padding": "10px",
+        "display": "flex",
+        "flexDirection": "column"
+    })
+
+
+def render_addis_resilience_view(selected_view='Socio-Economic Shocks'):
+    """Render the selected resilience view content"""
 
     if selected_view == 'Socio-Economic Shocks':
-
         volatility_csv_path = os.path.join(
             os.path.dirname(__file__),
-            'assets/data/addis/resilience/addis_rolling_price_volatility.csv'
+            'assets/data/addis/cross-cutting-issues_resilience/addis_cci_res_clim_price_volatility.csv'
         )
         ufpri_csv_path = os.path.join(
             os.path.dirname(__file__),
-            'assets/data/addis/resilience/addis_ufpri_scores.csv'
+            'assets/data/addis/cross-cutting-issues_resilience/addis_cci_res_clim_ufpri_scores.csv'
         )
 
         try:
@@ -848,6 +929,11 @@ def render_addis_resilience_view(selected_view='Socio-Economic Shocks'):
             df_ufpri = pd.DataFrame()
 
         return _build_socio_economic_shocks_content(df_volatility, df_ufpri)
+    
+    elif selected_view == 'Sustainability Metrics Database':
+        return _build_sustainability_metrics_content()
+    
+
 
 
 def diets_nutrition_health_tab_layout(selected_city='addis'):
@@ -998,14 +1084,13 @@ def environment_footprints_tab_layout(selected_city='addis'):
 
 
 def resilience_tab_layout(selected_city='addis', default_view='Socio-Economic Shocks'):
-    """Addis Ababa resilience tab layout with Socio-Economic Shocks (price volatility)"""
+    """Addis Ababa resilience tab layout with Socio-Economic Shocks (price volatility) and Sustainability Metrics"""
     selected_view = default_view or 'Socio-Economic Shocks'
     
     # Define resilience view options
     view_options = [
         'Socio-Economic Shocks',
-        #'Biophysical Shocks (coming soon)',
-        'Resilience Indicator Trends (coming soon)',
+        'Sustainability Metrics Database',
     ]
     
     return html.Div([
@@ -1465,7 +1550,7 @@ def governance_tab():
 def resilience_tab():
     """ Right now the SDG database is the only thing that fits exclusively here"""
     return resilience_tab_layout(selected_city='addis', default_view='Socio-Economic Shocks')
-    #return sdg_indicator_atlas_tab_layout()
+
 
 
 # NEW TAB LAYOUTS ==== OUTCOMES ====
