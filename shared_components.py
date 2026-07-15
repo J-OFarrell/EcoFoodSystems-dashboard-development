@@ -286,21 +286,13 @@ def make_sidebar(selected_city='hanoi', dark=False):
             ]
 
         pillar_sections.append(
-            html.Div([
-                html.Button(
-                    [
-                        html.Span(pillar["label"]),
-                    ],
-                    id=f"pillar-toggle-{pillar['key']}",
-                    n_clicks=0,
-                    className="dash-sidebar-pillar-toggle",
-                ),
-                dbc.Collapse(
+            html.Details(
+                [
+                    html.Summary(pillar["label"], className='dash-sidebar-pillar-toggle'),
                     html.Div(subdomain_sections, className="dash-sidebar-subdomain-group"),
-                    id=f"pillar-collapse-{pillar['key']}",
-                    is_open=False,
-                ),
-            ], className="dash-sidebar-pillar-card")
+                ],
+                className='dash-sidebar-pillar-card'
+            )
         )
 
     bg_color = "#1d574f" if dark else "#f0f6e5"

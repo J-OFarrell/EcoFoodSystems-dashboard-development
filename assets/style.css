@@ -342,19 +342,23 @@ body, * {
     width: 100%;
     text-align: left;
     border: none;
-    background: #bbce8a;
-    color: #313715;
-    font-weight: bold;
-    font-size: 0.85em;
-    padding: 8px 10px;
+    background: #2A7A6F;
+    color: #FFFFFF;
+    font-weight: 700;
+    font-size: 0.9em;
+    padding: 10px 12px;
     line-height: 1.25;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    display: block;
+    border-radius: 6px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    margin: 4px 0;
+    cursor: pointer;
+    list-style: none;
 }
 
 .dash-sidebar-pillar-toggle:hover {
-    background: #a9be79;
+    background: #22605E;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
 
 .dash-sidebar-subtab-group {
@@ -374,7 +378,7 @@ body, * {
     background: #ffffffc8;
     color: #1d574f;
     font-size: 0.8em;
-    font-weight: 600;
+    font-weight: 700;
     line-height: 1.25;
     padding: 7px 8px;
     box-shadow: 0 1px 4px rgba(0,0,0,0.06);
@@ -439,7 +443,7 @@ body, * {
     font-size: 1.2em;
     font-weight: 700;
     color: #313715;
-    background: rgba(147, 159, 92, 0.2);
+    background: rgba(147, 159, 92, 0.25);
     border-radius: 6px;
     cursor: pointer;
     list-style: none;
@@ -448,17 +452,6 @@ body, * {
 
 .dash-sidebar-subdomain-toggle:hover {
     background: rgba(147, 159, 92, 0.35);
-}
-
-.dash-sidebar-subdomain-toggle::after {
-    content: "▸";
-    float: right;
-    color: rgba(49, 55, 21, 0.65);
-    transition: transform 0.2s ease;
-}
-
-.dash-sidebar-subdomain-card[open] .dash-sidebar-subdomain-toggle::after {
-    transform: rotate(90deg);
 }
 
 /* ===================== Hero tab bar ===================== */
@@ -632,24 +625,25 @@ body, * {
     width: 100%;
     text-align: left;
     border: none !important;
-    background: transparent !important;
+    background: linear-gradient(135deg, #2A7A6F 0%, #5FA89A 100%) !important;
     color: #FFFFFF !important;
     font-size: 14px !important;
     font-weight: 700 !important;
     letter-spacing: 0.5px !important;
-    text-transform: uppercase;
     padding: 12px 16px !important;
-    border-radius: 0 !important;
+    border-radius: 6px !important;
     cursor: pointer !important;
-    opacity: 0.85 !important;
-    transition: opacity 0.2s ease !important;
-    display: block;
+    margin: 4px 0 !important;
+    transition: all 0.2s ease !important;
+    display: block !important;
     line-height: 1.2;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2) !important;
+    list-style: none !important;
 }
 
 .dash-sidebar-card--dark .dash-sidebar-pillar-toggle:hover {
-    background: transparent !important;
-    opacity: 1 !important;
+    background: linear-gradient(135deg, #22605E 0%, #4A9289 100%) !important;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3) !important;
     color: #FFFFFF !important;
 }
 
@@ -658,6 +652,7 @@ body, * {
     width: calc(100% - 28px) !important;
     display: block !important;
     text-align: left;
+    font-weight: 700 !important;
     border: none !important;
     border-left: 3px solid transparent !important;
     border-radius: 6px !important;
@@ -765,10 +760,6 @@ body, * {
 .dash-sidebar-card--dark .dash-sidebar-subdomain-toggle:hover {
     background: rgba(255, 255, 255, 0.14) !important;
     color: #FFFFFF !important;
-}
-
-.dash-sidebar-card--dark .dash-sidebar-subdomain-toggle::after {
-    color: rgba(255, 255, 255, 0.78) !important;
 }
 
 /* Home button: white bg, dark teal text */
