@@ -404,6 +404,16 @@ body, * {
     padding: 4px 2px;
 }
 
+.dash-sidebar-subdomain-header {
+    font-size: 12px;
+    font-weight: 600;
+    color: #3f4620;
+    opacity: 0.75;
+    padding: 8px 8px 4px 16px;
+    letter-spacing: 0.04em;
+    line-height: 1.2;
+}
+
 /* Sub-domain details/summary group */
 .dash-sidebar-subdomain-group {
     display: flex;
@@ -602,87 +612,129 @@ body, * {
 .dash-sidebar-card--dark .dash-sidebar-pillar-card {
     background-color: transparent !important;
     border: none !important;
+    border-radius: 0 !important;
+    overflow: visible !important;
 }
 
-/* Pillar section header buttons */
+/* Pillar list — no extra gap or padding; dividers are handled via sibling selector */
+.dash-sidebar-card--dark .dash-sidebar-pillar-list {
+    gap: 0 !important;
+    padding: 0 !important;
+}
+
+/* Thin divider above each pillar group except the first */
+.dash-sidebar-card--dark .dash-sidebar-pillar-list .dash-sidebar-pillar-card + .dash-sidebar-pillar-card {
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/* Pillar section header — clickable to expand/collapse */
 .dash-sidebar-card--dark .dash-sidebar-pillar-toggle {
-    color: #ffffffe8 !important;
-    background: rgba(255, 255, 255, 0.08) !important;
-    font-size: 15px !important;
+    width: 100%;
+    text-align: left;
+    border: none !important;
+    background: transparent !important;
+    color: #FFFFFF !important;
+    font-size: 14px !important;
     font-weight: 700 !important;
-    padding: 16px 14px !important;
-    border-radius: 8px !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
-    border-left: 4px solid #5FA89A !important;
-    opacity: 1 !important;
-    transition: all 0.2s ease !important;
+    letter-spacing: 0.5px !important;
+    text-transform: uppercase;
+    padding: 12px 16px !important;
+    border-radius: 0 !important;
     cursor: pointer !important;
+    opacity: 0.85 !important;
+    transition: opacity 0.2s ease !important;
+    display: block;
+    line-height: 1.2;
 }
 
 .dash-sidebar-card--dark .dash-sidebar-pillar-toggle:hover {
-    background-color: rgba(232, 243, 240, 0.92) !important;
-    color: #1d574f !important;
-}
-
-/* Active pillar — collapse is open */
-.dash-sidebar-card--dark .dash-sidebar-pillar-card:has(.collapse.show) .dash-sidebar-pillar-toggle {
-    background: linear-gradient(90deg, #2A7A6F 0%, #3d9083 100%) !important;
+    background: transparent !important;
+    opacity: 1 !important;
     color: #FFFFFF !important;
-    border-left-color: #E8F0DA !important;
 }
 
-/* Individual indicator buttons inside a collapsed pillar */
+/* Indicator buttons — active/available */
 .dash-sidebar-card--dark .dash-sidebar-subtab-btn {
-    color: #ffffff !important;
-    background: rgba(232, 243, 240, 0.16) !important;
-    border: 1px solid rgba(255, 255, 255, 0.24) !important;
-    border-left: 3px solid #6fc0b4 !important;
-    font-size: 12px !important;
-    font-weight: 600 !important;
-    padding: 10px 12px !important;
-    border-radius: 8px !important;
+    width: calc(100% - 28px) !important;
+    display: block !important;
+    text-align: left;
+    border: none !important;
+    border-left: 3px solid transparent !important;
+    border-radius: 6px !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+    color: #FFFFFF !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    line-height: 1.3;
+    padding: 9px 12px !important;
+    margin: 2px 8px 2px 20px !important;
     opacity: 1 !important;
     transition: all 0.2s ease !important;
     cursor: pointer !important;
-    position: relative;
-}
-
-.dash-sidebar-card--dark .dash-sidebar-subtab-btn:hover:not(:disabled) {
-    background-color: #E8F3F0 !important;
-    color: #1d574f !important;
-    border-color: #E8F3F0 !important;
-    border-left-color: #1d574f !important;
-}
-
-/* Unavailable indicators are explicitly muted but still readable as disabled. */
-.dash-sidebar-card--dark .dash-sidebar-subtab-btn:disabled {
-    color: rgba(255, 255, 255, 0.55) !important;
-    background: rgba(255, 255, 255, 0.06) !important;
-    border-color: rgba(255, 255, 255, 0.12) !important;
-    border-left-color: rgba(255, 255, 255, 0.18) !important;
     box-shadow: none !important;
 }
 
-.dash-sidebar-card--dark .dash-sidebar-subtab-btn:disabled .dash-landing-btn-coming-soon {
-    color: rgba(255, 255, 255, 0.62) !important;
+.dash-sidebar-card--dark .dash-sidebar-subtab-btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.16) !important;
+    border-left-color: #bbce8a !important;
+    color: #FFFFFF !important;
+}
+
+/* Currently selected indicator */
+.dash-sidebar-card--dark .dash-sidebar-subtab-btn.active,
+.dash-sidebar-card--dark .dash-sidebar-subtab-btn:focus {
+    background: rgba(255, 255, 255, 0.18) !important;
+    border-left-color: #4e998c !important;
+    font-weight: 700 !important;
+    color: #FFFFFF !important;
+    outline: none !important;
+}
+
+/* Coming soon / disabled indicator buttons */
+.dash-sidebar-card--dark .dash-sidebar-subtab-btn:disabled,
+.dash-sidebar-card--dark .dash-sidebar-subtab-btn[disabled] {
+    opacity: 0.35 !important;
+    cursor: not-allowed !important;
+    color: #bbce8a !important;
+    background: transparent !important;
+    border-left: 3px solid transparent !important;
+    pointer-events: none !important;
+}
+
+/* "Coming soon" sub-label inside disabled buttons */
+.dash-sidebar-card--dark .dash-landing-btn-coming-soon {
+    font-size: 11px !important;
+    font-style: italic !important;
+    font-weight: normal !important;
+    color: rgba(255, 255, 255, 0.4) !important;
     opacity: 1 !important;
+    display: block;
+    margin-top: 3px;
+    letter-spacing: 0;
 }
 
-/* Adding styling for sub-domain dropdown group to match the dark sidebar theme */
-.dash-sidebar-subdomain-group {
-    padding: 8px !important;
-    max-height: 42vh !important;
-    overflow-y: auto !important;
-    border-radius: 8px !important;
-}
-
+/* Vertical line connector container */
 .dash-sidebar-card--dark .dash-sidebar-subtab-group {
     display: flex !important;
     flex-direction: column !important;
-    gap: 6px !important;
-    padding: 8px 4px 4px 10px !important;
-    margin-left: 8px !important;
-    border-left: 1px dashed rgba(255, 255, 255, 0.22) !important;
+    gap: 0 !important;
+    padding: 4px 0 8px 0 !important;
+    margin-left: 16px !important;
+    border-left: 2px solid rgba(255, 255, 255, 0.2) !important;
+    max-height: none !important;
+    overflow-y: visible !important;
+}
+
+/* Subdomain group header — non-clickable label inside expanded pillar */
+.dash-sidebar-card--dark .dash-sidebar-subdomain-header {
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    color: rgba(255, 255, 255, 0.75) !important;
+    padding: 10px 8px 4px 32px !important;
+    letter-spacing: 0.04em !important;
+    text-transform: none;
+    line-height: 1.2;
+    cursor: default;
 }
 
 /* Sub-domain Details/Summary in dark sidebar */
@@ -728,6 +780,20 @@ body, * {
 .dash-sidebar-card--dark .dash-sidebar-home-btn:hover {
     background-color: #E8F3F0 !important;
     color: #1d574f !important;
+}
+
+/* Custom thin scrollbar for the sidebar */
+.dash-sidebar-card--dark::-webkit-scrollbar {
+    width: 4px;
+}
+
+.dash-sidebar-card--dark::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 2px;
+}
+
+.dash-sidebar-card--dark::-webkit-scrollbar-track {
+    background: transparent;
 }
 
 /* ===================== Vendor page transport toggle buttons ===================== */
