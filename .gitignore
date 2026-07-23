@@ -2,6 +2,8 @@
 __pycache__/
 *.pyc
 venv/
+.env
+*.log
 
 assets/data/all_policy_faodatabase.csv
 

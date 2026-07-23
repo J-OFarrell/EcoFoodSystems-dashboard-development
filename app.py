@@ -1,5 +1,7 @@
 import os
 import csv
+from dotenv import load_dotenv
+load_dotenv()
 from functools import lru_cache
 import numpy as np
 import xarray as xr
@@ -120,10 +122,16 @@ from hanoi_layouts import (
 )
 
 app = Dash(__name__, suppress_callback_exceptions=True, external_stylesheets=[dbc.themes.BOOTSTRAP])
-app.server.secret_key = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
+app.server.secret_key = os.environ.get('SECRET_KEY') or os.urandom(24).hex()
 
-VALID_USERNAME = os.environ.get('DASH_USERNAME', 'ecofoodsystems')
-VALID_PASSWORD = os.environ.get('DASH_PASSWORD', 'data4decisions!')
+VALID_USERNAME = os.environ.get('DASH_USERNAME')
+VALID_PASSWORD = os.environ.get('DASH_PASSWORD')
+
+if not VALID_USERNAME or not VALID_PASSWORD:
+    raise RuntimeError(
+        "DASH_USERNAME and DASH_PASSWORD must be set as environment variables "
+        "(e.g. via a local .env file - see .env.example)."
+    )
 
 auth = dash_auth.BasicAuth(
     app,
