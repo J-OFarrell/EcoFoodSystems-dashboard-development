@@ -1,17 +1,7 @@
 import dash_bootstrap_components as dbc
 from dash import html, dcc
 
-# Your brand colors (import or redefine)
-brand_colors = {
-    'Black': '#333333',
-    "Brown": "#313715",
-    "Red": "#A80050",
-    "Orange": "#D9A85C",
-    "Dark green": "#939f5c",
-    "Mid green": "#bbce8a",
-    "Light green": "#E8F0DA",
-    "White": "#ffffff"
-}
+from config import brand_colors
 
 kpi_card_style_2 = {
                 "textAlign": "center",

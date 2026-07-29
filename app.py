@@ -29,34 +29,68 @@ from plotly.subplots import make_subplots
 from lorem_text import lorem
 from io import StringIO
 
+from data_access import (
+    load_indicator_atlas_records as _load_indicator_atlas_records,
+    atlas_records,
+    is_indicator_available_for_city,
+    df_mpi,
+    df_mpi_hanoi,
+    MPI,
+    geojson,
+    mpi_vars,
+    variables,
+    df_sh,
+    outlets_geojson_files_addis,
+    df_policies_addis,
+    df_indicators,
+    df_lca,
+    df_sankey,
+    MPI_hanoi,
+    geojson_hanoi,
+    df_sh_hanoi,
+    df_policies_hanoi,
+    isochrones_geojson_files_hanoi,
+    df_affordability_hanoi,
+    df_diet_2_hanoi,
+    accessibility_outlet_options_addis,
+    accessibility_zonal_stats_addis,
+    accessibility_subcity_columns_addis,
+    accessibility_population_options_addis,
+    accessibility_offer_options_addis,
+)
+from config import (
+    brand_colors,
+    plotting_palette_cat,
+    green_scale,
+    red_scale,
+    grey_scale,
+    _BASEMAP_TILE,
+    REGION_COLOURS,
+    sub_city_level_metrics,
+    cols_labels_hex_vars,
+    FOOD_ENV_NEG_SCALE,
+    FOOD_ENV_POS_SCALE,
+    FOOD_ENV_NEUTRAL_BONE_SCALE,
+    VIRIDIS_SCALE,
+    BLUES_SCALE,
+    YLORBR_SCALE,
+    HOT_SCALE,
+    metric_color_scale,
+    kpi_card_style,
+    header_style,
+    card_style,
+)
+
 import warnings
 warnings.filterwarnings("ignore")
-
-# Esri World Imagery (satellite) tiles — used for Vietnam maps while a
-# compliant labelled basemap is sourced from Vietnamese partners.
-# Hoang Sa (Paracel) and Truong Sa (Spratly) islands are rendered explicitly
-# as GeoJSON overlays on the resilience tab to satisfy Vietnamese law.
-#_ESRI_TILE = {
-#    "below": "traces",
-#    "sourcetype": "raster",
-#    "source": ["https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"],
-#}
-
-_BASEMAP_TILE = [
-{
-    "below":"traces",
-    "sourcetype":"raster",
-    "source":[
-        "https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png"
-    ]
-}
-]
-
 
 from dashboard_components import create_nutrition_kpi_card
 import addis_config
 import hanoi_config
 from shared_components import sidebar, footer, city_selector
+from chatbot_ui import chatbot_widget, render_messages
+import chatbot_engine
+from flask import request as flask_request
 from addis_layouts import (
     governance_stakeholders_tab_layout as addis_governance_stakeholders_tab_layout,
     storage_distribution_tab_layout as addis_storage_distribution_tab_layout,
@@ -270,30 +304,6 @@ def _build_isochrone_union_geojson(isochrones_path_local, selected_isochrones_ke
 #  'accent_warm': '#E07A5F'
 #}
 
-brand_colors = {
-    'Black': '#333333',
-    "Brown": "#313715",
-    "Red": "#A80050",
-    "Orange": "#D9A85C",
-    "Teal": "#1d574f",
-    "Light Teal": "#4e998c",
-    "Dark green": "#939f5c",
-    "Mid green": "#bbce8a",
-    "Light green": "#E8F0DA",
-    "White": "#ffffff"
-}
-
-plotting_palette_cat = [
-    "#a80050",  
-    "#84003d",   
-    "#F5F5F5",   
-    '#E8F0DA',
-    "#bbce8a",
-    "#939f5c",
-    "#E07A5F",   
-    "#d33030",
-]
-
 _cmap_full = plt.get_cmap('RdYlBu_r')
 _cmap = mcolors.LinearSegmentedColormap.from_list(
     'RdYlGn_r_clipped',
@@ -302,96 +312,36 @@ _cmap = mcolors.LinearSegmentedColormap.from_list(
 
 drought_colorscale = [[round(i/9, 2), mcolors.to_hex(_cmap(i/9))] for i in range(10)]
 
-
-tabs = [
-    'Food Systems Stakeholders',                 
-    'Food Flows & Supply Chains',         
-    'Sustainability Metrics',       
-    'Multidimensional Poverty',                  
-    'Resilience Indicators',          
-    'Food Environments',           
-    'Food Losses & Waste',                      
-    'Policies & Regulation',                     
-    'Nutrition & Health',                       
-    'Environmental Footprints',  
-    'Behaviour Change Tool (AI Chatbot & Game)'  
-]
-
 # -------------------------- Loading and Formatting All Data ------------------------- #
+# Most eager data loading (MPI, geojson, df_sh, df_policies, df_indicators,
+# df_lca, df_sankey, and their Hanoi equivalents) now lives in data_access.py
+# (imported at the top of this file) - both app.py and addis_layouts.py/
+# hanoi_layouts.py import directly from there instead of the old
+# `import app as main` reverse-dependency workaround. What remains below is
+# data/paths only ever used within app.py itself (accessibility, EMDAT,
+# climate/LULC, adm3 boundaries).
 
 homepath = os.path.dirname(os.path.abspath(__file__))
 data_root = os.path.join(homepath, "assets", "data")
 
 addis_root = os.path.join(data_root, "addis")
-addis_mpi_dir = os.path.join(addis_root, "drivers_income-growth-and-distribution")
-addis_stakeholders_dir = os.path.join(addis_root, "cross-cutting-issues_governance")
 addis_food_env_dir = os.path.join(addis_root, "food-environments_vendor-properties")
-addis_policy_dir = os.path.join(addis_root, "drivers_policies-and-leadership")
-addis_environment_dir = os.path.join(addis_root, "drivers_environment-and-climate-change")
 addis_adm3_dir = os.path.join(addis_root, "drivers_income-growth-and-distribution_adm3")
 
 hanoi_root = os.path.join(data_root, "hanoi")
 hanoi_mpi_dir = os.path.join(hanoi_root, "drivers_income-growth-and-distribution")
-hanoi_stakeholders_dir = os.path.join(hanoi_root, "cross-cutting-issues_governance")
-hanoi_policy_dir = os.path.join(hanoi_root, "drivers_policies-and-leadership")
-hanoi_supply_dir = os.path.join(hanoi_root, "food-supply-chains_production-systems-and-input-supply")
-hanoi_affordability_dir = os.path.join(hanoi_root, "food-environments_food-affordability")
-hanoi_nutrition_dir = os.path.join(hanoi_root, "outcomes_nutritional-status")
 hanoi_food_env_dir = os.path.join(hanoi_root, "food-environments_vendor-properties")
 hanoi_resilience_dir = os.path.join(hanoi_root, "cross-cutting-issues_resilience")
 hanoi_climate_dir = os.path.join(hanoi_resilience_dir, "precomputed_hanoi_climate_vars")
 hanoi_infrastructure_dir = os.path.join(hanoi_resilience_dir, "osm_infrastructure")
-#atlas_csv_path = os.path.join(homepath, "EcoFoodSystems_indicator_architecture - 260326 - Hanoi_rewritten_descriptions_final.csv")
-atlas_csv_path = os.path.join(homepath, "EcoFoodSystems_FCD_aligned.csv")
-
-# Loading and Formatting MPI Data
-MPI = gpd.read_file(os.path.join(addis_mpi_dir, "addis_drv_igd_mpi_boundaries.geojson"))#.set_index('Dist_Name')
-MPI['Multidimensional Poverty Index'] = MPI['Multidimensional Poverty Index'].astype(float)
-MPI['Dist_Name'] = MPI['Dist_Name'].astype(str)
-geojson = json.loads(MPI.to_json())
 
 adm3_eth_gdf = gpd.read_file(os.path.join(addis_adm3_dir, "addis_drv_igd_adm3_boundaries.geojson")).to_crs("EPSG:4326")
 adm3_eth_gdf = adm3_eth_gdf.reset_index(drop=True)
 adm3_eth_gdf["adm3_id"] = adm3_eth_gdf.index.astype(str)
 adm3_eth_geojson = json.loads(adm3_eth_gdf[["adm3_id", "ADM3_EN", "geometry"]].to_json())
 
-# Loading and Formatting MPI CSV Data=
-# Detect numeric columns in the GeoJSON and coerce to numeric where possible
-geo_vars = []
-for _col in MPI.columns:
-    if _col in ['geometry', 'Dist_Name']:
-        continue
-    coerced = pd.to_numeric(MPI[_col], errors='coerce')
-    if coerced.notna().any():
-        MPI[_col] = coerced
-        geo_vars.append(_col)
-
-# Loading and Formatting MPI CSV Data (fallback)
-df_mpi = pd.read_csv(os.path.join(addis_mpi_dir, "addis_drv_igd_mpi_indicators_long.csv"))
-vars_csv = list(df_mpi['Variable'].unique())
-# Universal list of MPI variables (source of truth for dropdown ordering)
-mpi_vars = [
-    'Multidimensional Poverty Index',
-    'Cooking fuel',
-    'Housing',
-    'Assets',
-    'Drinking water',
-    'Sanitation',
-    'Electricity'
-]
-
-# For Addis, use the universal list but only include variables present in the GeoDataFrame
-variables = [v for v in mpi_vars if v in MPI.columns]
-
-# Loading and Formatting Food Systems Stakeholders Data
-df_sh = pd.read_csv(os.path.join(addis_stakeholders_dir, "addis_cci_gov_stk_database_cleaned.csv")).dropna(how='any').astype(str)
-df_sh.rename(columns={'Area of Activity (Food Systems Value Chain)': 'Area of Activity'}, inplace=True)
-
-# Format Website column as clickable markdown links
-if 'Website' in df_sh.columns:
-    df_sh['Website'] = df_sh['Website'].apply(
-        lambda x: f'[Link Available]({x})' if x and x.startswith('http') else '--'
-    )
+# MPI, mpi_vars, variables, df_sh, and outlets_geojson_files_addis are now
+# imported from data_access.py (see top of file).
 
 # Pre-calculate fixed column widths (6px per character, min 80px, max 200px)
 column_widths = {}
@@ -403,304 +353,31 @@ total_table_width = sum(column_widths.values())
 
 # Loading GeoJSON files for Food Outlets
 outlets_path = os.path.join(addis_food_env_dir, "jsons_addis_foodoutlets")
-outlets_geojson_files_addis = sorted(os.listdir(outlets_path))
 
-
-def _humanize_outlet_label(filename):
-    base = os.path.splitext(os.path.basename(filename))[0]
-    if base.endswith("_addis"):
-        base = base[:-6]
-    if base.startswith("shop_"):
-        base = base[len("shop_"):]
-    elif base.startswith("amenity_"):
-        base = base[len("amenity_"):]
-    if base in {"healthy", "healthy_offers"}:
-        return "All Healthy Offers"
-    if base in {"unhealthy", "unhealthy_offers"}:
-        return "All Unhealthy Offers"
-    if base in {"mixed", "mixed_offers"}:
-        return "All Mixed Offers"
-    return base.replace("_", " ").title()
-
-
-def _build_accessibility_outlet_options_addis(outlet_files):
-    healthy_files = {
-        "healthy_offers_addis.geojson",
-        "shop_butcher_addis.geojson",
-        "shop_dairy_addis.geojson",
-        "shop_farm_addis.geojson",
-        "shop_greengrocer_addis.geojson",
-        "shop_health_food_addis.geojson",
-        "shop_seafood_addis.geojson",
-        "amenity_marketplace_addis.geojson",
-        "amenity_drinking_water_addis.geojson",
-    }
-    unhealthy_files = {
-        "unhealthy_offers_addis.geojson",
-        "shop_bakery_addis.geojson",
-        "shop_beverages_addis.geojson",
-        "shop_confectionery_addis.geojson",
-        "shop_convenience_addis.geojson",
-        "shop_pastry_addis.geojson",
-        "shop_kiosk_addis.geojson",
-        "amenity_fast_food_addis.geojson",
-        "amenity_cafe_addis.geojson",
-        "amenity_ice_cream_addis.geojson",
-        "amenity_vending_machine_addis.geojson",
-    }
-    mixed_files = {
-        "mixed_offers_addis.geojson",
-        "shop_supermarket_addis.geojson",
-        "amenity_restaurant_addis.geojson",
-        "amenity_pub_addis.geojson",
-        "shop_deli_addis.geojson",
-    }
-
-    groups = [
-        ("All Healthy Offers", healthy_files),
-        ("All Unhealthy Offers", unhealthy_files),
-        ("All Mixed Offers", mixed_files),
-    ]
-
-    remaining = []
-    grouped = []
-    used = set()
-
-    for header, known_files in groups:
-        section_items = [f for f in outlet_files if f in known_files]
-        if section_items:
-            grouped.append({"label": f"── {header} ──", "value": f"__{header.lower().replace(' ', '_')}__", "disabled": True})
-            for file_name in sorted(section_items, key=_humanize_outlet_label):
-                grouped.append({"label": _humanize_outlet_label(file_name), "value": file_name})
-                used.add(file_name)
-
-    for file_name in outlet_files:
-        if file_name not in used:
-            remaining.append(file_name)
-
-    if remaining:
-        grouped.append({"label": "── Other Outlet Layers ──", "value": "__other_outlets__", "disabled": True})
-        for file_name in sorted(remaining, key=_humanize_outlet_label):
-            grouped.append({"label": _humanize_outlet_label(file_name), "value": file_name})
-
-    return grouped
-
-
-accessibility_outlet_options_addis = _build_accessibility_outlet_options_addis(outlets_geojson_files_addis)
+# accessibility_outlet_options_addis, accessibility_zonal_stats_addis,
+# accessibility_subcity_columns_addis, accessibility_population_options_addis,
+# and accessibility_offer_options_addis are now imported from data_access.py
+# (also needed by addis_layouts.py, previously via `import app as main`).
 
 # Loading GeoJSON files for Isochrones (30-minute accessibility polygons)
 isochrones_path = os.path.join(addis_food_env_dir, "isochrones_addis_all")
-#isochrones_geojson_files_addis = sorted(os.listdir(isochrones_path)) if os.path.exists(isochrones_path) else []
 summary_stats_path_addis = os.path.join(addis_food_env_dir, "addis_fev_vp_fenv_subcity_summary.geojson")
 gdf_summary_stats_addis = gpd.read_file(summary_stats_path_addis).to_crs('EPSG:4326')
-#walking_segments_addis = gpd.read_file(os.path.join(addis_food_env_dir, "addis_walking_segments_lst_canopy.geojson")).to_crs('EPSG:4326')
 hex_vars_addis = gpd.read_file(os.path.join(addis_food_env_dir, "addis_fev_vp_fenv_hexgrid_population.geojson")).to_crs('EPSG:4326')
 hex_vars_addis_geojson = json.loads(hex_vars_addis.to_crs("EPSG:4326").to_json())
 
-accessibility_zonal_stats_path_addis = os.path.join(addis_food_env_dir, "addis_fev_vp_fenv_accessibility_stats.csv")
-
-
-def _load_accessibility_zonal_stats(path):
-    if not os.path.exists(path):
-        return pd.DataFrame(), [], [], []
-
-    df = pd.read_csv(path).drop(columns=["Unnamed: 0"], errors="ignore")
-    for col in ["index", "time"]:
-        if col in df.columns:
-            df[col] = pd.to_numeric(df[col], errors="coerce")
-
-    for col in ["pop_cat", "offer_cat", "mode"]:
-        if col in df.columns:
-            df[col] = df[col].astype(str).str.strip()
-
-    subcity_cols = [
-        col for col in df.columns
-        if col not in {"index", "pop_cat", "offer_cat", "mode", "time"}
-    ]
-
-    population_labels = {
-        "total": "Total",
-        "men": "Men",
-        "women": "Women",
-        "youth": "Youth",
-        "children_u5": "Children (0-5 years)",
-        "women_rep": "Women of Reproductive Age (15-49 years)",
-        "elderly": "Elderly (60+ years)",
-    }
-    population_options = [
-        {"label": population_labels.get(pop, pop.replace("_", " ").title()), "value": pop}
-        for pop in sorted(df["pop_cat"].dropna().astype(str).unique())
-    ]
-    offer_options = [
-        {"label": offer.replace("_", " ").title(), "value": offer}
-        for offer in sorted(df["offer_cat"].dropna().astype(str).unique())
-    ]
-
-    return df, subcity_cols, population_options, offer_options
-
-
-accessibility_zonal_stats_addis, accessibility_subcity_columns_addis, accessibility_population_options_addis, accessibility_offer_options_addis = _load_accessibility_zonal_stats(accessibility_zonal_stats_path_addis)
-
 # Define food environment metrics and their labels
+# (sub_city_level_metrics, cols_labels_hex_vars, REGION_COLOURS, green_scale,
+# red_scale, grey_scale, FOOD_ENV_*_SCALE, VIRIDIS/BLUES/YLORBR/HOT_SCALE, and
+# metric_color_scale now live in config.py - imported at the top of this file)
 
-sub_city_level_metrics = {
-                        'density_he': 'Healthy Outlet Density',
-                        'density_un': 'Unhealthy Outlet Density',
-                        'density_mi': 'Mixed Outlet Density',
-                        'ratio_obes': 'Obesogenic Ratio',
-                        'children_u5': 'Children (0-5 years)', 
-                        'elderly': 'Elderly (60+ years)', 
-                        'women_rep': 'Women of Reproductive Age (15-49 years)', 
-                        'youth': 'Youth (15-24 years)', 
-                        'men': 'Men', 
-                        'women': 'Women', 
-                        'total': 'Total'} 
-
-cols_labels_hex_vars = {'children_u5': 'Children (0-5 years)', 
-                        'elderly': 'Elderly (60+ years)', 
-                        'women_rep': 'Women of Reproductive Age (15-49 years)', 
-                        'youth': 'Youth (15-24 years)', 
-                        'men': 'Men', 
-                        'women': 'Women', 
-                        'total': 'Total', 
-                        'canopy_cover_pixels': 'Canopy Cover (m²)', 
-                        'mean_lst': 'Average Land Surface Temperature (°C)'}
-
-REGION_COLOURS = {
-    "Red River Delta":    "#e63946",
-    "Northeast":          "#457b9d",
-    "Northwest":          "#2a9d8f",
-    "North Central Coast":"#e9c46a",
-    "South Central Coast":"#f4a261",
-    "Central Highlands":  "#264653",
-    "Southeast":          "#a8dadc",
-    "Mekong Delta":       "#06d6a0",
-}
-
-# Color schemes for choropleth
-green_scale = ['#e3f6d5', '#c1d88e', '#a5be91', '#6f946d', '#3a6649']
-red_scale = ['#fee5d9', '#fcbba1', '#fc9272', '#fb6a4a', '#de2d26']
-grey_scale = ['#f7f7f7', '#d9d9d9', '#bdbdbd', '#969696', '#636363']
-
-
-# Food-environment choropleth palettes
-# Plotly equivalents for requested styles: RdOrYl_r and GnYl_r
-FOOD_ENV_NEG_SCALE = "YlOrRd"
-FOOD_ENV_POS_SCALE = "YlGn"
-FOOD_ENV_NEUTRAL_BONE_SCALE = [
-    [0.00, "#fffdf8"],
-    [0.25, "#f7f1e3"],
-    [0.50, "#eadfc8"],
-    [0.75, "#d8c9ab"],
-    [1.00, "#c5b395"],
-]
-VIRIDIS_SCALE = "Viridis"
-BLUES_SCALE = "Blues"
-YLORBR_SCALE = "YlOrBr"
-HOT_SCALE = "Hot"
-
-
-metric_direction =      {'density_he': FOOD_ENV_POS_SCALE,
-                        'density_un': FOOD_ENV_NEG_SCALE,
-                        'density_mi': FOOD_ENV_NEUTRAL_BONE_SCALE,
-                        'ratio_obes': FOOD_ENV_NEG_SCALE,
-                        'children_u5': YLORBR_SCALE, 
-                        'elderly': YLORBR_SCALE, 
-                        'women_rep': YLORBR_SCALE, 
-                        'youth': YLORBR_SCALE, 
-                        'men': YLORBR_SCALE, 
-                        'women': YLORBR_SCALE, 
-                        'total': YLORBR_SCALE,
-                        'canopy_cover_pixels': FOOD_ENV_POS_SCALE,
-                        'mean_lst': HOT_SCALE}
-
-# Loading supply flow data for Sankey Diagram
-df_sankey = pd.read_csv(os.path.join(hanoi_supply_dir, 'hanoi_fsc_psis_supply_flows.csv'))
-
-df_policies_addis = pd.read_csv(os.path.join(addis_policy_dir, 'addis_drv_pl_pol_faolex.csv'))#.drop('Unnamed: 0',axis=1)
-# Ensure link columns render as markdown links in the DataTable
-if 'Document URL' in df_policies_addis.columns:
-    df_policies_addis['Document URL'] = df_policies_addis['Document URL'].apply(
-        lambda x: f'[Link Available]({x})' if x and str(x).startswith('http') else '--'
-    )
-
-if 'Record URL' in df_policies_addis.columns:
-    df_policies_addis['Record URL'] = df_policies_addis['Record URL'].apply(
-        lambda x: f'[Link Available]({x})' if x and str(x).startswith('http') else '--'
-    )
-
-if 'Available website' in df_policies_addis.columns:
-    df_policies_addis['Available website'] = df_policies_addis['Available website'].apply(
-        lambda x: f'[Link Available]({x})' if x and str(x).startswith('http') else '--'
-    )
-
-df_indicators = pd.read_csv(os.path.join(addis_policy_dir, 'addis_drv_pl_pol_expanded_sdg.csv'))
-
-# Create SDG logos as list of numbers for rendering
-def get_sdg_numbers(row):
-    sdg_cols = ['SDG_1', 'SDG_2', 'SDG_3', 'SDG_4', 'SDG_5']
-    sdg_numbers = []
-    for col in sdg_cols:
-        if pd.notna(row[col]) and str(row[col]).strip():
-            # Extract just the number (e.g., "1.3.1" -> "1", "2.1" -> "2")
-            sdg_num = str(row[col]).split('.')[0]
-            if sdg_num.isdigit() and sdg_num not in sdg_numbers:
-                sdg_numbers.append(sdg_num)
-    return ', '.join(sdg_numbers) if sdg_numbers else '--'
-
-df_indicators['SDG Numbers'] = df_indicators.apply(get_sdg_numbers, axis=1)
-
-df_env = pd.read_csv(os.path.join(addis_environment_dir, 'addis_drv_ecc_env_lca_pivot.csv'))
-df_lca = df_env  # Alias for compatibility
+# df_sankey, df_policies_addis, df_indicators, df_lca, MPI_hanoi, geojson_hanoi,
+# df_sh_hanoi, df_policies_hanoi, isochrones_geojson_files_hanoi,
+# df_affordability_hanoi, and df_diet_2_hanoi are now imported from
+# data_access.py (see top of file). gdf_food_env_hanoi below is app.py-local
+# (not reached into by the layout files, so it stayed here).
 
 # -------------------------- Loading Hanoi Data ------------------------- #
-
-# Hanoi MPI Data (commune level)
-MPI_hanoi = gpd.read_file(os.path.join(hanoi_mpi_dir, "hanoi_drv_igd_mpi_boundaries_communes.geojson"))
-MPI_hanoi['Name'] = MPI_hanoi['Name'].astype(str)
-MPI_hanoi['ma_xa'] = MPI_hanoi['ma_xa'].astype(str)
-
-# Load long-format MPI CSV and pivot to wide, then merge into GeoDataFrame
-df_mpi_hanoi = pd.read_csv(os.path.join(hanoi_mpi_dir, "hanoi_drv_igd_mpi_indicators_long.csv"))
-df_mpi_wide = df_mpi_hanoi.pivot_table(index='Name', columns='Variable', values='Value').reset_index()
-df_mpi_wide.columns.name = None
-MPI_hanoi = MPI_hanoi.merge(df_mpi_wide, on='Name', how='left')
-
-# Detect numeric MPI columns (all columns added from the pivot)
-geo_vars = []
-for _col in MPI_hanoi.columns:
-    if _col in ['geometry', 'Name', 'ma_xa']:
-        continue
-    coerced = pd.to_numeric(MPI_hanoi[_col], errors='coerce')
-    if coerced.notna().any():
-        MPI_hanoi[_col] = coerced
-        geo_vars.append(_col)
-
-geojson_hanoi = json.loads(MPI_hanoi.to_json())
-
-# Hanoi Stakeholders Data
-df_sh_hanoi = pd.read_csv(os.path.join(hanoi_stakeholders_dir, "hanoi_cci_gov_stk_database.csv")).dropna(how='any').astype(str)
-
-if 'Website' in df_sh_hanoi.columns:
-    df_sh_hanoi['Website'] = df_sh_hanoi['Website'].apply(
-        lambda x: f'[Link Available]({x})' if x and x.startswith('http') else '--'
-    )
-
-# Hanoi policy database
-df_policies_hanoi = pd.read_csv(os.path.join(hanoi_policy_dir, 'hanoi_drv_pl_pol_database_cleaned.csv'))#.drop('Unnamed: 0',axis=1)
-
-if 'Document Link' in df_policies_hanoi.columns:
-    df_policies_hanoi['Document Link'] = df_policies_hanoi['Document Link'].apply(
-        lambda x: f'[Link Available]({x})' if x and str(x).startswith('http') else '--'
-    )
-
-    df_policies_hanoi['Available website'] = df_policies_hanoi['Available website'].apply(
-        lambda x: f'[Link Available]({x})' if x and str(x).startswith('http') else '--'
-    )
-
-# Loading GeoJSON files for Food Outlets
-#outlets_path_hanoi = os.path.join(hanoi_food_env_dir, "jsons_hanoi_foodoutlets")
-#outlets_geojson_files_hanoi = sorted(os.listdir(outlets_path_hanoi))
 
 # Hanoi food-environment choropleth (minified base geometry + values CSV when available)
 food_env_path_hanoi = os.path.join(hanoi_food_env_dir, "hanoi_fev_vp_fenv_subcity_summary.geojson")
@@ -715,67 +392,9 @@ try:
 except Exception as e:
     print(f"Error loading Hanoi food environment layer: {e}")
 
-# Loading GeoJSON files for Isochrones (30-minute accessibility polygons)
+# isochrones_path_hanoi is still used directly below (Hanoi accessibility map
+# callback); isochrones_geojson_files_hanoi itself is now imported.
 isochrones_path_hanoi = os.path.join(hanoi_food_env_dir, "isochrones_hanoi")
-isochrones_geojson_files_hanoi = sorted(os.listdir(isochrones_path_hanoi)) if os.path.exists(isochrones_path_hanoi) else []
-
-# Hanoi affordability data
-df_affordability_hanoi = pd.read_csv(os.path.join(hanoi_affordability_dir, 'hanoi_fev_aff_afford_indicators_cleaned.csv'))
-
-# Hanoi dietary data
-df_diet_2_hanoi = pd.read_csv(os.path.join(hanoi_nutrition_dir, 'hanoi_out_ns_nut_health_indicators_cleaned.csv'))
-
-
-def _load_indicator_atlas_records(csv_path):
-    if not os.path.exists(csv_path):
-        return []
-
-    rows = None
-    for enc in ('utf-8-sig', 'utf-8', 'cp1252', 'latin-1'):
-        try:
-            with open(csv_path, newline='', encoding=enc) as f:
-                rows = list(csv.reader(f))
-            break
-        except UnicodeDecodeError:
-            continue
-
-    # Last-resort fallback: preserve row structure while replacing undecodable bytes.
-    if rows is None:
-        with open(csv_path, 'rb') as f:
-            text = f.read().decode('utf-8', errors='replace')
-        rows = list(csv.reader(StringIO(text)))
-
-    if len(rows) < 2:
-        return []
-
-    # Find the real header row dynamically (some files include a title/metadata row first).
-    header_idx = None
-    for idx, row in enumerate(rows):
-        normalized = [str(c).strip() for c in row]
-        if 'Domain / Sub-theme' in normalized and 'Indicator name' in normalized:
-            header_idx = idx
-            break
-
-    if header_idx is None:
-        return []
-
-    header = [str(c).strip() for c in rows[header_idx]]
-    records = []
-    for row in rows[header_idx + 1:]:
-        if not any((c or '').strip() for c in row):
-            continue
-        if len(row) < len(header):
-            row = row + [''] * (len(header) - len(row))
-        rec = dict(zip(header, row[:len(header)]))
-        indicator_name = (rec.get('Indicator name') or '').strip()
-        if not indicator_name:
-            continue
-        records.append(rec)
-    return records
-
-
-atlas_records = _load_indicator_atlas_records(atlas_csv_path)
-#print(f"DEBUG: Loaded {len(atlas_records)} records from indicator atlas CSV, Example: {atlas_records[:1]}")
 
 
 # ── commune climate indicators ───────────────────────────────────────────────
@@ -1165,16 +784,13 @@ tabs_style = {
                 "wordBreak": "normal"
             }
 
-kpi_card_style ={"textAlign": "center", 
-                "backgroundColor": brand_colors['White'], 
-                "color":brand_colors['Brown'],
-                "font-weight":"bold",
-                "border-radius": "8px",
-                "padding":"10px",
-                "margin-bottom":"10px",
-                "flexDirection": "column",
-                "border": "2px solid " + brand_colors['White'],
-                }
+# kpi_card_style, header_style, and card_style below were confirmed
+# byte-identical to config.py's copies and are now imported from there
+# instead (see the config import block at the top of this file).
+# tabs_style and kpi_card_style_2 are NOT deduplicated - they differ from
+# config.py's same-named dicts (and dashboard_components.py has a THIRD,
+# also-different kpi_card_style_2), so unifying them would be a real visual
+# change, not a pure refactor. Left as-is here; flagged separately.
 
 kpi_card_style_2 = {
                 "textAlign": "center",
@@ -1189,23 +805,6 @@ kpi_card_style_2 = {
                 "height": "auto",
                 #"minWidth": "220px"
             }
-
-header_style = {"color": brand_colors['Brown'], 
-                'fontWeight': 'bold',
-                "margin": "0", 
-                'textAlign': 'center',
-                "fontSize": "clamp(0.8em, 3vw, 1.25em)",
-                'whiteSpace': 'normal',
-                }
-
-card_style = {
-    "backgroundColor": brand_colors['White'],
-    "border-radius": "10px",
-    "box-shadow": "0 2px 6px rgba(0,0,0,0.1)",
-    "padding": "20px",  # Increase padding for consistency
-    "margin-bottom": "15px"
-}
-
 
 ATLAS_SECTIONS = [
     ("Diets, Nutrition & Health", "tab-10-nutrition"),
@@ -2316,7 +1915,8 @@ app.layout = html.Div([
 
     dcc.Interval(id='resize-interval', interval=1000, n_intervals=0),
     html.Div(id="tab-content", children=landing_page_layout(selected_city='addis'), style={"width": "100%",
-                                                                       "height": "100%"})
+                                                                       "height": "100%"}),
+    chatbot_widget(),
     # Parent container for full page
 ], style={
     "display": "flex",
@@ -2353,6 +1953,57 @@ app.clientside_callback(
 )
 def store_selected_city(city):
     return city
+
+
+# ------------------------- Chatbot Assistant Callbacks ------------------------- #
+# Note: opening/closing/dragging the chatbot widget is handled entirely by
+# assets/chatbot_drag.js (plain JS), not a Dash callback - mixing Dash-managed
+# style updates with JS-driven drag positioning on the same element risks
+# Dash's virtual DOM silently overwriting the dragged position on any
+# unrelated re-render. Removing the Dash Output here means Dash never retakes
+# ownership of chatbot-panel's style after first render, so JS can safely own
+# it completely.
+
+
+@app.callback(
+    Output('chatbot-history', 'data'),
+    Output('chatbot-messages', 'children'),
+    Output('chatbot-input', 'value'),
+    Output('chatbot-error-banner', 'children'),
+    Output('chatbot-error-banner', 'style'),
+    Input('chatbot-send-btn', 'n_clicks'),
+    Input('chatbot-input', 'n_submit'),
+    State('chatbot-input', 'value'),
+    State('chatbot-history', 'data'),
+    State('atlas-open-tab', 'data'),
+    prevent_initial_call=True,
+)
+def handle_chatbot_send(n_clicks, n_submit, user_text, history, atlas_open_tab):
+    error_style_visible = {
+        "display": "block", "padding": "6px 12px", "color": "#a80050",
+        "fontSize": "0.85em", "backgroundColor": "white",
+    }
+    error_style_hidden = {"display": "none"}
+
+    if not user_text or not user_text.strip():
+        return dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update
+
+    client_key = flask_request.remote_addr or "unknown"
+    if not chatbot_engine.check_rate_limit(client_key):
+        return (dash.no_update, dash.no_update, "",
+                "Too many requests - please wait a moment before trying again.",
+                error_style_visible)
+
+    history = history or []
+    try:
+        updated_history = chatbot_engine.run_chat_turn(
+            history, user_text.strip(), page_context=atlas_open_tab
+        )
+    except Exception as exc:
+        return (dash.no_update, dash.no_update, "",
+                f"Something went wrong: {exc}", error_style_visible)
+
+    return updated_history, render_messages(updated_history), "", "", error_style_hidden
 
 
 # Linking the dropdown to the bar chart for the MPI page    
@@ -2813,7 +2464,7 @@ def update_accesibility_map(selected_travel_time, selected_outlets, selected_tra
         sub_city_level_metrics=sub_city_level_metrics,
         #sub_city_level_metrics.keys(),
         #data_labels_food_env_local=sub_city_level_metrics.values(),
-        metric_direction_local=metric_direction,
+        metric_direction_local=metric_color_scale,
         center_default={"lat": 9.0192, "lon":  38.752},
         zoom_default=11,
         city_key="addis",
@@ -3645,7 +3296,7 @@ def update_affordability_map_hanoi(selected_travel_time, selected_outlets, selec
         sub_city_level_metrics=sub_city_level_metrics,
         #cols_food_env_local=sub_city_level_metrics.keys() if gdf_food_env_hanoi is not None else None,
         #data_labels_food_env_local=sub_city_level_metrics.values() if gdf_food_env_hanoi is not None else None,
-        metric_direction_local=metric_direction,
+        metric_direction_local=metric_color_scale,
         center_default={"lat": MPI_hanoi.geometry.centroid.y.mean(), "lon": MPI_hanoi.geometry.centroid.x.mean()},
         zoom_default=10,
         city_key="hanoi",

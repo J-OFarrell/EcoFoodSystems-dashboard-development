@@ -15,6 +15,10 @@ import json
 from config import brand_colors, header_style, kpi_card_style_2, card_style, hero_gradient, sidebar_colors
 from shared_components import sidebar_hanoi as sidebar, city_selector
 from dashboard_components import create_nutrition_kpi_card, create_nutrition_kpi_card_hanoi
+from data_access import (
+    df_sh_hanoi, mpi_vars, df_diet_2_hanoi, isochrones_geojson_files_hanoi,
+    df_affordability_hanoi, df_indicators, df_policies_hanoi,
+)
 
 
 def _red_graph_loading(children, loading_id=None):
@@ -40,9 +44,6 @@ def _red_graph_loading(children, loading_id=None):
 
 def governance_stakeholders_tab_layout():
     """Hà Nội stakeholders tab layout"""
-    import app as main
-    df_sh_hanoi = main.df_sh_hanoi
-    
     return html.Div([
         city_selector(selected_city='hanoi', visible=False),  # Hidden but present for callback
         
@@ -361,9 +362,6 @@ def storage_distribution_tab_layout():
 
 def livelihoods_poverty_equity_tab_layout():
     """Hà Nội poverty tab layout"""
-    import app as main
-    mpi_vars = main.mpi_vars
-    
     return html.Div([
         city_selector(selected_city='hanoi', visible=False),  # Hidden but present for callback
         
@@ -613,9 +611,6 @@ def food_affordability_tab_layout_hanoi_arch():
 
 def diets_nutrition_health_tab_layout():
     """Hà Nội health & nutrition tab layout"""
-    import app as main
-    df_diet_2_hanoi = main.df_diet_2_hanoi
-    
     labels = df_diet_2_hanoi['Cat'].unique()
     
     tile_width, lg = 12, 3
@@ -718,13 +713,14 @@ def diets_nutrition_health_tab_layout():
 
 def food_affordability_tab_layout():
     """Hanoi affordability tab layout"""
-    import app as main
-    outlets_geojson_files_hanoi = main.outlets_geojson_files_hanoi
-    isochrones_geojson_files_hanoi = main.isochrones_geojson_files_hanoi
-    data_labels_food_env = getattr(main, 'data_labels_food_env_hanoi', getattr(main, 'data_labels_food_env', []))
-    cols_food_env = getattr(main, 'cols_food_env_hanoi', getattr(main, 'cols_food_env', []))
-    df_affordability_hanoi = main.df_affordability_hanoi
-    
+    # NOTE: outlets_geojson_files_hanoi was never defined anywhere (commented
+    # out in the original app.py) - this import is EXPECTED to fail. This
+    # preserves a pre-existing bug where this tab has always raised on open;
+    # not fixed here since fixing it is a data/design decision, not a refactor.
+    from data_access import outlets_geojson_files_hanoi
+    data_labels_food_env = []  # always empty today (naming-mismatch bug, preserved)
+    cols_food_env = []  # always empty today (naming-mismatch bug, preserved)
+
     return html.Div([
         city_selector(selected_city='hanoi', visible=False),  # Hidden but present for callback
         
@@ -920,8 +916,6 @@ def food_affordability_tab_layout():
 
 def sdg_indicator_atlas_tab_layout():
     """Hanoi sustainability tab layout - mirrors the Addis sustainability page"""
-    import app as main
-    df_indicators = main.df_indicators
 
     display_cols = ['Dimensions', 'Components', 'Indicators', 'SDG impact area/target', 'SDG Numbers']
     df_display = df_indicators[display_cols]
@@ -2219,8 +2213,7 @@ def income_growth_distribution_tab():
 
 def policies_leadership_tab():
     """Hanoi policies tab layout"""
-    import app as main
-    df_policies = main.df_policies_hanoi
+    df_policies = df_policies_hanoi
     
     return html.Div([
         city_selector(selected_city='hanoi', visible=False),  # Hidden but present for callback

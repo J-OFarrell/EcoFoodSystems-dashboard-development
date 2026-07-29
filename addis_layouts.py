@@ -9,9 +9,17 @@ import dash_bootstrap_components as dbc
 import plotly.graph_objects as go
 import plotly.express as px
 
-from config import brand_colors, header_style, sub_header_style, kpi_card_style_2, card_style, hero_gradient, sidebar_colors
+from config import (
+    brand_colors, header_style, sub_header_style, kpi_card_style_2, card_style,
+    hero_gradient, sidebar_colors, sub_city_level_metrics, cols_labels_hex_vars,
+)
 from shared_components import sidebar_addis as sidebar, sidebar_addis_vendor, city_selector
 from dashboard_components import create_nutrition_kpi_card, create_price_volatility_kpi_card
+from data_access import (
+    df_sh, variables, df_indicators, df_policies_addis, df_lca,
+    outlets_geojson_files_addis, accessibility_population_options_addis,
+    accessibility_outlet_options_addis,
+)
 
 
 _BASEMAP_TILE = [
@@ -48,10 +56,7 @@ def _red_graph_loading(children, loading_id=None):
 
 def governance_stakeholders_tab_layout():
     """Addis Ababa stakeholders tab layout"""
-    # Import data at runtime to avoid circular imports
-    import app as main
-    df_sh = main.df_sh
-    
+
     return html.Div([
         city_selector(selected_city='addis', visible=False),  # Hidden but present for callback
         
@@ -313,9 +318,7 @@ def storage_distribution_tab_layout():
 
 def livelihoods_poverty_equity_tab_layout():
     """Addis Ababa poverty tab layout"""
-    import app as main
-    variables = main.variables
-    
+
     return html.Div([
         city_selector(selected_city='addis', visible=False),  # Hidden but present for callback
         
@@ -453,9 +456,6 @@ def livelihoods_poverty_equity_tab_layout():
 def sdg_indicator_atlas_tab_layout():
 
     """Addis Ababa sustainability tab layout"""
-    import app as main
-    df_indicators = main.df_indicators
-    
     display_cols = ['Dimensions', 'Components', 'Indicators', 'SDG impact area/target', 'SDG Numbers']
     df_display = df_indicators[display_cols]
     
@@ -648,8 +648,7 @@ def sdg_indicator_atlas_tab_layout():
 
 def governance_policies_tab_layout():
     """Addis Ababa policies tab layout"""
-    import app as main
-    df_policies = main.df_policies_addis
+    df_policies = df_policies_addis
     df_policies = df_policies[['ID', 'Document URL', 'Title', 'Date of original text', 'Language of document',
         'Primary subjects', 'Domain',
         'Last amended date', 'Available website',
@@ -825,8 +824,6 @@ def _build_socio_economic_shocks_content(df_volatility, df_ufpri):
 
 def _build_sustainability_metrics_content():
     """Build sustainability metrics table content for resilience tab"""
-    import app as main
-    df_indicators = main.df_indicators
     display_cols = ['Dimensions', 'Components', 'Indicators', 'SDG impact area/target', 'SDG Numbers']
     df_display = df_indicators[display_cols]
     
@@ -1017,9 +1014,6 @@ def diets_nutrition_health_tab_layout(selected_city='addis'):
 
 def environment_footprints_tab_layout(selected_city='addis'):
     """Addis Ababa processing and packing (LCA) tab layout"""
-    import app as main
-    df_lca = main.df_lca
-    
     return html.Div([
         city_selector(selected_city=selected_city, visible=False),  # Hidden but present for callback
         
@@ -1145,13 +1139,7 @@ def resilience_tab_layout(selected_city='addis', default_view='Socio-Economic Sh
 
 def food_accessibility_vendor_properties_tab_layout(selected_city='addis'):
     """Addis Ababa accessibility tab layout"""
-    import app as main
-    outlets_geojson_files = main.outlets_geojson_files_addis
-    #data_labels_food_env = main.data_labels_food_env
-    #cols_food_env = main.cols_food_env
-    #walking_segs = main.walking_segments_addis
-    sub_city_level_metrics = main.sub_city_level_metrics
-    cols_labels_hex_vars = main.cols_labels_hex_vars
+    outlets_geojson_files = outlets_geojson_files_addis
 
     if selected_city == 'addis':
         cityname = 'Addis Ababa'
@@ -1161,8 +1149,8 @@ def food_accessibility_vendor_properties_tab_layout(selected_city='addis'):
     walking = html.Img(src="/assets/data/logos/walking.svg")
     bus = html.Img(src="/assets/data/logos/bus.svg")
     car = html.Img(src="/assets/data/logos/car.svg")
-    population_options = getattr(main, "accessibility_population_options_addis", [])
-    outlet_options = getattr(main, "accessibility_outlet_options_addis", [])
+    population_options = accessibility_population_options_addis
+    outlet_options = accessibility_outlet_options_addis
     population_default = population_options[0]["value"] if population_options else None
     
     return html.Div([

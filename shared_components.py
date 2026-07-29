@@ -2,22 +2,16 @@
 Shared UI components for EcoFoodSystems Dashboard
 """
 
-import csv
-import os
-from io import StringIO
-
 from dash import html, dcc
 import dash_bootstrap_components as dbc
 from config import brand_colors
+from data_access import (
+    is_indicator_available_for_city as _atlas_available_for_city,
+    atlas_records,
+)
 
 
 # ========================== Sidebar ==========================
-
-
-_ATLAS_CSV_PATH = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)),
-    "EcoFoodSystems_FCD_aligned.csv",
-)
 
 ATLAS_COLUMNS = [
     "FCD Primary Pillar",
@@ -57,58 +51,6 @@ _TAB_BG_KEY_BY_ID = {
     "tab-11-footprints": "footprints",
     "tab-12-behaviour": "behaviour",
 }
-
-
-def _load_indicator_atlas_records(csv_path):
-    if not os.path.exists(csv_path):
-        return []
-
-    rows = None
-    for enc in ('utf-8-sig', 'utf-8', 'cp1252', 'latin-1'):
-        try:
-            with open(csv_path, newline='', encoding=enc) as f:
-                rows = list(csv.reader(f))
-            break
-        except UnicodeDecodeError:
-            continue
-
-    if rows is None:
-        with open(csv_path, 'rb') as f:
-            text = f.read().decode('utf-8', errors='replace')
-        rows = list(csv.reader(StringIO(text)))
-
-    if len(rows) < 2:
-        return []
-
-    header_idx = None
-    for idx, row in enumerate(rows):
-        normalized = [str(c).strip() for c in row]
-        if 'Domain / Sub-theme' in normalized and 'Indicator name' in normalized:
-            header_idx = idx
-            break
-
-    if header_idx is None:
-        return []
-
-    header = [str(c).strip() for c in rows[header_idx]]
-    records = []
-    for row in rows[header_idx + 1:]:
-        if not any((c or '').strip() for c in row):
-            continue
-        if len(row) < len(header):
-            row = row + [''] * (len(header) - len(row))
-        rec = dict(zip(header, row[:len(header)]))
-        indicator_name = (rec.get('Indicator name') or '').strip()
-        if not indicator_name:
-            continue
-        records.append(rec)
-    return records
-
-
-def _atlas_available_for_city(rec, selected_city):
-    field = 'Available Hanoi' if selected_city == 'hanoi' else 'Available Addis'
-    val = str(rec.get(field, '')).strip().lower()
-    return val in {'1', 'true', 'yes', 'y'}
 
 
 def _record_pillar_key(rec):
@@ -211,8 +153,6 @@ def make_sidebar(selected_city='hanoi', dark=False):
                     "fontSize": "1.08em"
                 })
             ], id="tab-home", n_clicks=0, className="dash-sidebar-home-btn")
-
-    atlas_records = _load_indicator_atlas_records(_ATLAS_CSV_PATH)
 
     pillar_subdomain_items = {p['key']: {} for p in _SIDEBAR_PILLARS}
     seen_by_pillar = {p['key']: set() for p in _SIDEBAR_PILLARS}

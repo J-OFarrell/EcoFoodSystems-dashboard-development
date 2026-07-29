@@ -192,6 +192,94 @@ metric_direction = {
     'ptc_access_unhealthy': False
 }
 
+# ========================== Map / Chart Constants (from app.py) ==========================
+
+# Esri World Imagery (satellite) tiles were considered for Vietnam maps while a
+# compliant labelled basemap is sourced from Vietnamese partners; using the
+# CartoDB light basemap instead for now.
+_BASEMAP_TILE = [
+    {
+        "below": "traces",
+        "sourcetype": "raster",
+        "source": [
+            "https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png"
+        ],
+    }
+]
+
+REGION_COLOURS = {
+    "Red River Delta": "#e63946",
+    "Northeast": "#457b9d",
+    "Northwest": "#2a9d8f",
+    "North Central Coast": "#e9c46a",
+    "South Central Coast": "#f4a261",
+    "Central Highlands": "#264653",
+    "Southeast": "#a8dadc",
+    "Mekong Delta": "#06d6a0",
+}
+
+# Food environment metrics: household/demographic sub-city breakdown labels
+sub_city_level_metrics = {
+    'density_he': 'Healthy Outlet Density',
+    'density_un': 'Unhealthy Outlet Density',
+    'density_mi': 'Mixed Outlet Density',
+    'ratio_obes': 'Obesogenic Ratio',
+    'children_u5': 'Children (0-5 years)',
+    'elderly': 'Elderly (60+ years)',
+    'women_rep': 'Women of Reproductive Age (15-49 years)',
+    'youth': 'Youth (15-24 years)',
+    'men': 'Men',
+    'women': 'Women',
+    'total': 'Total',
+}
+
+cols_labels_hex_vars = {
+    'children_u5': 'Children (0-5 years)',
+    'elderly': 'Elderly (60+ years)',
+    'women_rep': 'Women of Reproductive Age (15-49 years)',
+    'youth': 'Youth (15-24 years)',
+    'men': 'Men',
+    'women': 'Women',
+    'total': 'Total',
+    'canopy_cover_pixels': 'Canopy Cover (m²)',
+    'mean_lst': 'Average Land Surface Temperature (°C)',
+}
+
+# Food-environment choropleth palettes (Plotly scale names/definitions)
+FOOD_ENV_NEG_SCALE = "YlOrRd"
+FOOD_ENV_POS_SCALE = "YlGn"
+FOOD_ENV_NEUTRAL_BONE_SCALE = [
+    [0.00, "#fffdf8"],
+    [0.25, "#f7f1e3"],
+    [0.50, "#eadfc8"],
+    [0.75, "#d8c9ab"],
+    [1.00, "#c5b395"],
+]
+VIRIDIS_SCALE = "Viridis"
+BLUES_SCALE = "Blues"
+YLORBR_SCALE = "YlOrBr"
+HOT_SCALE = "Hot"
+
+# Maps each food-environment metric to its choropleth color scale. Named
+# metric_color_scale (not metric_direction) to avoid colliding with this
+# file's own metric_direction above, which is a different concept (bool
+# "higher is better" flag) that happens to share app.py's original name.
+metric_color_scale = {
+    'density_he': FOOD_ENV_POS_SCALE,
+    'density_un': FOOD_ENV_NEG_SCALE,
+    'density_mi': FOOD_ENV_NEUTRAL_BONE_SCALE,
+    'ratio_obes': FOOD_ENV_NEG_SCALE,
+    'children_u5': YLORBR_SCALE,
+    'elderly': YLORBR_SCALE,
+    'women_rep': YLORBR_SCALE,
+    'youth': YLORBR_SCALE,
+    'men': YLORBR_SCALE,
+    'women': YLORBR_SCALE,
+    'total': YLORBR_SCALE,
+    'canopy_cover_pixels': FOOD_ENV_POS_SCALE,
+    'mean_lst': HOT_SCALE,
+}
+
 # ========================== Tab Labels ==========================
 
 tabs = [
