@@ -19,7 +19,7 @@
   // panel - not the button - is what can go off the TOP of the screen, and
   // the button - not the panel - is what can go off the BOTTOM.
   var PANEL_WIDTH = 340;
-  var PANEL_HEIGHT = 470;
+  var PANEL_HEIGHT = 477;
   var PANEL_BOTTOM_OFFSET = 66; // matches PANEL_STYLE_BASE's "bottom" in chatbot_ui.py
   var BUTTON_SIZE = 56;
 
