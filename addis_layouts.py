@@ -12,6 +12,7 @@ import plotly.express as px
 from config import (
     brand_colors, header_style, sub_header_style, kpi_card_style_2, card_style,
     hero_gradient, sidebar_colors, sub_city_level_metrics, cols_labels_hex_vars,
+    _BASEMAP_STYLE,
 )
 from shared_components import sidebar_addis as sidebar, sidebar_addis_vendor, city_selector
 from dashboard_components import create_nutrition_kpi_card, create_price_volatility_kpi_card
@@ -19,18 +20,8 @@ from data_access import (
     df_sh, variables, df_indicators, df_policies_addis, df_lca,
     outlets_geojson_files_addis, accessibility_population_options_addis,
     accessibility_outlet_options_addis,
+    atlas_records,
 )
-
-
-_BASEMAP_TILE = [
-{
-    "below":"traces",
-    "sourcetype":"raster",
-    "source":[
-        "https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png"
-    ]
-}
-]
 
 
 def _red_graph_loading(children, loading_id=None):
@@ -54,20 +45,278 @@ def _red_graph_loading(children, loading_id=None):
     )
 
 
+def _build_indicator_kpi_cards_by_subdomain(city, subdomain_key, pillar_title=None):
+    """
+    Build KPI cards with sparklines for indicators in a specific sub-domain,
+    filtered by city availability from atlas_records.
+    
+    Features:
+    - Filters atlas_records by subdomain_key and city availability
+    - Attempts to load temporal data files for indicators
+    - Creates sparkline charts when data is available
+    - Falls back to metadata display for indicators without data
+    
+    Parameters:
+    - city: 'hanoi' or 'addis'
+    - subdomain_key: The FCD Sub-domain key (e.g., 'Production systems and input supply')
+    - pillar_title: Optional pillar name for additional filtering
+    
+    Returns: html.Div with grid of KPI cards for available indicators
+    """
+    # Normalize subdomain key for matching
+    def normalize_key(k):
+        return k.lower().strip().replace(' and ', ' & ').replace(' ', '-').replace('_', '-')
+    
+    normalized_target = normalize_key(subdomain_key)
+    
+    # Filter atlas records for this subdomain and city
+    matching_records = [
+        rec for rec in atlas_records
+        if normalize_key(rec.get('FCD Sub-domain', '')) == normalized_target
+        and (city == 'hanoi' and str(rec.get('Available Hanoi', '0')).strip() in ('1', 'true', 'yes', 'y') or
+             city == 'addis' and str(rec.get('Available Addis', '0')).strip() in ('1', 'true', 'yes', 'y'))
+    ]
+    
+    if not matching_records:
+        return html.Div([
+            html.P(f"No indicators available for {subdomain_key} in {city}.",
+                   style={'color': '#999', 'textAlign': 'center', 'padding': '40px'})
+        ])
+    
+    cards = []
+    for rec in matching_records:
+        indicator_name = (rec.get('Indicator name') or '').strip()
+        definition = (rec.get('Definition (what the indicator measures)') or '').strip()
+        unit = (rec.get('Unit of measurement') or '').strip()
+        source = (rec.get('Data source') or '').strip()
+        
+        if not indicator_name:
+            continue
+        
+        # Try to load temporal data for this indicator if available
+        sparkline_chart = _try_load_temporal_indicator_data(city, subdomain_key, indicator_name)
+        
+        # Create a KPI card with metadata and optional sparkline
+        card_body = [
+            html.H6(indicator_name, style={
+                "fontWeight": "bold",
+                "fontSize": "0.9em",
+                "color": brand_colors['Brown'],
+                "marginBottom": "8px",
+                "lineHeight": "1.3",
+                "minHeight": "40px",
+                "display": "-webkit-box",
+                "-webkitLineClamp": "2",
+                "-webkitBoxOrient": "vertical",
+                "overflow": "hidden",
+            }),
+            html.Div(definition if definition else "No definition available.", style={
+                "fontSize": "0.75em",
+                "color": "#666",
+                "marginBottom": "8px",
+                "minHeight": "35px",
+                "display": "-webkit-box",
+                "-webkitLineClamp": "2",
+                "-webkitBoxOrient": "vertical",
+                "overflow": "hidden",
+                "lineHeight": "1.3",
+            }),
+        ]
+        
+        # Add sparkline chart if available
+        if sparkline_chart:
+            card_body.append(
+                dcc.Graph(
+                    figure=sparkline_chart,
+                    config={"displayModeBar": False},
+                    style={"height": "100px", "width": "100%", "margin": "8px 0"},
+                )
+            )
+        
+        card_body.extend([
+            html.Hr(style={"margin": "8px 0"}),
+            html.Div([
+                html.Span("Unit: ", style={"fontWeight": "600", "fontSize": "0.7em"}),
+                html.Span(unit if unit else "N/A", style={"color": "#777", "fontSize": "0.7em"})
+            ], style={"marginBottom": "4px"}),
+            html.Div([
+                html.Span("Source: ", style={"fontWeight": "600", "fontSize": "0.7em"}),
+                html.Span(source if source else "N/A", style={"color": "#777", "fontSize": "0.7em"})
+            ], style={"marginBottom": "8px"}),
+        ])
+        
+        if not sparkline_chart:
+            card_body.append(
+                html.Div(
+                    "📊 Data visualization pending",
+                    style={
+                        "fontSize": "0.75em",
+                        "color": "#999",
+                        "fontStyle": "italic",
+                        "padding": "10px",
+                        "backgroundColor": "#f9f9f9",
+                        "borderRadius": "4px",
+                        "textAlign": "center"
+                    }
+                )
+            )
+        
+        cards.append(
+            dbc.Card([
+                dbc.CardBody(card_body, style={"padding": "10px"})
+            ], style={
+                "textAlign": "left",
+                "backgroundColor": brand_colors['White'],
+                "borderRadius": "10px",
+                "boxShadow": "0 2px 8px rgba(0,0,0,0.08)",
+                "marginBottom": "12px",
+                "width": "100%",
+                "height": "100%",
+                "border": "1px solid #e5e5e5",
+            })
+        )
+    
+    # Return cards in a responsive grid
+    if not cards:
+        return html.Div([
+            html.P("No indicators to display.",
+                   style={'color': '#999', 'textAlign': 'center', 'padding': '40px'})
+        ])
+    
+    return html.Div([
+        dbc.Row([
+            dbc.Col(card, xs=12, sm=6, md=4, lg=3, style={"marginBottom": "8px"})
+            for card in cards
+        ], className="g-2")
+    ], style={"padding": "8px"})
+
+
+def _build_indicator_kpi_card_with_sparkline(indicator_name, definition, unit, source, sparkline_fig=None, line_color=None):
+    """
+    Build a single KPI card with sparkline in the style of _create_resilience_temporal_kpi_card().
+    
+    Displays indicator name, latest value, unit, sparkline, and source.
+    """
+    if line_color is None:
+        line_color = brand_colors['Dark green']
+    
+    card_body = [
+        html.H5(indicator_name, style={
+            "fontWeight": "bold",
+            "fontSize": "0.95em",
+            "color": brand_colors['Brown'],
+            "marginBottom": "10px",
+            "lineHeight": "1.25",
+            "minHeight": "48px"
+        }),
+    ]
+    
+    # Add sparkline and latest value if available
+    if sparkline_fig:
+        # Extract latest value from figure
+        if sparkline_fig.data and len(sparkline_fig.data[0].y) > 0:
+            latest_value = sparkline_fig.data[0].y[-1]
+            formatted_value = f"{latest_value:,.0f}" if isinstance(latest_value, (int, float)) else str(latest_value)
+            
+            card_body.append(
+                html.Div(formatted_value, style={
+                    "fontSize": "2.0em",
+                    "fontWeight": "bold",
+                    "color": brand_colors['Red'],
+                    "lineHeight": "1.2",
+                    "marginBottom": "8px",
+                    "minHeight": "32px"
+                })
+            )
+        
+        card_body.extend([
+            html.Div(unit if unit else "", style={
+                "fontSize": "0.85em",
+                "color": brand_colors['Brown'],
+                "fontStyle": "italic",
+                "minHeight": "18px",
+                "marginBottom": "6px"
+            }),
+            dcc.Graph(
+                figure=sparkline_fig,
+                config={"displayModeBar": False},
+                style={"height": "80px", "width": "100%"},
+            ),
+        ])
+    else:
+        # No sparkline - show definition instead
+        card_body.extend([
+            html.Div(definition if definition else "No definition available.", style={
+                "fontSize": "0.8em",
+                "color": "#666",
+                "marginBottom": "8px",
+                "minHeight": "35px",
+                "lineHeight": "1.3",
+                "display": "-webkit-box",
+                "-webkitLineClamp": "2",
+                "-webkitBoxOrient": "vertical",
+                "overflow": "hidden",
+            }),
+            html.Div(unit if unit else "", style={
+                "fontSize": "0.85em",
+                "color": brand_colors['Brown'],
+                "fontStyle": "italic",
+                "minHeight": "18px",
+                "marginBottom": "6px"
+            }),
+        ])
+    
+    card_body.append(
+        html.Div(source if source else "", style={
+            "fontSize": "0.7em",
+            "color": "#888888",
+            "fontStyle": "italic",
+            "textAlign": "right",
+            "marginTop": "4px",
+            "minHeight": "14px",
+        })
+    )
+    
+    return dbc.Card([
+        dbc.CardBody(card_body)
+    ], style={**kpi_card_style_2, "height": "100%"})
+
+
+def _try_load_temporal_indicator_data(city, subdomain_key, indicator_name):
+    """
+    Attempt to load temporal data for an indicator and create a sparkline chart.
+    
+    Returns a Plotly figure if data is found and loaded, or None if not available.
+    Searches for data files in standard locations and creates sparkline matching
+    the style of _create_resilience_temporal_kpi_card().
+    """
+    try:
+        base_dir = os.path.dirname(__file__)
+        subdomain_path = subdomain_key.lower().replace(' and ', '-').replace(' ', '-').replace('_', '-')
+        
+        # Addis Ababa: Check for various indicator data files
+        # For now, return None as most indicators don't have temporal data
+        # This can be extended to search for actual data files
+        return None
+        
+    except Exception as e:
+        return None
+
+
 def governance_stakeholders_tab_layout():
     """Addis Ababa stakeholders tab layout"""
 
     return html.Div([
         city_selector(selected_city='addis', visible=False),  # Hidden but present for callback
         
-        html.Div([sidebar], style={
-            "width": "15%",
-            "height": "100%",
-            "display": "flex",
-            "vertical-align": 'top',
-            "flexDirection": "column",
-            "justifyContent": "flex-start",
-        }),
+        #html.Div([sidebar], style={
+        #    "width": "15%",
+        #    "height": "100%",
+        #    "display": "flex",
+        #    "vertical-align": 'top',
+        #    "flexDirection": "column",
+        #    "justifyContent": "flex-start",
+        #}),
 
         # Main content: full-page DataTable for stakeholders
         html.Div([
@@ -173,13 +422,13 @@ def storage_distribution_tab_layout():
     return html.Div([
         city_selector(selected_city='addis', visible=False),  # Hidden but present for callback
         
-            html.Div([sidebar], style={
-                                "width": "15%",
-                                "height": "100%",
-                                "display": "flex",
-                                "vertical-align":'top',
-                                "flexDirection": "column",
-                                "justifyContent": "flex-start"}),
+            #html.Div([sidebar], style={
+            #                    "width": "15%",
+            #                    "height": "100%",
+            #                    "display": "flex",
+            #                    "vertical-align":'top',
+            #                    "flexDirection": "column",
+            #                    "justifyContent": "flex-start"}),
 
             # Left Panel
             html.Div([
@@ -322,13 +571,13 @@ def livelihoods_poverty_equity_tab_layout():
     return html.Div([
         city_selector(selected_city='addis', visible=False),  # Hidden but present for callback
         
-        html.Div([sidebar], style={
-                                        "width": "15%",
-                                        "height": "100%",
-                                        "display": "flex",
-                                        "vertical-align":'top',
-                                        "flexDirection": "column",
-                                        "justifyContent": "flex-start",}),
+        #html.Div([sidebar], style={
+        #                                "width": "15%",
+        #                                "height": "100%",
+        #                                "display": "flex",
+        #                                "vertical-align":'top',
+        #                                "flexDirection": "column",
+        #                                "justifyContent": "flex-start",}),
 
         # Left Panel: text, dropdown, bar chart
         html.Div([
@@ -462,14 +711,14 @@ def sdg_indicator_atlas_tab_layout():
     return html.Div([
         city_selector(selected_city='addis', visible=False),  # Hidden but present for callback
         
-        html.Div([sidebar], style={
-            "width": "15%",
-            "height": "100%",
-            "display": "flex",
-            "vertical-align": 'top',
-            "flexDirection": "column",
-            "justifyContent": "flex-start"
-        }),
+        #html.Div([sidebar], style={
+        #    "width": "15%",
+        #    "height": "100%",
+        #    "display": "flex",
+        #    "vertical-align": 'top',
+        #    "flexDirection": "column",
+        #    "justifyContent": "flex-start"
+        #}),
 
         # Main content area
         html.Div([
@@ -659,14 +908,14 @@ def governance_policies_tab_layout():
     return html.Div([
         city_selector(selected_city='addis', visible=False),  # Hidden but present for callback
         
-        html.Div([sidebar], style={
-            "width": "15%",
-            "height": "100%",
-            "display": "flex",
-            "vertical-align": 'top',
-            "flexDirection": "column",
-            "justifyContent": "flex-start"
-        }),
+        #html.Div([sidebar], style={
+        #    "width": "15%",
+        #    "height": "100%",
+        #    "display": "flex",
+        #    "vertical-align": 'top',
+        #    "flexDirection": "column",
+        #    "justifyContent": "flex-start"
+        #}),
 
         # Main content area
         html.Div([
@@ -942,13 +1191,13 @@ def diets_nutrition_health_tab_layout(selected_city='addis'):
     return html.Div([
         city_selector(selected_city=selected_city, visible=False),  # Hidden but present for callback
         
-                html.Div([sidebar], style={
-                                        "width": "15%",
-                                        "height": "100%",
-                                        "display": "flex",
-                                        "vertical-align":'top',
-                                        "flexDirection": "column",
-                                        "justifyContent": "flex-start",}),
+                #html.Div([sidebar], style={
+                #                        "width": "15%",
+                #                        "height": "100%",
+                #                        "display": "flex",
+                #                        "vertical-align":'top',
+                #                        "flexDirection": "column",
+                #                        "justifyContent": "flex-start",}),
 
                 # Main content area
                 html.Div([
@@ -1017,14 +1266,14 @@ def environment_footprints_tab_layout(selected_city='addis'):
     return html.Div([
         city_selector(selected_city=selected_city, visible=False),  # Hidden but present for callback
         
-        html.Div([sidebar], style={
-            "width": "15%",
-            "height": "100%",
-            "display": "flex",
-            "vertical-align": 'top',
-            "flexDirection": "column",
-            "justifyContent": "flex-start"
-        }),
+        #html.Div([sidebar], style={
+        #    "width": "15%",
+        #    "height": "100%",
+        #    "display": "flex",
+        #    "vertical-align": 'top',
+        #    "flexDirection": "column",
+        #    "justifyContent": "flex-start"
+        #}),
 
         # Main content area
         html.Div([
@@ -1093,14 +1342,14 @@ def resilience_tab_layout(selected_city='addis', default_view='Socio-Economic Sh
     return html.Div([
         city_selector(selected_city=selected_city, visible=False),
         
-        html.Div([sidebar], style={
-            "width": "15%",
-            "height": "100%",
-            "display": "flex",
-            "vertical-align": 'top',
-            "flexDirection": "column",
-            "justifyContent": "flex-start",
-        }),
+        #html.Div([sidebar], style={
+        #    "width": "15%",
+        #    "height": "100%",
+        #    "display": "flex",
+        #    "vertical-align": 'top',
+        #    "flexDirection": "column",
+        #    "justifyContent": "flex-start",
+        #}),
         
         # Content area with dropdown and KPI cards
         html.Div([
@@ -1113,12 +1362,13 @@ def resilience_tab_layout(selected_city='addis', default_view='Socio-Economic Sh
                     ],
                     value=selected_view,
                     clearable=False,
-                    style={"zIndex": "2000", "marginBottom": "0", 'fontSize': 'clamp(0.8em, 1em, 1.4em)', 'width': '100%'}
+                    style={"zIndex": "9999", "marginBottom": "0", 'fontSize': 'clamp(0.8em, 1em, 1.4em)', 'width': '100%'}
                 ),
                 style={
                     "height": "auto", "padding": "6px", "marginBottom": "16px",
                     "boxShadow": "0 2px 12px rgba(0,0,0,0.08)",
-                    "backgroundColor": "#FFFFFF", "borderRadius": "12px"
+                    "backgroundColor": "#FFFFFF", "borderRadius": "12px",
+                    "position": "relative", "zIndex": "9999"
                 }
             ),
 
@@ -1156,14 +1406,14 @@ def food_accessibility_vendor_properties_tab_layout(selected_city='addis'):
     return html.Div([
             city_selector(selected_city=selected_city, visible=False),  # Hidden but present for callback
             dcc.Store(id="transport-mode", data="walk"),
-            html.Div([sidebar], style={
-                                "width": "15%",
-                                "height": "100%",
-                                "display": "flex",
-                                "vertical-align":'top',
-                                "flexDirection": "column",
-                                "justifyContent": "flex-start",
-            }),
+            #html.Div([sidebar], style={
+            #                    "width": "15%",
+            #                    "height": "100%",
+            #                    "display": "flex",
+            #                    "vertical-align":'top',
+            #                    "flexDirection": "column",
+            #                    "justifyContent": "flex-start",
+            #}),
 
             # Left Panel
             html.Div([
@@ -1431,8 +1681,8 @@ def food_accessibility_vendor_properties_tab_layout(selected_city='addis'):
                             dcc.Graph(
                                 id='accessibility-map-addis',
                                 figure=go.Figure().update_layout(
-                                    mapbox=dict(
-                                        style="carto-positron",
+                                    map=dict(
+                                        style=_BASEMAP_STYLE,
                                         center={"lat": 9.0192, "lon": 38.752},
                                         zoom=11
                                     ),

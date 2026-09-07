@@ -1,8 +1,10 @@
 """
 Hà Nội dashboard tab layouts
 """
+import glob
 import json
 import os
+import re
 
 import numpy as np
 import pandas as pd
@@ -12,14 +14,14 @@ import plotly.graph_objects as go
 import plotly.express as px
 import json
 
-from config import brand_colors, header_style, kpi_card_style_2, card_style, hero_gradient, sidebar_colors
+from config import brand_colors, header_style, kpi_card_style_2, card_style, hero_gradient, sidebar_colors, _BASEMAP_STYLE
 from shared_components import sidebar_hanoi as sidebar, city_selector
 from dashboard_components import create_nutrition_kpi_card, create_nutrition_kpi_card_hanoi
 from data_access import (
     df_sh_hanoi, mpi_vars, df_diet_2_hanoi, isochrones_geojson_files_hanoi,
     df_affordability_hanoi, df_indicators, df_policies_hanoi,
+    atlas_records,
 )
-
 
 def _red_graph_loading(children, loading_id=None):
     return dcc.Loading(
@@ -42,19 +44,276 @@ def _red_graph_loading(children, loading_id=None):
     )
 
 
+def _slugify_for_data_path(text):
+    """Match the assets/data/{city}/{pillar}_{subdomain}/ directory naming convention."""
+    text = (text or "").strip().lower().replace(",", "")
+    text = re.sub(r"\s+", "-", text)
+    return re.sub(r"-+", "-", text)
+
+
+def _match_indicator_column(df_columns, indicator_name):
+    indicator_norm = re.sub(r"\s+", " ", indicator_name.strip().lower())
+    for col in df_columns:
+        if re.sub(r"\s+", " ", col.strip().lower()) == indicator_norm:
+            return col
+    for col in df_columns:
+        col_norm = re.sub(r"\s+", " ", col.strip().lower())
+        if indicator_norm in col_norm or col_norm in indicator_norm:
+            return col
+    return None
+
+
+def _find_indicator_series(city, pillar_title, subdomain_key, indicator_name):
+    """Search assets/data/{city}/{pillar}_{subdomain}/*_temporal_indicators.csv for a matching column."""
+    base_dir = os.path.dirname(__file__)
+    pillar_slug = _slugify_for_data_path(pillar_title)
+    subdomain_slug = _slugify_for_data_path(subdomain_key)
+    data_dir = os.path.join(base_dir, "assets", "data", city, f"{pillar_slug}_{subdomain_slug}")
+    if not os.path.isdir(data_dir):
+        return None
+
+    for csv_path in sorted(glob.glob(os.path.join(data_dir, "*_temporal_indicators.csv"))):
+        try:
+            df = pd.read_csv(csv_path)
+        except Exception:
+            continue
+        match_col = _match_indicator_column(df.columns, indicator_name)
+        if match_col is not None:
+            return df, match_col
+    return None
+
+
+def _try_load_temporal_indicator_data(city, pillar_title, subdomain_key, indicator_name):
+    """
+    Attempt to load temporal data for an indicator and create a sparkline chart.
+    
+    Returns a Plotly figure if data is found and loaded, or None if not available.
+    Searches assets/data/{city}/{pillar}_{subdomain}/*_temporal_indicators.csv for
+    a column matching indicator_name and creates a sparkline matching the style
+    of _create_resilience_temporal_kpi_card().
+    """
+    try:
+        found = _find_indicator_series(city, pillar_title, subdomain_key, indicator_name)
+        if found is None:
+            return None
+        df, match_col = found
+
+        df = df.copy()
+        df["Year"] = pd.to_numeric(df["Year"], errors="coerce")
+        if "Month" in df.columns:
+            df["Month"] = pd.to_numeric(df["Month"], errors="coerce")
+            df = df.dropna(subset=["Year", "Month", match_col]).sort_values(["Year", "Month"])
+            time_labels = [f"{int(y)}-{int(m):02d}" for y, m in zip(df["Year"], df["Month"])]
+        else:
+            df = df.dropna(subset=["Year", match_col]).sort_values("Year")
+            time_labels = [str(int(y)) for y in df["Year"]]
+
+        values = pd.to_numeric(df[match_col], errors="coerce").values
+        if len(values) == 0:
+            return None
+
+        sparkline = go.Figure()
+        sparkline.add_trace(go.Scatter(
+            x=list(range(len(values))),
+            y=values,
+            mode="lines+markers",
+            line=dict(color=brand_colors['Dark green'], width=2),
+            marker=dict(size=4, color=brand_colors['Dark green']),
+            text=time_labels,
+            hovertemplate="%{text}: %{y:,.3f}<extra></extra>"
+        ))
+        sparkline.update_layout(
+            height=80,
+            margin=dict(l=0, r=0, t=0, b=0),
+            showlegend=False,
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
+            xaxis=dict(visible=False),
+            yaxis=dict(visible=False),
+        )
+        return sparkline
+
+    except Exception:
+        return None
+
+
+def _build_indicator_kpi_card_with_sparkline(indicator_name, definition, unit, source, sparkline_fig=None, line_color=None):
+    """
+    Build a single KPI card with sparkline in the style of _create_resilience_temporal_kpi_card().
+    
+    Displays indicator name, latest value, unit, sparkline, and source.
+    """
+    if line_color is None:
+        line_color = brand_colors['Dark green']
+    
+    card_body = [
+        html.H5(indicator_name, style={
+            "fontWeight": "bold",
+            "fontSize": "0.95em",
+            "color": brand_colors['Brown'],
+            "marginBottom": "10px",
+            "lineHeight": "1.25",
+            "minHeight": "48px"
+        }),
+    ]
+    
+    # Add sparkline and latest value if available
+    if sparkline_fig:
+        # Extract latest value from figure
+        if sparkline_fig.data and len(sparkline_fig.data[0].y) > 0:
+            latest_value = sparkline_fig.data[0].y[-1]
+            formatted_value = _format_indicator_value(latest_value)
+            
+            card_body.append(
+                html.Div(formatted_value, style={
+                    "fontSize": "2.0em",
+                    "fontWeight": "bold",
+                    "color": brand_colors['Red'],
+                    "lineHeight": "1.2",
+                    "marginBottom": "8px",
+                    "minHeight": "32px"
+                })
+            )
+        
+        card_body.extend([
+            html.Div(unit if unit else "", style={
+                "fontSize": "0.85em",
+                "color": brand_colors['Brown'],
+                "fontStyle": "italic",
+                "minHeight": "18px",
+                "marginBottom": "6px"
+            }),
+            dcc.Graph(
+                figure=sparkline_fig,
+                config={"displayModeBar": False},
+                style={"height": "80px", "width": "100%"},
+            ),
+        ])
+    else:
+        # No sparkline - show definition instead
+        card_body.extend([
+            html.Div(definition if definition else "No definition available.", style={
+                "fontSize": "0.8em",
+                "color": "#666",
+                "marginBottom": "8px",
+                "minHeight": "35px",
+                "lineHeight": "1.3",
+            }),
+            html.Div(unit if unit else "", style={
+                "fontSize": "0.85em",
+                "color": brand_colors['Brown'],
+                "fontStyle": "italic",
+                "minHeight": "18px",
+                "marginBottom": "6px"
+            }),
+        ])
+    
+    card_body.append(
+        html.Div(source if source else "", style={
+            "fontSize": "0.7em",
+            "color": "#888888",
+            "fontStyle": "italic",
+            "textAlign": "right",
+            "marginTop": "4px",
+            "minHeight": "14px",
+        })
+    )
+    
+    return dbc.Card([
+        dbc.CardBody(card_body)
+    ], style={**kpi_card_style_2, "height": "100%"})
+
+
+def _build_indicator_kpi_cards_by_subdomain(city, subdomain_key, pillar_title=None):
+    """
+    Build KPI cards with sparklines for indicators in a specific sub-domain,
+    filtered by city availability from atlas_records.
+    
+    Features:
+    - Filters atlas_records by subdomain_key and city availability
+    - Attempts to load temporal data and creates sparkline charts
+    - Displays latest value prominently in red (matching resilience card style)
+    - Falls back to metadata display for indicators without data
+    
+    Parameters:
+    - city: 'hanoi' or 'addis'
+    - subdomain_key: The FCD Sub-domain key (e.g., 'Production systems and input supply')
+    - pillar_title: Optional pillar name for additional filtering
+    
+    Returns: html.Div with responsive grid of KPI cards
+    """
+    # Normalize subdomain key for matching
+    def normalize_key(k):
+        return k.lower().strip().replace(' and ', ' & ').replace(' ', '-').replace('_', '-')
+    
+    normalized_target = normalize_key(subdomain_key)
+    
+    # Filter atlas records for this subdomain and city
+    matching_records = [
+        rec for rec in atlas_records
+        if normalize_key(rec.get('FCD Sub-domain', '')) == normalized_target
+        and (city == 'hanoi' and str(rec.get('Available Hanoi', '0')).strip() in ('1', 'true', 'yes', 'y') or
+             city == 'addis' and str(rec.get('Available Addis', '0')).strip() in ('1', 'true', 'yes', 'y'))
+    ]
+    
+    if not matching_records:
+        return html.Div([
+            html.P(f"No indicators available for {subdomain_key} in {city}.",
+                   style={'color': '#999', 'textAlign': 'center', 'padding': '40px'})
+        ])
+    
+    cards = []
+    for rec in matching_records:
+        indicator_name = (rec.get('Indicator name') or '').strip()
+        definition = (rec.get('Definition (what the indicator measures)') or '').strip()
+        unit = (rec.get('Unit of measurement') or '').strip()
+        source = (rec.get('Data source') or '').strip()
+        
+        if not indicator_name:
+            continue
+        
+        # Try to load temporal data for this indicator
+        pillar_title = (rec.get('FCD Primary Pillar') or '').strip()
+        sparkline_chart = _try_load_temporal_indicator_data(city, pillar_title, subdomain_key, indicator_name)
+
+        # Skip indicators with no temporal data rather than showing a definition-only card
+        if sparkline_chart is None:
+            continue
+
+        # Create KPI card (matches resilience style)
+        card = _build_indicator_kpi_card_with_sparkline(
+            indicator_name, definition, unit, source, sparkline_chart
+        )
+        cards.append(card)
+    
+    # Return cards in a responsive grid
+    if not cards:
+        return html.Div([
+            html.P("No indicators to display.",
+                   style={'color': '#999', 'textAlign': 'center', 'padding': '40px'})
+        ])
+    
+    return html.Div([
+        dbc.Row([
+            dbc.Col(card, xs=12, sm=6, md=4, lg=3, style={"marginBottom": "8px"})
+            for card in cards
+        ], className="g-2")
+    ], style={"padding": "8px"})
+
+
 def governance_stakeholders_tab_layout():
     """Hà Nội stakeholders tab layout"""
     return html.Div([
         city_selector(selected_city='hanoi', visible=False),  # Hidden but present for callback
         
-        html.Div([sidebar], style={
-            "width": "15%",
-            "height": "100%",
-            "display": "flex",
-            "vertical-align": 'top',
-            "flexDirection": "column",
-            "justifyContent": "flex-start",
-        }),
+        #html.Div([sidebar], style={
+        #    "width": "15%",
+        #    "height": "100%",
+        #    "display": "flex",
+        #    "vertical-align": 'top',
+        #    "flexDirection": "column",
+        #    "justifyContent": "flex-start",
+        #}),
 
         # Main content: full-page DataTable for stakeholders
         html.Div([
@@ -175,13 +434,13 @@ def storage_distribution_tab_layout():
     return html.Div([
         city_selector(selected_city='hanoi', visible=False),  # Hidden but present for callback
         
-        html.Div([sidebar], style={
-            "width": "15%",
-            "height": "100%",
-            "display": "flex",
-            "vertical-align":'top',
-            "flexDirection": "column",
-            "justifyContent": "flex-start"}),
+        #html.Div([sidebar], style={
+        #    "width": "15%",
+        #    "height": "100%",
+        #    "display": "flex",
+        #    "vertical-align":'top',
+        #    "flexDirection": "column",
+        #    "justifyContent": "flex-start"}),
 
         # Left Panel
         html.Div([
@@ -360,19 +619,19 @@ def storage_distribution_tab_layout():
     })
 
 
-def livelihoods_poverty_equity_tab_layout():
+def income_growth_distribution_tab():
     """Hà Nội poverty tab layout"""
     return html.Div([
         city_selector(selected_city='hanoi', visible=False),  # Hidden but present for callback
         
-        html.Div([sidebar], style={
-            "width": "15%",
-            "height": "100%",
-            "display": "flex",
-            "vertical-align":'top',
-            "flexDirection": "column",
-            "justifyContent": "flex-start",
-        }),
+        #html.Div([sidebar], style={
+        #    "width": "15%",
+        #    "height": "100%",
+        #    "display": "flex",
+        #    "vertical-align":'top',
+        #    "flexDirection": "column",
+        #    "justifyContent": "flex-start",
+        #}),
 
         html.Div([
             dbc.Card([
@@ -503,14 +762,14 @@ def food_affordability_tab_layout_hanoi_arch():
     return html.Div([
         city_selector(selected_city='hanoi', visible=False),  # Hidden but present for callback
         
-        html.Div([sidebar], style={
-            "width": "15%",
-            "height": "100%",
-            "display": "flex",
-            "vertical-align":'top',
-            "flexDirection": "column",
-            "justifyContent": "flex-start",
-        }),
+        #html.Div([sidebar], style={
+        #    "width": "15%",
+        #    "height": "100%",
+        #    "display": "flex",
+        #    "vertical-align":'top',
+        #    "flexDirection": "column",
+        #    "justifyContent": "flex-start",
+        #}),
 
         # Left Panel
         html.Div([
@@ -619,26 +878,27 @@ def diets_nutrition_health_tab_layout():
     return html.Div([
         city_selector(selected_city='hanoi', visible=False),  # Hidden but present for callback
         
-        html.Div([sidebar], style={
-            "width": "15%",
-            "height": "100%",
-            "display": "flex",
-            "vertical-align":'top',
-            "flexDirection": "column",
-            "justifyContent": "flex-start",
-        }),
+        #html.Div([sidebar], style={
+        #    "width": "15%",
+        #    "height": "100%",
+        #    "display": "flex",
+        #    "vertical-align":'top',
+        #    "flexDirection": "column",
+        #    "justifyContent": "flex-start",
+        #}),
 
         # KPI cards (left)
-        html.Div([
-            html.H3("Children under 5 years", style={
-                        "color": sidebar_colors['Hover (light)'],
-                        "fontWeight": "bold",
-                        "marginTop": "20px",
-                        "marginBottom": "15px",
-                        "borderBottom": f"3px solid {hero_gradient['100%']}",
-                        "paddingBottom": "10px"
-                    }),
-            dbc.Row([
+        dbc.Card([
+            dbc.CardHeader(
+                html.H4("Children under 5 years", style={
+                    "color": brand_colors['White'],
+                    "fontWeight": "bold",
+                    "margin": "0",
+                }),
+                style={"backgroundColor": hero_gradient['50%'], "borderRadius": "9px 9px 0 0"}
+            ),
+            dbc.CardBody(
+                dbc.Row([
                         dbc.Col([create_nutrition_kpi_card_hanoi(
                                         df_diet_2_hanoi[(df_diet_2_hanoi['Cat'] == labels[0]) & (df_diet_2_hanoi['Reg'] == 'Hanoi')][['Year', 'value']],
                                         labels[0].split(' in ')[0], 
@@ -667,18 +927,26 @@ def diets_nutrition_health_tab_layout():
                                         df_diet_2_hanoi[(df_diet_2_hanoi['Cat'] == labels[3]) & (df_diet_2_hanoi['Reg'] == 'Vietnam')]['value'].dropna().values[-1], 
                                         lower_is_better=True)], width=tile_width, lg=lg),
                     ]),
+                style={"padding": "12px", "borderRadius": "10px"}
+            ),
+        ], style={
+            "marginBottom": "14px",
+            "borderRadius": "10px",
+            "backgroundColor": sidebar_colors['Hover (dark card)'],
+            "boxShadow": "0 2px 6px rgba(0,0,0,0.1)",
+        }),
 
-            html.H3("Women of reproductive age", style={
-                        "color": sidebar_colors['Hover (light)'],
-                        "fontWeight": "bold",
-                        "marginTop": "20px",
-                        "marginBottom": "15px",
-                        "borderBottom": f"3px solid {hero_gradient['100%']}",
-                        "paddingBottom": "10px"
-                    }),
-
-            dbc.Row([
-
+        dbc.Card([
+            dbc.CardHeader(
+                html.H4("Women of reproductive age", style={
+                    "color": brand_colors['White'],
+                    "fontWeight": "bold",
+                    "margin": "0",
+                }),
+                style={"backgroundColor": hero_gradient['50%'], "borderRadius": "9px 9px 0 0"}
+            ),
+            dbc.CardBody(
+                dbc.Row([
                         dbc.Col([create_nutrition_kpi_card_hanoi(
                                         df_diet_2_hanoi[(df_diet_2_hanoi['Cat'] == labels[4]) & (df_diet_2_hanoi['Reg'] == 'Hanoi')][['Year', 'value']],
                                         labels[4].split(' in ')[0], 
@@ -686,28 +954,18 @@ def diets_nutrition_health_tab_layout():
                                         df_diet_2_hanoi[(df_diet_2_hanoi['Cat'] == labels[4]) & (df_diet_2_hanoi['Reg'] == 'Vietnam')]['value'].dropna().values[-1], 
                                         lower_is_better=True)], width=tile_width, lg=lg),
                     ]),
-
+                style={"padding": "12px", "borderRadius": "10px"}
+            ),
         ], style={
-            "width": "min(90%)",
-            "height": "100%",
-            "padding": "10px",
-            "marginLeft": "14px",
-            "backgroundColor": "#FFFFFF",
-            "borderRadius": "0",
-            "margin": "0",
-            "boxShadow": "0 2px 8px rgba(0,0,0,0.05)",
-            "display": "flex",
-            "flexDirection": "column",
-            "justifyContent": "flex-start",
-            "overflowY": "auto",
-            "boxSizing": "border-box",
-            "position": "relative",
+            "marginBottom": "14px",
+            "borderRadius": "10px",
+            "backgroundColor": sidebar_colors['Hover (dark card)'],
+            "boxShadow": "0 2px 6px rgba(0,0,0,0.1)",
         }),
+
     ], style={
-        "display": "flex",
-        "width": "100%",
-        "height": "100%",
-        "backgroundColor": "#F8FAF8"
+        "width": "100%", "height": "100%", "display": "flex", "flexDirection": "column",
+        "padding": "6px", "backgroundColor": sidebar_colors['Hover (dark card)'], "overflowY": "auto",
     })
 
 
@@ -724,14 +982,14 @@ def food_affordability_tab_layout():
     return html.Div([
         city_selector(selected_city='hanoi', visible=False),  # Hidden but present for callback
         
-            html.Div([sidebar], style={
-                                "width": "15%",
-                                "height": "100%",
-                                "display": "flex",
-                                "vertical-align":'top',
-                                "flexDirection": "column",
-                                "justifyContent": "flex-start",
-            }),
+            #html.Div([sidebar], style={
+            #                    "width": "15%",
+            #                    "height": "100%",
+            #                    "display": "flex",
+            #                    "vertical-align":'top',
+            #                    "flexDirection": "column",
+            #                    "justifyContent": "flex-start",
+            #}),
 
             # Left Panel
             html.Div([
@@ -876,8 +1134,8 @@ def food_affordability_tab_layout():
                             dcc.Graph(
                                 id='affordability-map-hanoi',
                                 figure=go.Figure().update_layout(
-                                    mapbox=dict(
-                                        style="carto-positron",
+                                    map=dict(
+                                        style=_BASEMAP_STYLE,
                                         center={"lat": 21.0, "lon": 105.85},
                                         zoom=9
                                     ),
@@ -923,14 +1181,14 @@ def sdg_indicator_atlas_tab_layout():
     return html.Div([
         city_selector(selected_city='hanoi', visible=False),  # Hidden but present for callback
 
-        html.Div([sidebar], style={
-            "width": "15%",
-            "height": "100%",
-            "display": "flex",
-            "vertical-align": 'top',
-            "flexDirection": "column",
-            "justifyContent": "flex-start"
-        }),
+        #html.Div([sidebar], style={
+        #    "width": "15%",
+        #    "height": "100%",
+        #    "display": "flex",
+        #    "vertical-align": 'top',
+        #    "flexDirection": "column",
+        #    "justifyContent": "flex-start"
+        #}),
 
         # Main content area
         html.Div([
@@ -2000,29 +2258,32 @@ def climate_resilience_tab_layout(all_quarters, default_view='Biophysical shocks
         }),
         html.Script(f"window.quarterLookup = {json.dumps(all_quarters)};"),
 
-        html.Div([sidebar], style={
-            "width": "15%",
-            "height": "100%",
-            "display": "flex",
-            "vertical-align": 'top',
-            "flexDirection": "column",
-            "justifyContent": "flex-start",
-        }),
+        #html.Div([sidebar], style={
+        #    "width": "15%",
+        #    "height": "100%",
+        #    "display": "flex",
+        #    "vertical-align": 'top',
+        #    "flexDirection": "column",
+        #    "justifyContent": "flex-start",
+        #}),
 
         # ── Content area: toggle + dynamic view container ────────
         html.Div([
             dbc.CardHeader(
-                dcc.Dropdown(
-                    id="resilience_view-select",
-                    options=view_options,
-                    value=selected_view,
-                    clearable=False,
-                    style={"zIndex": "2000", "marginBottom": "0", 'fontSize': 'clamp(0.8em, 1em, 1.4em)', 'width': '100%'}
-                ),
+                html.Div([
+                    html.Button(
+                        'Biophysical shocks', id='env-climate-view-tab-biophysical', n_clicks=0,
+                        className='dash-subview-tab-active' if selected_view == 'Biophysical shocks' else 'dash-subview-tab-inactive'
+                    ),
+                    html.Button(
+                        'Land-use & Land-cover', id='env-climate-view-tab-lulc', n_clicks=0,
+                        className='dash-subview-tab-active' if selected_view == 'Land-use & Land-cover' else 'dash-subview-tab-inactive'
+                    ),
+                ], className='dash-subview-tab-group'),
                 style={
                     "height": "auto", "padding": "6px", "marginBottom": "16px",
                     "boxShadow": "0 2px 12px rgba(0,0,0,0.08)",
-                    "backgroundColor": "#FFFFFF", "borderRadius": "12px"
+                    "backgroundColor": "#FFFFFF", "borderRadius": "12px",
                 }
             ),
             html.Div(
@@ -2046,14 +2307,14 @@ def temporal_resilience_tab():
     return html.Div([
         city_selector(selected_city='hanoi', visible=False),
 
-        html.Div([sidebar], style={
-            "width": "15%",
-            "height": "100%",
-            "display": "flex",
-            "vertical-align": 'top',
-            "flexDirection": "column",
-            "justifyContent": "flex-start",
-        }),
+        #html.Div([sidebar], style={
+        #    "width": "15%",
+        #    "height": "100%",
+        #    "display": "flex",
+        #   "vertical-align": 'top',
+        #    "flexDirection": "column",
+        #    "justifyContent": "flex-start",
+        #}),
 
         # ── Content area: toggle + dynamic view container ────────
         html.Div([
@@ -2168,29 +2429,32 @@ def environment_climate_change_tab(all_quarters, default_view='Biophysical shock
         }),
         html.Script(f"window.quarterLookup = {json.dumps(all_quarters)};"),
 
-        html.Div([sidebar], style={
-            "width": "15%",
-            "height": "100%",
-            "display": "flex",
-            "vertical-align": 'top',
-            "flexDirection": "column",
-            "justifyContent": "flex-start",
-        }),
+        #html.Div([sidebar], style={
+        #    "width": "15%",
+        #    "height": "100%",
+        #    "display": "flex",
+        #    "vertical-align": 'top',
+        #    "flexDirection": "column",
+        #    "justifyContent": "flex-start",
+        #}),
 
         # ── Content area: toggle + dynamic view container ────────
         html.Div([
             dbc.CardHeader(
-                dcc.Dropdown(
-                    id="resilience_view-select",
-                    options=view_options,
-                    value=selected_view,
-                    clearable=False,
-                    style={"zIndex": "2000", "marginBottom": "0", 'fontSize': 'clamp(0.8em, 1em, 1.4em)', 'width': '100%'}
-                ),
+                html.Div([
+                    html.Button(
+                        'Biophysical shocks', id='env-climate-view-tab-biophysical', n_clicks=0,
+                        className='dash-subview-tab-active' if selected_view == 'Biophysical shocks' else 'dash-subview-tab-inactive'
+                    ),
+                    html.Button(
+                        'Land-use & Land-cover', id='env-climate-view-tab-lulc', n_clicks=0,
+                        className='dash-subview-tab-active' if selected_view == 'Land-use & Land-cover' else 'dash-subview-tab-inactive'
+                    ),
+                ], className='dash-subview-tab-group'),
                 style={
                     "height": "auto", "padding": "6px", "marginBottom": "16px",
                     "boxShadow": "0 2px 12px rgba(0,0,0,0.08)",
-                    "backgroundColor": "#FFFFFF", "borderRadius": "12px"
+                    "backgroundColor": "#FFFFFF", "borderRadius": "12px",
                 }
             ),
             html.Div(
@@ -2206,11 +2470,6 @@ def environment_climate_change_tab(all_quarters, default_view='Biophysical shock
 
     ], style={"display": "flex", "width": "100vw", "height": "100%", "backgroundColor": "#F8FAF8"})
 
-def income_growth_distribution_tab():
-    """Can repurpose MPI tab layout for this and add in any additional indicators available to sub-tabs?
-    """
-    return livelihoods_poverty_equity_tab_layout() 
-
 def policies_leadership_tab():
     """Hanoi policies tab layout"""
     df_policies = df_policies_hanoi
@@ -2218,14 +2477,14 @@ def policies_leadership_tab():
     return html.Div([
         city_selector(selected_city='hanoi', visible=False),  # Hidden but present for callback
         
-        html.Div([sidebar], style={
-            "width": "15%",
-            "height": "100%",
-            "display": "flex",
-            "vertical-align": 'top',
-            "flexDirection": "column",
-            "justifyContent": "flex-start"
-        }),
+        #html.Div([sidebar], style={
+        #    "width": "15%",
+        #    "height": "100%",
+        #    "display": "flex",
+        #    "vertical-align": 'top',
+        #    "flexDirection": "column",
+        #    "justifyContent": "flex-start"
+        #}),
 
         # Main content area
         html.Div([
@@ -2339,6 +2598,36 @@ def policies_leadership_tab():
     })
 
 
+def globalization_trade_tab():
+    """Globalization & trade indicators from atlas."""
+    return html.Div([
+        city_selector(selected_city='hanoi', visible=False),
+
+        dbc.Card([
+            dbc.CardHeader(
+                html.H4("Temporal Indicators", style={
+                    "color": brand_colors['White'],
+                    "fontWeight": "bold",
+                    "margin": "0",
+                }),
+                style={"backgroundColor": hero_gradient['50%'], "borderRadius": "9px 9px 0 0"}
+            ),
+            dbc.CardBody(
+                _build_indicator_kpi_cards_by_subdomain('hanoi', 'Globalization and trade'),
+                style={"padding": "12px", "borderRadius": "10px"}
+            ),
+        ], style={
+            "marginBottom": "14px",
+            "borderRadius": "10px",
+            "backgroundColor": brand_colors['White'],
+            "boxShadow": "0 2px 6px rgba(0,0,0,0.1)",
+        }),
+    ], style={
+        "width": "100%", "height": "100%", "display": "flex", "flexDirection": "column",
+        "padding": "6px", "backgroundColor": brand_colors['White'], "overflowY": "auto",
+    })
+
+
 def population_growth_migration_tab():
     """ Will need to move some of the temporal resilience pieces here under new classification scheme
     """
@@ -2372,9 +2661,33 @@ def processing_packing_tab():
     return "coming-soon"
 
 def production_systems_input_supply_tab():
-    """ Only data available for Hanoi right now is from repurposing vars from resilience temporal trends
-    """
-    return temporal_resilience_tab()
+    """Production systems & input supply indicators from atlas."""
+    return html.Div([
+        city_selector(selected_city='hanoi', visible=False),
+
+        dbc.Card([
+            dbc.CardHeader(
+                html.H4("Temporal Indicators", style={
+                    "color": brand_colors['White'],
+                    "fontWeight": "bold",
+                    "margin": "0",
+                }),
+                style={"backgroundColor": hero_gradient['50%'], "borderRadius": "9px 9px 0 0"}
+            ),
+            dbc.CardBody(
+                _build_indicator_kpi_cards_by_subdomain('hanoi', 'Production systems and input supply'),
+                style={"padding": "12px", "borderRadius": "10px"}
+            ),
+        ], style={
+            "marginBottom": "14px",
+            "borderRadius": "10px",
+            "backgroundColor": brand_colors['White'],
+            "boxShadow": "0 2px 6px rgba(0,0,0,0.1)",
+        }),
+    ], style={
+        "width": "100%", "height": "100%", "display": "flex", "flexDirection": "column",
+        "padding": "6px", "backgroundColor": brand_colors['White'], "overflowY": "auto",
+    })
 
 def retail_markerting_tab():
     """ Only data available for Hanoi right now is from repurposing vars from resilience temporal trends
@@ -2404,11 +2717,8 @@ def governance_tab():
 def food_security_tab():
     return 'coming-soon'
 
-def livelihoods_poverty_equity_tab():
-    return livelihoods_poverty_equity_tab_layout()
-
 def noncommunicable_diseases_tab():
     return 'coming-soon'
 
 def nutrional_status_tab():
-    return diets_nutrition_health_tab_layout(selected_city='addis')
+    return diets_nutrition_health_tab_layout(selected_city='hanoi')

@@ -194,18 +194,11 @@ metric_direction = {
 
 # ========================== Map / Chart Constants (from app.py) ==========================
 
-# Esri World Imagery (satellite) tiles were considered for Vietnam maps while a
-# compliant labelled basemap is sourced from Vietnamese partners; using the
-# CartoDB light basemap instead for now.
-_BASEMAP_TILE = [
-    {
-        "below": "traces",
-        "sourcetype": "raster",
-        "source": [
-            "https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png"
-        ],
-    }
-]
+# Plotly's legacy Mapbox GL traces (Scattermapbox/Choroplethmapbox) always show an
+# "API key required" watermark without a Mapbox token, regardless of custom tile layers.
+# The newer MapLibre-based traces (Scattermap/Choroplethmap) render open styles like
+# carto-positron natively - no token, no watermark.
+_BASEMAP_STYLE = "carto-positron"
 
 REGION_COLOURS = {
     "Red River Delta": "#e63946",

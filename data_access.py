@@ -33,7 +33,7 @@ _HANOI_AFFORDABILITY_DIR = os.path.join(_HANOI_ROOT, "food-environments_food-aff
 _HANOI_NUTRITION_DIR = os.path.join(_HANOI_ROOT, "outcomes_nutritional-status")
 _HANOI_FOOD_ENV_DIR = os.path.join(_HANOI_ROOT, "food-environments_vendor-properties")
 
-ATLAS_CSV_PATH = os.path.join(_HOMEPATH, "EcoFoodSystems_FCD_aligned.csv")
+ATLAS_CSV_PATH = os.path.join(_HOMEPATH, "EcoFoodSystems_FCD_aligned_v6.csv")
 
 
 def load_indicator_atlas_records(csv_path):
@@ -60,7 +60,7 @@ def load_indicator_atlas_records(csv_path):
     header_idx = None
     for idx, row in enumerate(rows):
         normalized = [str(c).strip() for c in row]
-        if 'Domain / Sub-theme' in normalized and 'Indicator name' in normalized:
+        if 'FCD Primary Pillar' in normalized and 'Indicator name' in normalized:
             header_idx = idx
             break
 
