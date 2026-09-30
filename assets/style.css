@@ -852,6 +852,39 @@ body, * {
     box-shadow: none !important;
 }
 
+/* ===================== Indicator Search Dropdown ===================== */
+/* The running Dash version (3.3.0) renders dcc.Dropdown with the classic
+   react-select / react-virtualized-select markup - option rows use the
+   ".VirtualizedSelectOption" class (not the Dash 4.x "dash-dropdown-option"
+   class assumed earlier, which never matched anything). Each row is
+   absolutely positioned at a fixed height via inline style driven by the
+   optionHeight prop (set in Python) - it's uniform for every row (no per-row
+   auto-measurement in this version), sized generously so 2-3 line wrapped
+   labels have room to breathe. Scoped to #indicator-search-dropdown only
+   (the homepage + sidebar search bars), not other dropdowns in the app. */
+
+#indicator-search-dropdown .Select-placeholder,
+#indicator-search-dropdown .Select-value {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#indicator-search-dropdown .VirtualizedSelectOption {
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    box-sizing: border-box;
+    white-space: normal;
+    line-height: 1;
+    overflow: hidden;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+#indicator-search-dropdown .VirtualizedSelectFocusedOption {
+    background-color: rgba(29, 87, 79, 0.1);
+}
+
 /* ===================== EMDAT Tab Switcher ===================== */
 
 .emdat-tab-active {

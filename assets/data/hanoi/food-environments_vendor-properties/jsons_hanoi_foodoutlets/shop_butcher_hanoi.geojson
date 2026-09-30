@@ -1,0 +1,15 @@
+{
+"type": "FeatureCollection",
+"name": "shop_butcher_hanoi",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "osm_id": "4378846896", "code": 2516, "fclass": "butcher", "name_left": "Thịt lợn đen Song Thắng", "index_right": 0, "name_right": "Hanoi" }, "geometry": { "type": "Point", "coordinates": [ 105.8341085, 21.0149278 ] } },
+{ "type": "Feature", "properties": { "osm_id": "4432075090", "code": 2516, "fclass": "butcher", "name_left": null, "index_right": 0, "name_right": "Hanoi" }, "geometry": { "type": "Point", "coordinates": [ 105.8576379, 20.996006 ] } },
+{ "type": "Feature", "properties": { "osm_id": "6221120385", "code": 2516, "fclass": "butcher", "name_left": "Thịt Xiên Hoàng Đức", "index_right": 0, "name_right": "Hanoi" }, "geometry": { "type": "Point", "coordinates": [ 105.8073002, 21.023154 ] } },
+{ "type": "Feature", "properties": { "osm_id": "8363335532", "code": 2516, "fclass": "butcher", "name_left": null, "index_right": 0, "name_right": "Hanoi" }, "geometry": { "type": "Point", "coordinates": [ 105.7761907, 21.0728885 ] } },
+{ "type": "Feature", "properties": { "osm_id": "10857545234", "code": 2516, "fclass": "butcher", "name_left": "Organic Green", "index_right": 0, "name_right": "Hanoi" }, "geometry": { "type": "Point", "coordinates": [ 105.8103459, 21.0478414 ] } },
+{ "type": "Feature", "properties": { "osm_id": "11590640344", "code": 2516, "fclass": "butcher", "name_left": "Bếp+", "index_right": 0, "name_right": "Hanoi" }, "geometry": { "type": "Point", "coordinates": [ 105.7842088, 21.0453737 ] } },
+{ "type": "Feature", "properties": { "osm_id": "13264888450", "code": 2516, "fclass": "butcher", "name_left": "Meat Farm Thực Phẩm Sạch", "index_right": 0, "name_right": "Hanoi" }, "geometry": { "type": "Point", "coordinates": [ 105.7955156, 21.0062901 ] } },
+{ "type": "Feature", "properties": { "osm_id": "13632874207", "code": 2516, "fclass": "butcher", "name_left": null, "index_right": 0, "name_right": "Hanoi" }, "geometry": { "type": "Point", "coordinates": [ 105.831024, 21.2004108 ] } }
+]
+}

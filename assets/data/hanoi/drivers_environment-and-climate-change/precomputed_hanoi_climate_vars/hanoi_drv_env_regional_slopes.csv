@@ -1,0 +1,17 @@
+region,indicator,slope
+Central Highlands,grace_trend,0.038097
+Central Highlands,vci_severe_pct,-0.151072
+Mekong Delta,grace_trend,-0.047749
+Mekong Delta,vci_severe_pct,-0.237409
+North Central Coast,grace_trend,0.022292
+North Central Coast,vci_severe_pct,-0.314382
+Northeast,grace_trend,0.012761
+Northeast,vci_severe_pct,-0.345267
+Northwest,grace_trend,0.024099
+Northwest,vci_severe_pct,-0.190853
+Red River Delta,grace_trend,0.015337
+Red River Delta,vci_severe_pct,-0.252203
+South Central Coast,grace_trend,0.05356
+South Central Coast,vci_severe_pct,-0.269019
+Southeast,grace_trend,-0.033776
+Southeast,vci_severe_pct,-0.176584

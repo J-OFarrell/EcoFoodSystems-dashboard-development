@@ -1,0 +1,11 @@
+{
+"type": "FeatureCollection",
+"name": "shop_kiosk_hanoi",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "osm_id": "13434514781", "code": 2503, "fclass": "kiosk", "name_left": null, "index_right": 0, "name_right": "Hanoi" }, "geometry": { "type": "Point", "coordinates": [ 105.8435262, 21.0143493 ] } },
+{ "type": "Feature", "properties": { "osm_id": "13434528346", "code": 2503, "fclass": "kiosk", "name_left": "Lotus Bar", "index_right": 0, "name_right": "Hanoi" }, "geometry": { "type": "Point", "coordinates": [ 105.8449193, 21.0141093 ] } },
+{ "type": "Feature", "properties": { "osm_id": "13434543127", "code": 2503, "fclass": "kiosk", "name_left": "Climbing Rose Box", "index_right": 0, "name_right": "Hanoi" }, "geometry": { "type": "Point", "coordinates": [ 105.845246, 21.0099626 ] } },
+{ "type": "Feature", "properties": { "osm_id": "13434544806", "code": 2503, "fclass": "kiosk", "name_left": null, "index_right": 0, "name_right": "Hanoi" }, "geometry": { "type": "Point", "coordinates": [ 105.8432198, 21.0145123 ] } }
+]
+}

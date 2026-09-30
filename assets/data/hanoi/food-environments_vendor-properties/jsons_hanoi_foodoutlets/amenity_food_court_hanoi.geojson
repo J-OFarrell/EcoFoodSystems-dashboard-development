@@ -1,0 +1,17 @@
+{
+"type": "FeatureCollection",
+"name": "amenity_food_court_hanoi",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "osm_id": "104770283", "code": 2306, "fclass": "food_court", "name_left": "Cửa Hàng Bò Nầm Nướng", "index_right": 0, "name_right": "Hanoi" }, "geometry": { "type": "Point", "coordinates": [ 105.8480778, 21.0390983 ] } },
+{ "type": "Feature", "properties": { "osm_id": "1708540209", "code": 2306, "fclass": "food_court", "name_left": "Cơm Trịnh", "index_right": 0, "name_right": "Hanoi" }, "geometry": { "type": "Point", "coordinates": [ 105.8547467, 21.0029067 ] } },
+{ "type": "Feature", "properties": { "osm_id": "3316120061", "code": 2306, "fclass": "food_court", "name_left": "Bún Đậu Phố Cổ", "index_right": 0, "name_right": "Hanoi" }, "geometry": { "type": "Point", "coordinates": [ 105.8161781, 21.0229285 ] } },
+{ "type": "Feature", "properties": { "osm_id": "5315672621", "code": 2306, "fclass": "food_court", "name_left": "Bún Bò Huế O Uông", "index_right": 0, "name_right": "Hanoi" }, "geometry": { "type": "Point", "coordinates": [ 105.8134757, 21.0745825 ] } },
+{ "type": "Feature", "properties": { "osm_id": "5350734821", "code": 2306, "fclass": "food_court", "name_left": "Nhà Hàng Chim Quay Móc Mật", "index_right": 0, "name_right": "Hanoi" }, "geometry": { "type": "Point", "coordinates": [ 105.8189349, 21.035304 ] } },
+{ "type": "Feature", "properties": { "osm_id": "6035928576", "code": 2306, "fclass": "food_court", "name_left": "Quán Cá Lăng Toàn Thắng", "index_right": 0, "name_right": "Hanoi" }, "geometry": { "type": "Point", "coordinates": [ 105.86208, 21.0250522 ] } },
+{ "type": "Feature", "properties": { "osm_id": "6957667188", "code": 2306, "fclass": "food_court", "name_left": "Bún Chả Đắc Kim", "index_right": 0, "name_right": "Hanoi" }, "geometry": { "type": "Point", "coordinates": [ 105.8480701, 21.0323248 ] } },
+{ "type": "Feature", "properties": { "osm_id": "7055939380", "code": 2306, "fclass": "food_court", "name_left": "Bún Bò Huế Ngự Uyển", "index_right": 0, "name_right": "Hanoi" }, "geometry": { "type": "Point", "coordinates": [ 105.833621, 20.9852705 ] } },
+{ "type": "Feature", "properties": { "osm_id": "7178803503", "code": 2306, "fclass": "food_court", "name_left": null, "index_right": 0, "name_right": "Hanoi" }, "geometry": { "type": "Point", "coordinates": [ 105.8737162, 21.1121073 ] } },
+{ "type": "Feature", "properties": { "osm_id": "7192525585", "code": 2306, "fclass": "food_court", "name_left": "Thực Phẩm Chay Âu Lạc", "index_right": 0, "name_right": "Hanoi" }, "geometry": { "type": "Point", "coordinates": [ 105.8464987, 21.0323034 ] } }
+]
+}

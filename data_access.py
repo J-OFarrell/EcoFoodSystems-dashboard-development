@@ -237,7 +237,7 @@ if 'Document Link' in df_policies_hanoi.columns:
     )
 
 # Isochrone GeoJSON file list (Hanoi)
-_isochrones_path_hanoi = os.path.join(_HANOI_FOOD_ENV_DIR, "isochrones_hanoi")
+_isochrones_path_hanoi = os.path.join(_HANOI_FOOD_ENV_DIR, "isochrones_hanoi_all")
 isochrones_geojson_files_hanoi = (
     sorted(os.listdir(_isochrones_path_hanoi)) if os.path.exists(_isochrones_path_hanoi) else []
 )
@@ -258,7 +258,10 @@ df_diet_2_hanoi = pd.read_csv(
 
 def _humanize_outlet_label(filename):
     base = os.path.splitext(os.path.basename(filename))[0]
+    # Strip city suffixes (both _addis and _hanoi)
     if base.endswith("_addis"):
+        base = base[:-6]
+    elif base.endswith("_hanoi"):
         base = base[:-6]
     if base.startswith("shop_"):
         base = base[len("shop_"):]
@@ -338,6 +341,70 @@ def _build_accessibility_outlet_options_addis(outlet_files):
 
 accessibility_outlet_options_addis = _build_accessibility_outlet_options_addis(outlets_geojson_files_addis)
 
+
+def _build_accessibility_outlet_options_hanoi(outlet_files):
+    healthy_files = {
+        "shop_butcher_hanoi.geojson",
+        "shop_dairy_hanoi.geojson",
+        "shop_greengrocer_hanoi.geojson",
+        "shop_health_food_hanoi.geojson",
+        "shop_seafood_hanoi.geojson",
+        "amenity_marketplace_hanoi.geojson",
+        "amenity_drinking_water_hanoi.geojson",
+    }
+    unhealthy_files = {
+        "shop_bakery_hanoi.geojson",
+        "shop_beverages_hanoi.geojson",
+        "shop_confectionery_hanoi.geojson",
+        "shop_convenience_hanoi.geojson",
+        "shop_kiosk_hanoi.geojson",
+        "amenity_fast_food_hanoi.geojson",
+        "amenity_cafe_hanoi.geojson",
+        "amenity_ice_cream_hanoi.geojson",
+        "amenity_vending_machine_hanoi.geojson",
+        "shop_alcohol_hanoi.geojson",
+        "shop_chocolate_hanoi.geojson",
+        "shop_coffee_hanoi.geojson",
+    }
+    mixed_files = {
+        "shop_supermarket_hanoi.geojson",
+        "amenity_restaurant_hanoi.geojson",
+        "amenity_pub_hanoi.geojson",
+        "amenity_bar_hanoi.geojson",
+        "amenity_food_court_hanoi.geojson",
+        "shop_deli_hanoi.geojson",
+    }
+
+    groups = [
+        ("All Healthy Offers", healthy_files),
+        ("All Unhealthy Offers", unhealthy_files),
+        ("All Mixed Offers", mixed_files),
+    ]
+
+    remaining = []
+    grouped = []
+    used = set()
+
+    for header, known_files in groups:
+        section_items = [f for f in outlet_files if f in known_files]
+        if section_items:
+            grouped.append({"label": f"── {header} ──", "value": f"__{header.lower().replace(' ', '_')}__", "disabled": True})
+            for file_name in sorted(section_items, key=_humanize_outlet_label):
+                grouped.append({"label": _humanize_outlet_label(file_name), "value": file_name})
+                used.add(file_name)
+
+    for file_name in outlet_files:
+        if file_name not in used:
+            remaining.append(file_name)
+
+    if remaining:
+        grouped.append({"label": "── Other Outlet Layers ──", "value": "__other_outlets__", "disabled": True})
+        for file_name in sorted(remaining, key=_humanize_outlet_label):
+            grouped.append({"label": _humanize_outlet_label(file_name), "value": file_name})
+
+    return grouped
+
+
 _accessibility_zonal_stats_path_addis = os.path.join(_ADDIS_FOOD_ENV_DIR, "addis_fev_vp_fenv_accessibility_stats.csv")
 
 
@@ -345,7 +412,39 @@ def _load_accessibility_zonal_stats(path):
     if not os.path.exists(path):
         return pd.DataFrame(), [], [], []
 
+    # Read the CSV and check if it's Hanoi format (with district names in a data row)
     df = pd.read_csv(path).drop(columns=["Unnamed: 0"], errors="ignore")
+    
+    # Check if first row contains district/commune names (Hanoi format)
+    # In Hanoi format, the first data row has 'adm3_name' in the first column
+    if len(df) > 0 and "adm3_name" in df.columns:
+        # Hanoi format: district/commune names are stored in a data row, not column headers
+        # Extract the row with district names
+        district_row = df.iloc[0]
+        
+        # Get district names from columns 5 onwards (skip the metadata columns)
+        district_names = []
+        for col_name in df.columns:
+            if col_name not in {"adm3_name", "pop_cat", "offer_cat", "mode", "time", "index"}:
+                val = district_row[col_name]
+                if pd.notna(val) and str(val).strip():
+                    district_names.append(str(val).strip())
+        
+        # Drop the metadata row and reset
+        df = df.iloc[1:].reset_index(drop=True)
+        
+        # Rename columns to use district names
+        # First keep the key columns, then rename data columns with district names
+        col_mapping = {}
+        data_col_idx = 0
+        for i, col_name in enumerate(df.columns):
+            if col_name not in {"adm3_name", "pop_cat", "offer_cat", "mode", "time", "index"}:
+                if data_col_idx < len(district_names):
+                    col_mapping[col_name] = district_names[data_col_idx]
+                    data_col_idx += 1
+        
+        df = df.rename(columns=col_mapping)
+    
     for col in ["index", "time"]:
         if col in df.columns:
             df[col] = pd.to_numeric(df[col], errors="coerce")
@@ -356,7 +455,7 @@ def _load_accessibility_zonal_stats(path):
 
     subcity_cols = [
         col for col in df.columns
-        if col not in {"index", "pop_cat", "offer_cat", "mode", "time"}
+        if col not in {"index", "pop_cat", "offer_cat", "mode", "time", "adm3_name"}
     ]
 
     population_labels = {
@@ -387,9 +486,17 @@ def _load_accessibility_zonal_stats(path):
     accessibility_offer_options_addis,
 ) = _load_accessibility_zonal_stats(_accessibility_zonal_stats_path_addis)
 
-# NOTE: outlets_geojson_files_hanoi is intentionally NOT defined here. In the
-# original app.py it was commented out (never loaded), while
-# hanoi_layouts.py::food_affordability_tab_layout unconditionally read
-# `main.outlets_geojson_files_hanoi` with no fallback - meaning that tab has
-# always raised AttributeError when opened. This refactor preserves that
-# pre-existing bug exactly rather than silently fixing it (see hanoi_layouts.py).
+# Hanoi accessibility/vendor properties structures
+outlets_geojson_files_hanoi = sorted(os.listdir(os.path.join(_HANOI_FOOD_ENV_DIR, "jsons_hanoi_foodoutlets")))
+
+accessibility_outlet_options_hanoi = _build_accessibility_outlet_options_hanoi(outlets_geojson_files_hanoi)
+
+_accessibility_zonal_stats_path_hanoi = os.path.join(_HANOI_FOOD_ENV_DIR, "hanoi_fev_vp_fenv_accessibility_stats.csv")
+
+(
+    accessibility_zonal_stats_hanoi,
+    accessibility_subcity_columns_hanoi,
+    accessibility_population_options_hanoi,
+    accessibility_offer_options_hanoi,
+) = _load_accessibility_zonal_stats(_accessibility_zonal_stats_path_hanoi)
+

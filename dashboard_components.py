@@ -1,3 +1,4 @@
+import hashlib
 import dash_bootstrap_components as dbc
 from dash import html, dcc
 
@@ -15,7 +16,7 @@ kpi_card_style_2 = {
                 "height": "auto",
             }
 
-def create_nutrition_kpi_card(outcome_name, addis_value, national_value, lower_is_better=True):
+def create_nutrition_kpi_card(outcome_name, addis_value, national_value, lower_is_better=True, data_source=""):
     """
     Create a KPI card comparing Addis Ababa vs National nutrition outcomes.
     
@@ -24,6 +25,7 @@ def create_nutrition_kpi_card(outcome_name, addis_value, national_value, lower_i
     - addis_value: Percentage value for Addis Ababa
     - national_value: Percentage value for National
     - lower_is_better: True if lower values are better (default), False otherwise
+    - data_source: Source of the data (displayed in info tooltip)
     """
     difference = addis_value - national_value
     
@@ -43,14 +45,43 @@ def create_nutrition_kpi_card(outcome_name, addis_value, national_value, lower_i
         arrow = "↑" if lower_is_better else "↓"
         status_text = "worse"
     
+    # Generate unique ID for info button
+    info_btn_id = f"nutrition-info-{hashlib.md5(outcome_name.encode()).hexdigest()[:8]}"
+    
     return dbc.Card([
         dbc.CardBody([
-            html.H5(outcome_name, style={
-                "fontWeight": "bold",
-                "fontSize": "1em",
-                "color": brand_colors['Brown'],
-                "marginBottom": "10px"
-            }),
+            html.Div([
+                html.H5(outcome_name, style={
+                    "fontWeight": "bold",
+                    "fontSize": "1em",
+                    "color": brand_colors['Brown'],
+                    "marginBottom": "10px"
+                }),
+                dbc.Button("ⓘ", id=info_btn_id, style={
+                    "fontSize": "1.2em",
+                    "color": brand_colors['Red'],
+                    "background": "none",
+                    "border": "none",
+                    "padding": "0",
+                    "cursor": "pointer",
+                    "marginLeft": "8px"
+                }),
+                dbc.Tooltip(
+                    html.Div([
+                        html.Div([
+                            html.Span("Indicator: ", style={"fontWeight": "bold"}),
+                            html.Span(outcome_name, style={"fontWeight": "bold"})
+                        ]),
+                        html.Div([
+                            html.Span("Data source: ", style={"fontStyle": "italic"}),
+                            html.Span(data_source if data_source else "Not provided", style={"fontStyle": "italic"})
+                        ], style={"marginTop": "4px"})
+                    ]),
+                    target=info_btn_id,
+                    placement="left",
+                    style={"fontSize": "0.85em", "maxWidth": "400px", "padding": "8px"}
+                )
+            ], style={"display": "flex", "alignItems": "center", "justifyContent": "space-between"}),
             
             # Addis Value
             html.Div([
@@ -91,7 +122,7 @@ def create_nutrition_kpi_card(outcome_name, addis_value, national_value, lower_i
 
 
 
-def create_nutrition_kpi_card_hanoi(timeseries, outcome_name, hanoi_value, national_value, lower_is_better=True):
+def create_nutrition_kpi_card_hanoi(timeseries, outcome_name, hanoi_value, national_value, lower_is_better=True, data_source=""):
     import plotly.graph_objects as go
     
     """
@@ -102,6 +133,7 @@ def create_nutrition_kpi_card_hanoi(timeseries, outcome_name, hanoi_value, natio
     - hanoi_value: Percentage value for Hanoi
     - national_value: Percentage value for National
     - lower_is_better: True if lower values are better (default), False otherwise
+    - data_source: Source of the data (displayed in info tooltip)
     """
     difference = hanoi_value - national_value
     
@@ -146,16 +178,45 @@ def create_nutrition_kpi_card_hanoi(timeseries, outcome_name, hanoi_value, natio
         yaxis=dict(visible=False),
     )
     
+    # Generate unique ID for info button
+    info_btn_id = f"nutrition-info-{hashlib.md5(outcome_name.encode()).hexdigest()[:8]}"
+    
     return dbc.Card([
         dbc.CardBody([
-            html.H5(outcome_name, style={
-                "fontWeight": "bold",
-                "fontSize": "1em",
-                "color": brand_colors['Brown'],
-                "marginBottom": "10px"
-            }),
+            html.Div([
+                html.H5(outcome_name, style={
+                    "fontWeight": "bold",
+                    "fontSize": "1em",
+                    "color": brand_colors['Brown'],
+                    "marginBottom": "10px"
+                }),
+                dbc.Button("ⓘ", id=info_btn_id, style={
+                    "fontSize": "1.2em",
+                    "color": brand_colors['Red'],
+                    "background": "none",
+                    "border": "none",
+                    "padding": "0",
+                    "cursor": "pointer",
+                    "marginLeft": "8px"
+                }),
+                dbc.Tooltip(
+                    html.Div([
+                        html.Div([
+                            html.Span("Indicator: ", style={"fontWeight": "bold"}),
+                            html.Span(outcome_name, style={"fontWeight": "bold"})
+                        ]),
+                        html.Div([
+                            html.Span("Data source: ", style={"fontStyle": "italic"}),
+                            html.Span(data_source if data_source else "Not provided", style={"fontStyle": "italic"})
+                        ], style={"marginTop": "4px"})
+                    ]),
+                    target=info_btn_id,
+                    placement="left",
+                    style={"fontSize": "0.85em", "maxWidth": "400px", "padding": "8px"}
+                )
+            ], style={"display": "flex", "alignItems": "center", "justifyContent": "space-between"}),
             
-            # Addis Value
+            # Hanoi Value
             html.Div([
                 html.Span("Hanoi: ", style={"fontSize": "0.9em", "color": "#666"}),
                 html.Span(f"{hanoi_value}%", style={

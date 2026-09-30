@@ -54,6 +54,7 @@ def _record_primary_pillar_key(rec):
 _CSV_SUBDOMAIN_TO_KEY = {
     "income growth and distribution": "income-growth-distribution",
     "environment and climate change": "environment-climate-change",
+    "policies and leadership": "policies-leadership",
     "socio-cultural context": "socio-cultural-context",
     "population growth and migration": "population-growth-migration",
     "globalization and trade": "globalization-trade",
@@ -147,6 +148,54 @@ def _make_indicator_button(idx, rec, indicator_name, selected_city):
     )
 
 
+# ========================== Indicator Search ==========================
+
+def _build_indicator_search_options(selected_city):
+    """Flat, alphabetised list of every indicator for the search bar's typeahead."""
+    seen = set()
+    options = []
+    for idx, rec in enumerate(atlas_records):
+        indicator_name = (rec.get('Indicator name') or '').strip()
+        if not indicator_name:
+            continue
+        subdomain_key = _record_subdomain_key(rec)
+        dedupe_key = (indicator_name.lower(), subdomain_key)
+        if dedupe_key in seen:
+            continue
+        seen.add(dedupe_key)
+
+        available = _atlas_available_for_city(rec, selected_city)
+        options.append({
+            'label': indicator_name,
+            # subdomain_key is parsed out by the routing callback; name/index just keep values unique.
+            'value': f"{subdomain_key}::{indicator_name}::{idx}",
+            'disabled': not available,
+        })
+
+    options.sort(key=lambda opt: opt['label'].lower())
+    return options
+
+
+def indicator_search_bar(selected_city='hanoi'):
+    """Typeahead search box - selecting an indicator routes straight to its sub-domain page."""
+    return dcc.Dropdown(
+        id='indicator-search-dropdown',
+        options=_build_indicator_search_options(selected_city),
+        value=None,
+        placeholder='🔍',
+        searchable=True,
+        clearable=True,
+        # This Dash version sizes every virtualized row uniformly (no per-row
+        # auto-measurement), so this needs to fit the longest 2-3 line label.
+        optionHeight=70,
+        style={
+            "width": "100%",
+            "fontSize": "0.9em",
+            "borderRadius": "10px",
+        },
+    )
+
+
 def make_sidebar(selected_city='hanoi', dark=False):
     home_button = html.Button([
                 html.Img(
@@ -208,6 +257,11 @@ def make_sidebar(selected_city='hanoi', dark=False):
 
     return dbc.Card([
         html.Div(home_button, className="dash-sidebar-home-wrap"),
+        html.Div(
+            indicator_search_bar(selected_city),
+            className="dash-sidebar-search-wrap",
+            style={"padding": "0 4px 10px 4px"}
+        ),
         html.Div(pillar_sections, className="dash-sidebar-pillar-list"),
     ], className=card_class, style={
         #"boxShadow": "0 2px 8px rgba(0,0,0,0.08)",
@@ -238,33 +292,48 @@ def city_selector(selected_city='hanoi', visible=True):
     Set visible=False to hide it on tab pages.
     """
     return html.Div([
-        # Indicator Atlas button
-        html.Div([
-            dbc.Button(
-                "Indicator Atlas",
-                id='atlas-top-button',
-                color='danger',
-                n_clicks=0,
-                style={
-                    "fontSize": "1.1em",
-                    "fontWeight": "bold",
-                    "borderRadius": "10px",
-                    "border": "none",
-                    "color": brand_colors['Brown'],
-                    "backgroundColor": brand_colors['Mid green'],
-                    "padding": "12px 20px",
-                    "boxShadow": "0 4px 10px rgba(0,0,0,0.12)",
-                    "minWidth": "160px",
-                }
-            )
-        ], style={
-            "position": "absolute",
-            "left": "2%",
-            "top": "50%",
-            "transform": "translateY(-50%)",
-            "display": "flex" if visible else "none",
-            "alignItems": "center",
-        }),
+        # Indicator Atlas button - temporarily disabled; search bar takes its spot below
+        # html.Div([
+        #     dbc.Button(
+        #         "Indicator Atlas",
+        #         id='atlas-top-button',
+        #         color='danger',
+        #         n_clicks=0,
+        #         style={
+        #             "fontSize": "1.1em",
+        #             "fontWeight": "bold",
+        #             "borderRadius": "10px",
+        #             "border": "none",
+        #             "color": brand_colors['Brown'],
+        #             "backgroundColor": brand_colors['Mid green'],
+        #             "padding": "12px 20px",
+        #             "boxShadow": "0 4px 10px rgba(0,0,0,0.12)",
+        #             "minWidth": "160px",
+        #         }
+        #     )
+        # ], style={
+        #     "position": "absolute",
+        #     "left": "2%",
+        #     "top": "50%",
+        #     "transform": "translateY(-50%)",
+        #     "display": "flex" if visible else "none",
+        #     "alignItems": "center",
+        # }),
+
+        # Only instantiate the search dropdown when visible (homepage) - it already
+        # lives in the sidebar on other pages, and ids must stay unique per page.
+        html.Div(
+            indicator_search_bar(selected_city) if visible else None,
+            style={
+                "position": "absolute",
+                "left": "2%",
+                "top": "50%",
+                "transform": "translateY(-50%)",
+                "display": "flex" if visible else "none",
+                "alignItems": "center",
+                "width": "280px",
+            }
+        ),
 
         # Dropdown selector
         html.Div([

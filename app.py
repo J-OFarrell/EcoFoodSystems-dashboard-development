@@ -41,6 +41,7 @@ from data_access import (
     variables,
     df_sh,
     outlets_geojson_files_addis,
+    outlets_geojson_files_hanoi,
     df_policies_addis,
     df_indicators,
     df_lca,
@@ -57,6 +58,10 @@ from data_access import (
     accessibility_subcity_columns_addis,
     accessibility_population_options_addis,
     accessibility_offer_options_addis,
+    accessibility_zonal_stats_hanoi,
+    accessibility_subcity_columns_hanoi,
+    accessibility_population_options_hanoi,
+    accessibility_offer_options_hanoi,
 )
 from config import (
     brand_colors,
@@ -120,7 +125,6 @@ from addis_layouts import (
     livelihoods_poverty_equity_tab as addis_livelihoods_poverty_equity_tab,
     noncommunicable_diseases_tab as addis_noncommunicable_diseases_tab,
     nutrional_status_tab as addis_nutrional_status_tab,
-    governance_policies_tab_layout as addis_governance_policies_tab_layout,
 )
 from hanoi_layouts import (
     governance_stakeholders_tab_layout as hanoi_governance_stakeholders_tab_layout,
@@ -133,7 +137,6 @@ from hanoi_layouts import (
     climate_resilience_tab_layout as hanoi_climate_resilience_tab,
     environment_climate_change_tab as hanoi_environment_climate_change_tab,
     income_growth_distribution_tab as hanoi_income_growth_distribution_tab,
-    policies_leadership_tab as hanoi_policies_leadership_tab,
     population_growth_migration_tab as hanoi_population_growth_migration_tab,
     socio_cultural_context_tab as hanoi_socio_cultural_context_tab,
     food_availability_tab as hanoi_food_availability_tab,
@@ -323,13 +326,22 @@ hanoi_root = os.path.join(data_root, "hanoi")
 hanoi_mpi_dir = os.path.join(hanoi_root, "drivers_income-growth-and-distribution")
 hanoi_food_env_dir = os.path.join(hanoi_root, "food-environments_vendor-properties")
 hanoi_resilience_dir = os.path.join(hanoi_root, "cross-cutting-issues_resilience")
-hanoi_climate_dir = os.path.join(hanoi_resilience_dir, "precomputed_hanoi_climate_vars")
-hanoi_infrastructure_dir = os.path.join(hanoi_resilience_dir, "osm_infrastructure")
+hanoi_environment_dir = os.path.join(hanoi_root, "drivers_environment-and-climate-change")
+hanoi_climate_dir = os.path.join(hanoi_environment_dir, "precomputed_hanoi_climate_vars")
+hanoi_infrastructure_dir = os.path.join(hanoi_environment_dir, "osm_infrastructure")
+#print(f"DEBUG: hanoi_infrastructure_dir items = {os.listdir(hanoi_infrastructure_dir)}")
 
 adm3_eth_gdf = gpd.read_file(os.path.join(addis_adm3_dir, "addis_drv_igd_adm3_boundaries.geojson")).to_crs("EPSG:4326")
 adm3_eth_gdf = adm3_eth_gdf.reset_index(drop=True)
 adm3_eth_gdf["adm3_id"] = adm3_eth_gdf.index.astype(str)
 adm3_eth_geojson = json.loads(adm3_eth_gdf[["adm3_id", "ADM3_EN", "geometry"]].to_json())
+
+# Load Hanoi commune boundaries
+hanoi_communes_path = os.path.join(homepath, "..", "..", "HàNội_AdministrativeBounderies_Level2.geojson")
+adm3_vn_gdf = gpd.read_file(hanoi_communes_path).to_crs("EPSG:4326")
+adm3_vn_gdf = adm3_vn_gdf.reset_index(drop=True)
+adm3_vn_gdf["adm3_id"] = adm3_vn_gdf.index.astype(str)
+adm3_vn_geojson = json.loads(adm3_vn_gdf[["adm3_id", "ten_xa", "geometry"]].to_json())
 
 # MPI, mpi_vars, variables, df_sh, and outlets_geojson_files_addis are now
 # imported from data_access.py (see top of file).
@@ -385,19 +397,18 @@ except Exception as e:
 
 # isochrones_path_hanoi is still used directly below (Hanoi accessibility map
 # callback); isochrones_geojson_files_hanoi itself is now imported.
-isochrones_path_hanoi = os.path.join(hanoi_food_env_dir, "isochrones_hanoi")
+outlets_path_hanoi = os.path.join(hanoi_food_env_dir, "jsons_hanoi_foodoutlets")
+isochrones_path_hanoi = os.path.join(hanoi_food_env_dir, "isochrones_hanoi_all")
 
 
 # ── commune climate indicators ───────────────────────────────────────────────
-_climate_csv  = os.path.join(hanoi_climate_dir, "hanoi_env_clim_resilience_quarterly_v1.csv")
-_communes_path = os.path.join(hanoi_climate_dir, "hanoi_env_clim_boundaries_communes_2025.geojson")
-_islands_path = os.path.join(hanoi_resilience_dir, "hanoi_cci_res_clim_vietnam_islands.geojson")
+_climate_csv  = os.path.join(hanoi_climate_dir, "hanoi_drv_env_resilience_quarterly_v1.csv")
+_communes_path = os.path.join(hanoi_climate_dir, "hanoi_drv_env_boundaries_communes_2025.geojson")
+_region_quarterly_path = os.path.join(hanoi_climate_dir, "hanoi_drv_env_regional_quarterly.csv")
+_slopes_path = os.path.join(hanoi_climate_dir, "hanoi_drv_env_regional_slopes.csv")
 
-_lulc_stats_csv = os.path.join(hanoi_resilience_dir, "hanoi_cci_res_lulc_statistics.csv")
+_lulc_stats_csv = os.path.join(hanoi_environment_dir, "hanoi_drv_env_lulc_statistics.csv")
 _communes_geojson_path = os.path.join(hanoi_mpi_dir, "hanoi_drv_igd_mpi_boundaries_communes.geojson")
-_region_quarterly_path = os.path.join(hanoi_climate_dir, "hanoi_env_clim_regional_quarterly.csv")
-_slopes_path = os.path.join(hanoi_climate_dir, "hanoi_env_clim_regional_slopes.csv")
-
 
 @lru_cache(maxsize=1)
 def _get_resilience_context():
@@ -1078,12 +1089,10 @@ def _pillar_for_subdomain(subdomain_key):
     return None
 
 
-# Sub-domains with no content function yet on either city fall through to a
-# generic "Coming soon" message in _resolve_subdomain_layout regardless of
 # whether they're listed here - this set only controls the hub-card styling.
 _NOT_YET_BUILT_SUBDOMAINS = {
     'urbanization', 'food-safety', 'food-messaging',
-    'behavioral', 'environmental-impacts', 'dietary-intake', 'policies-leadership',
+    'behavioral', 'environmental-impacts', 'dietary-intake'
 }
 
 _COMING_SOON_SUBDOMAINS_BY_CITY = {
@@ -1106,9 +1115,7 @@ _COMING_SOON_SUBDOMAINS_BY_CITY = {
         'socio-cultural-context',
         'food-availability',
         'food-affordability',
-        'vendor-properties',
         'processing-packing',
-        #'production-systems-input-supply',
         'retail-markerting',
         'economic',
         'food-security',
@@ -2336,6 +2343,41 @@ def _build_accesibility_figure(
                     hoverinfo='skip',
                 ))
 
+    elif city_key == "hanoi":
+        fig.add_trace(go.Choroplethmap(
+                    geojson=adm3_vn_geojson,
+                    locations=adm3_vn_gdf["adm3_id"],
+                    featureidkey="properties.adm3_id",
+                    z=np.ones(len(adm3_vn_gdf), dtype=float),
+                    colorscale=[[0, "rgba(0,0,0,0)"], [1, "rgba(0,0,0,0)"]],
+                    showscale=False,
+                    marker=dict(
+                        opacity=1.0,
+                        line=dict(color=brand_colors["Brown"], width=0.5)
+                    ),
+                    text=adm3_vn_gdf["ten_xa"],
+                    hoverinfo='text',
+                ))
+
+        # Add click to highlight functionality for Hanoi
+        if selected_adm3_id is not None:
+            selected_adm3_id = str(selected_adm3_id)
+            selected_adm3_gdf = adm3_vn_gdf[adm3_vn_gdf["adm3_id"].astype(str) == selected_adm3_id]
+            if not selected_adm3_gdf.empty:
+                fig.add_trace(go.Choroplethmap(
+                    geojson=json.loads(selected_adm3_gdf[["adm3_id", "ten_xa", "geometry"]].to_json()),
+                    locations=selected_adm3_gdf["adm3_id"],
+                    featureidkey="properties.adm3_id",
+                    z=np.ones(len(selected_adm3_gdf), dtype=float),
+                    colorscale=[[0, "rgba(171, 224, 149, 0.18)"], [1, "rgba(171, 224, 149, 0.18)"]],
+                    showscale=False,
+                    marker=dict(
+                        opacity=0.95,
+                        line=dict(color=brand_colors["Teal"], width=3)
+                    ),
+                    hoverinfo='skip',
+                ))
+
     fig.update_layout(
         map=dict(style=_BASEMAP_STYLE, center=center, zoom=zoom),
         margin=dict(l=0, r=0, t=0, b=0),
@@ -2386,6 +2428,41 @@ def update_accesibility_map(selected_travel_time, selected_outlets, selected_tra
     )
 
 
+@app.callback(
+    Output('accessibility-map-hanoi', 'figure'),
+    [Input('outlet-travel-time', 'value'), Input("food-outlets-isochrones", "value"),
+     Input("transport-mode", "data"), Input("accessibility-map-hanoi", "clickData")],
+    [State('accessibility-map-hanoi', 'relayoutData')]
+)
+def update_accesibility_map_hanoi(selected_travel_time, selected_outlets, selected_transport_mode, click_data, relayout_data):
+    selected_adm3_id = None
+    if click_data and click_data.get('points'):
+        selected_adm3_id = click_data['points'][0].get('location')
+
+    # Add defensive defaults for None values
+    selected_travel_time = selected_travel_time if selected_travel_time is not None else 2
+    selected_transport_mode = selected_transport_mode if selected_transport_mode else "walk"
+    
+    return _build_accesibility_figure(
+        selected_travel_time,
+        selected_outlets,
+        None,
+        selected_transport_mode,
+        None,
+        selected_adm3_id,
+        relayout_data,
+        outlets_geojson_files_hanoi,
+        outlets_path_hanoi,
+        isochrones_path_hanoi,
+        gdf_food_env_local=gdf_food_env_hanoi,
+        sub_city_level_metrics=sub_city_level_metrics,
+        metric_direction_local=metric_color_scale,
+        center_default={"lat": 21.0285, "lon": 105.8542},
+        zoom_default=11,
+        city_key="hanoi",
+    )
+
+
 def _travel_time_to_seconds(selected_travel_time):
     time_map = {0: 300, 1: 600, 2: 900}
     return time_map.get(selected_travel_time, 900)
@@ -2422,7 +2499,18 @@ def _selected_offer_categories(selected_outlets, city_key="addis"):
 def _build_accessibility_population_bar_figure(pop_cat, selected_outlets, selected_transport_mode, selected_travel_time, city_key="addis"):
     fig = go.Figure()
 
-    if accessibility_zonal_stats_addis.empty or not accessibility_subcity_columns_addis:
+    # Map city_key to the correct dataset
+    city_stats_map = {
+        "addis": (accessibility_zonal_stats_addis, accessibility_subcity_columns_addis),
+        "hanoi": (accessibility_zonal_stats_hanoi, accessibility_subcity_columns_hanoi),
+    }
+    
+    if city_key not in city_stats_map:
+        city_key = "addis"
+    
+    stats_df, subcity_cols = city_stats_map[city_key]
+
+    if stats_df.empty or not subcity_cols:
         fig.add_annotation(
             text="Accessibility zonal stats are not available.",
             showarrow=False,
@@ -2449,7 +2537,7 @@ def _build_accessibility_population_bar_figure(pop_cat, selected_outlets, select
     selected_seconds = _travel_time_to_seconds(selected_travel_time)
     offer_categories = _selected_offer_categories(selected_outlets, city_key=city_key)
 
-    df = accessibility_zonal_stats_addis.copy()
+    df = stats_df.copy()
     df = df[df["pop_cat"].astype(str) == str(pop_cat)]
     df = df[df["mode"].astype(str) == str(selected_transport_mode)]
     df = df[pd.to_numeric(df["time"], errors="coerce") == selected_seconds]
@@ -2469,7 +2557,7 @@ def _build_accessibility_population_bar_figure(pop_cat, selected_outlets, select
         fig.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=380)
         return fig
 
-    chart_values = df[accessibility_subcity_columns_addis].apply(pd.to_numeric, errors="coerce").mean(axis=0, skipna=True)
+    chart_values = df[subcity_cols].apply(pd.to_numeric, errors="coerce").mean(axis=0, skipna=True)
     chart_df = chart_values.reset_index()
     chart_df.columns = ["sub_city", "percent_affected"]
     chart_df = chart_df.sort_values("percent_affected", ascending=False)
@@ -2486,28 +2574,36 @@ def _build_accessibility_population_bar_figure(pop_cat, selected_outlets, select
     )
     subtitle_text = f"{offer_text} | {selected_transport_mode.title()} | {selected_seconds // 60}-minute threshold"
 
+    # Sort by percent_affected in descending order (highest first)
+    chart_df = chart_df.sort_values(by="percent_affected", ascending=True)  # ascending=True because y-axis is reversed in horizontal bars
+    
     fig = px.bar(
         chart_df,
-        x="sub_city",
-        y="percent_affected",
+        y="sub_city",
+        x="percent_affected",
         text="percent_affected",
         color="percent_affected",
         color_continuous_scale=["#c8e3e0", "#1d574f"],
+        orientation="h",
     )
     fig.update_traces(texttemplate="%{text:.1f}%", textposition="outside")
+    
+    # Set height based on number of districts (taller = more scrollable)
+    chart_height = max(380, len(chart_df) * 22 + 100)
+    
     fig.update_layout(
         #title=dict(text=f"{title_text}<br><sup>{subtitle_text}</sup>", x=0.5, xanchor="center"),
         title=None,
-        margin=dict(l=10, r=10, t=70, b=70),
-        height=380,
+        margin=dict(l=5, r=10, t=20, b=20),
+        height=chart_height,
         paper_bgcolor=brand_colors['White'],
         plot_bgcolor=brand_colors['White'],
         coloraxis_showscale=False,
-        xaxis_title=None,
-        yaxis_title="Percentage population affected",
-        xaxis_tickangle=-25,
+        xaxis_title="Percentage population affected",
+        yaxis_title=None,
+        yaxis=dict(tickfont=dict(size=10)),
     )
-    fig.update_yaxes(range=[0, float(chart_df["percent_affected"].max() * 1.1)])
+    fig.update_xaxes(range=[0, float(chart_df["percent_affected"].max() * 1.1)])
     return fig
 
 
@@ -2518,20 +2614,20 @@ def _build_accessibility_population_bar_figure(pop_cat, selected_outlets, select
         Input("food-outlets-isochrones", "value"),
         Input("transport-mode", "data"),
         Input("outlet-travel-time", "value"),
+        Input("selected-city", "data"),
     ],
 )
-def update_accessibility_population_bar_chart(pop_cat, selected_outlets, selected_transport_mode, selected_travel_time):
+def update_accessibility_population_bar_chart(pop_cat, selected_outlets, selected_transport_mode, selected_travel_time, selected_city):
     selected_transport_mode = selected_transport_mode or "walk"
     selected_travel_time = selected_travel_time if selected_travel_time is not None else 2
+    selected_city = selected_city or "addis"
     return _build_accessibility_population_bar_figure(
         pop_cat,
         selected_outlets,
         selected_transport_mode,
         selected_travel_time,
-        city_key="addis",
+        city_key=selected_city,
     )
-
-# Hanoi callback is defined later; avoid duplicate callback registration here.
 
 
 @app.callback(
@@ -2975,15 +3071,30 @@ def render_tab_content(city_value, atlas_open_tab, selected_city):
         Input({"type": "home-pillar-atlas-btn", "section": ALL, "city": ALL, "index": ALL}, "n_clicks"),
         Input({"type": "home-subdomain-btn", "subdomain": ALL, "city": ALL, "index": ALL}, "n_clicks"),
         Input({"type": "sidebar-home-btn", "city": ALL, "index": ALL}, "n_clicks"),
+        Input("indicator-search-dropdown", "value"),
     ],
+    State("selected-city", "data"),
     prevent_initial_call=True,
 )
-def open_atlas_target_tab(_atlas_btn_clicks, _sidebar_btn_clicks, _home_btn_clicks, _home_pillar_btn_clicks, _home_subdomain_btn_clicks, _sidebar_home_btn_clicks):
+def open_atlas_target_tab(_atlas_btn_clicks, _sidebar_btn_clicks, _home_btn_clicks, _home_pillar_btn_clicks, _home_subdomain_btn_clicks, _sidebar_home_btn_clicks, search_value, selected_city):
     ctx = dash.callback_context
     if not ctx.triggered:
         return dash.no_update
 
     trig = ctx.triggered[0]["prop_id"].split(".")[0]
+
+    if trig == "indicator-search-dropdown":
+        if not search_value:
+            return dash.no_update
+        subdomain_key = search_value.split("::", 1)[0]
+        if not subdomain_key:
+            return dash.no_update
+        return {
+            "tab": "subdomain",
+            "subdomain": subdomain_key,
+            "city": selected_city or None,
+        }
+
     try:
         trig_obj = json.loads(trig)
     except Exception:
@@ -3106,7 +3217,7 @@ def update_map_on_bar_click_hanoi(clickData, selected_variable):
 
     if choropleth_col is not None:
         color_kwargs = dict(color=choropleth_col)
-        labels = {choropleth_col: choropleth_col, 'Name': 'Commune Name'}
+        labels = {choropleth_col: str(choropleth_col)+' (%)', 'Name': 'Commune Name'}
     else:
         # No choropleth column available; create empty figure
         empty_fig = go.Figure()
@@ -3116,8 +3227,8 @@ def update_map_on_bar_click_hanoi(clickData, selected_variable):
     fig = px.choropleth_map(
         MPI_hanoi,
         geojson=geojson_hanoi,
-        locations="ma_xa",
-        featureidkey="properties.ma_xa",
+        locations="Name",
+        featureidkey="properties.Name",
         color=choropleth_col,
         color_continuous_scale="YlOrRd",
         opacity=0.7,
@@ -3379,7 +3490,7 @@ def _build_drought_map_cached(slider_idx, indicator, min_ag_area=0, infrastructu
         keep_cols.append("shapeName")
 
     if isinstance(indicator, str) and (indicator.startswith("class_") or indicator in ("ag_area_ha", "drought_resistance")):
-        spei_csv = os.path.join(hanoi_climate_dir, "hanoi_env_clim_static_composites.csv")
+        spei_csv = os.path.join(hanoi_climate_dir, "hanoi_drv_env_static_composites.csv")
         spei_df = pd.read_csv(spei_csv)
         spei_df[commune_join_key] = spei_df[commune_join_key].astype(str)
         df = spei_df[keep_cols].dropna(subset=[col])
@@ -3387,7 +3498,7 @@ def _build_drought_map_cached(slider_idx, indicator, min_ag_area=0, infrastructu
         plot_gdf = communes_unique.merge(df, on=commune_join_key, how="left")
         #print("DEBUG: plot_gdf columns:", plot_gdf.columns)
     else:
-        spei_csv = os.path.join(hanoi_climate_dir, "hanoi_env_clim_static_composites.csv")
+        spei_csv = os.path.join(hanoi_climate_dir, "hanoi_drv_env_static_composites.csv")
         spei_df = pd.read_csv(spei_csv)
         spei_df[commune_join_key] = spei_df[commune_join_key].astype(str)
         commune_climate_df = commune_climate_df.merge(spei_df[[commune_join_key, 'ag_area_ha']], on=commune_join_key, how='left')
@@ -3528,7 +3639,7 @@ def _build_drought_map_cached(slider_idx, indicator, min_ag_area=0, infrastructu
                 lat=lats,
                 lon=lons,
                 mode='lines',
-                line=dict(width=1.5, color=brand_colors['Teal']),
+                line=dict(width=1, color=brand_colors['Black']),
                 opacity=0.7,
                 hoverinfo='skip',
                 name=f"{infrastructure_layer} infrastructure",

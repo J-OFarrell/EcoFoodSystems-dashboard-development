@@ -2,6 +2,7 @@
 Addis Ababa dashboard tab layouts
 """
 
+import hashlib
 import os
 import pandas as pd
 from dash import html, dcc, dash_table
@@ -266,14 +267,38 @@ def _build_indicator_kpi_card_with_sparkline(indicator_name, definition, unit, s
             }),
         ])
     
+    # Generate unique ID for info button
+    info_btn_id = f"info-btn-{hashlib.md5(indicator_name.encode()).hexdigest()[:8]}"
+    
+    # Add info button with tooltip showing indicator name and data source
     card_body.append(
-        html.Div(source if source else "", style={
-            "fontSize": "0.7em",
-            "color": "#888888",
-            "fontStyle": "italic",
+        html.Div([
+            dbc.Button("ⓘ", id=info_btn_id, style={
+                "fontSize": "1.2em",
+                "color": brand_colors['Red'],
+                "background": "none",
+                "border": "none",
+                "padding": "0",
+                "cursor": "pointer"
+            }),
+            dbc.Tooltip(
+                html.Div([
+                    html.Div([
+                        html.Span("Indicator: ", style={"fontWeight": "bold"}),
+                        html.Span(indicator_name, style={"fontWeight": "bold"})
+                    ]),
+                    html.Div([
+                        html.Span("Data source: ", style={"fontStyle": "italic"}),
+                        html.Span(source if source else "Not provided", style={"fontStyle": "italic"})
+                    ], style={"marginTop": "4px"})
+                ]),
+                target=info_btn_id,
+                placement="left",
+                style={"fontSize": "0.85em", "maxWidth": "400px", "padding": "8px"}
+            )
+        ], style={
             "textAlign": "right",
-            "marginTop": "4px",
-            "minHeight": "14px",
+            "marginTop": "4px"
         })
     )
     
@@ -939,8 +964,31 @@ def governance_policies_tab_layout():
 
 
 def _build_policy_documents_content(df_policies, table_id='policies_table'):
+    info_btn_id = f"policy-fao-info-btn"
     return dbc.Card([
-        dbc.CardHeader(html.H3("Food System Policies Database", style=header_style)),
+        dbc.CardHeader(html.Div([
+            html.H3("Food System Policies Database", style={**header_style, "marginBottom": "0", "display": "inline-block", "marginRight": "12px"}),
+            dbc.Button("ⓘ", id=info_btn_id, style={
+                "fontSize": "1.3em",
+                "color": brand_colors['Red'],
+                "background": "none",
+                "border": "none",
+                "padding": "0",
+                "cursor": "pointer",
+                "verticalAlign": "middle"
+            }),
+            dbc.Tooltip(
+                html.Div([
+                    html.Div([
+                        html.Span("Data source: ", style={"fontStyle": "italic"}),
+                        html.Span("FAO FAOLEX Database", style={"fontStyle": "italic"})
+                    ])
+                ]),
+                target=info_btn_id,
+                placement="right",
+                style={"fontSize": "0.9em", "maxWidth": "300px", "padding": "8px"}
+            )
+        ], style={"display": "flex", "alignItems": "center"})),
         dbc.CardBody([
             dash_table.DataTable(
                 id=table_id,
@@ -1211,12 +1259,12 @@ def diets_nutrition_health_tab_layout(selected_city='addis'):
                         "paddingBottom": "10px"
                     }),
                     dbc.Row([
-                        dbc.Col([create_nutrition_kpi_card("Stunting", 13.9, 40.9, lower_is_better=True)], width=tile_width, lg=lg),
-                        dbc.Col([create_nutrition_kpi_card("Wasting", 3.8, 11.2, lower_is_better=True)], width=tile_width, lg=lg),
-                        dbc.Col([create_nutrition_kpi_card("Concurrent Stunting and Wasting", 0.7, 2.9, lower_is_better=True)], width=tile_width, lg=lg),
-                        dbc.Col([create_nutrition_kpi_card("Underweight", 5.5, 23.3, lower_is_better=True)], width=tile_width, lg=lg),
-                        dbc.Col([create_nutrition_kpi_card("Overweight", 6.9, 3.9, lower_is_better=True)], width=tile_width, lg=lg),
-                        dbc.Col([create_nutrition_kpi_card("Malnutrition", 21.9, 51.5, lower_is_better=True)], width=tile_width, lg=lg),
+                        dbc.Col([create_nutrition_kpi_card("Stunting", 13.9, 40.9, lower_is_better=True, data_source="Nutrition Survailance (NIN)")], width=tile_width, lg=lg),
+                        dbc.Col([create_nutrition_kpi_card("Wasting", 3.8, 11.2, lower_is_better=True, data_source="Nutrition Survailance (NIN)")], width=tile_width, lg=lg),
+                        dbc.Col([create_nutrition_kpi_card("Concurrent Stunting and Wasting", 0.7, 2.9, lower_is_better=True, data_source="Nutrition Survailance (NIN)")], width=tile_width, lg=lg),
+                        dbc.Col([create_nutrition_kpi_card("Underweight", 5.5, 23.3, lower_is_better=True, data_source="Nutrition Survailance (NIN)")], width=tile_width, lg=lg),
+                        dbc.Col([create_nutrition_kpi_card("Overweight", 6.9, 3.9, lower_is_better=True, data_source="Nutrition Survailance (NIN)")], width=tile_width, lg=lg),
+                        dbc.Col([create_nutrition_kpi_card("Malnutrition", 21.9, 51.5, lower_is_better=True, data_source="Nutrition Survailance (NIN)")], width=tile_width, lg=lg),
                     ]),
 
                     # ADOLESCENT GIRLS Section (4 cards)
@@ -1229,9 +1277,9 @@ def diets_nutrition_health_tab_layout(selected_city='addis'):
                         "paddingBottom": "10px"
                     }),
                     dbc.Row([
-                        dbc.Col([create_nutrition_kpi_card("Underweight (BMI)", 5.3, 9.3, lower_is_better=True)], width=tile_width, lg=lg),
-                        dbc.Col([create_nutrition_kpi_card("Overweight (BMI)", 12.5, 5.1, lower_is_better=True)], width=tile_width, lg=lg),
-                        dbc.Col([create_nutrition_kpi_card("Obese (BMI)", 3.5, 1, lower_is_better=True)], width=tile_width, lg=lg),
+                        dbc.Col([create_nutrition_kpi_card("Underweight (BMI)", 5.3, 9.3, lower_is_better=True, data_source="Nutrition Survailance (NIN)")], width=tile_width, lg=lg),
+                        dbc.Col([create_nutrition_kpi_card("Overweight (BMI)", 12.5, 5.1, lower_is_better=True, data_source="Nutrition Survailance (NIN)")], width=tile_width, lg=lg),
+                        dbc.Col([create_nutrition_kpi_card("Obese (BMI)", 3.5, 1, lower_is_better=True, data_source="Nutrition Survailance (NIN)")], width=tile_width, lg=lg),
                     ]),
                     
                     # WOMEN Section (2 cards)
@@ -1244,8 +1292,8 @@ def diets_nutrition_health_tab_layout(selected_city='addis'):
                         "paddingBottom": "10px"
                     }),
                     dbc.Row([
-                        dbc.Col([create_nutrition_kpi_card("Underweight", 10.7, 20.1, lower_is_better=True)], width=tile_width, lg=lg),
-                        dbc.Col([create_nutrition_kpi_card("Overweight", 35.8, 11.4, lower_is_better=True)], width=tile_width, lg=lg),
+                        dbc.Col([create_nutrition_kpi_card("Underweight", 10.7, 20.1, lower_is_better=True, data_source="Nutrition Survailance (NIN)")], width=tile_width, lg=lg),
+                        dbc.Col([create_nutrition_kpi_card("Overweight", 35.8, 11.4, lower_is_better=True, data_source="Nutrition Survailance (NIN)")], width=tile_width, lg=lg),
                     ]),
                 ], style={  "overflowY": "auto",
                             "flex": "1 1 85%",
@@ -1545,11 +1593,19 @@ def food_accessibility_vendor_properties_tab_layout(selected_city='addis'):
                                 placeholder="Select a population category",
                                 style={'zIndex': '3000'}
                             ),
-                            dcc.Graph(
-                                id="accessibility-population-bar-chart",
-                                config={"displayModeBar": False, "responsive": True},
-                                style={"height": "380px", "width": "100%"}
-                            ),
+                            html.Div([
+                                dcc.Graph(
+                                    id="accessibility-population-bar-chart",
+                                    config={"displayModeBar": False, "responsive": True},
+                                    style={"width": "100%", "margin": "0"}
+                                ),
+                            ], style={
+                                "height": "480px",
+                                "overflowY": "auto",
+                                "width": "100%",
+                                "border": "1px solid #f0f0f0",
+                                "borderRadius": "4px"
+                            }),
                         ], style={
                             'margin': '2px 0px',
                             'justifyContent': 'end',
