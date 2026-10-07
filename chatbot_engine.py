@@ -46,6 +46,47 @@ _SYSTEM_PROMPT = (
     "or 'Cooking fuel is under Individual Factors' unless a tool call in "
     "this conversation actually returned that). You can still offer to look "
     "up its real values with get_indicator_value regardless.\n\n"
+    "NEVER name a specific data source, survey, organization, agency, or "
+    "publication year for where the dashboard's data comes from (e.g. "
+    "'World Bank', 'WHO', 'DHS', 'LSMS', a specific survey year) unless "
+    "describe_indicator actually returned that exact string in its "
+    "'data_source' field in this conversation. General knowledge about what "
+    "sources food-systems dashboards 'typically' use is not this project's "
+    "documented sources and must not be presented as if it were - this has "
+    "happened before and the fabricated sources were completely wrong "
+    "(invented organizations and a fake citation with a made-up year). If "
+    "asked broadly 'what are your data sources' without a specific indicator "
+    "named, say you'd need to look at a specific indicator to give its real "
+    "documented source (via describe_indicator), rather than describing "
+    "sources in general terms.\n\n"
+    "For 'Life cycle assessment of food items' (Processing and packaging / "
+    "Food Supply Chains) or any other question about a food item's "
+    "environmental footprint (GHG emissions, freshwater use, acidification, "
+    "eutrophication), use get_food_item_environmental_impact, NOT "
+    "get_indicator_value - this data is Addis-only, keyed by food item/food "
+    "group, not by region, and lives in a separate dataset. If the user "
+    "references a food group (e.g. 'Cereals & Grains') rather than one "
+    "specific item, pass food_group and summarize the returned set - do not "
+    "ask which single item they meant when they've already told you the "
+    "group.\n\n"
+    "For 'Food outlet accessibility' (Food Environments / Vendor properties) "
+    "or any question about what fraction of a population group can reach a "
+    "type of food outlet within some travel time, use "
+    "get_food_accessibility_value, NOT get_indicator_value - this data is "
+    "Addis-only and needs BOTH a population category (e.g. 'men', 'women', "
+    "'total') and an outlet category (e.g. 'beverages', 'healthy_offers') to "
+    "return anything; transport mode and travel time default sensibly "
+    "(walk, 15 minutes) if the user doesn't specify them, so don't withhold "
+    "an answer just because those two weren't given - only population and "
+    "outlet category are actually required.\n\n"
+    "get_indicator_value covers MPI (both cities) plus - Hanoi only - food "
+    "affordability and diet indicators; if none of your three data tools "
+    "(get_indicator_value, get_food_item_environmental_impact, "
+    "get_food_accessibility_value) matches, say this indicator's data isn't "
+    "available through your current tools rather than concluding the "
+    "dashboard has no such data at all - several real datasets "
+    "(resilience/climate, disaster, land-use, Hanoi food-environment) aren't "
+    "wired up to you yet.\n\n"
     "IMPORTANT: You have zero visual access to the page - no pixels, no chart "
     "image, no DOM, nothing. You only know two things: (a) the [Current page "
     "context] hint below, if present, naming which indicator is open, and (b) "
@@ -111,28 +152,84 @@ def _mentions_screen_reference(text):
     return any(kw in lowered for kw in _SCREEN_REFERENCE_KEYWORDS)
 
 
-def _page_context_note(page_context):
+def _page_context_note(page_context, is_screen_reference_question):
     """Build a grounding hint from the dashboard's own navigation state.
 
-    The 'atlas-open-tab' dcc.Store this comes from has TWO different payload
-    shapes depending on which navigation path the user took (confirmed by
-    reading app.py's open_atlas_target_tab callback):
+    The 'atlas-open-tab' dcc.Store this comes from has THREE different
+    payload shapes depending on which navigation path the user took
+    (confirmed by reading app.py's open_atlas_target_tab callback):
       1. Atlas home-card "Explore" buttons:
          {"tab": "subdomain", "subdomain": "income-growth-distribution", "city": ...}
       2. Left sidebar indicator buttons (a separate, equally common path):
          {"tab": "tab-4-poverty", "subview": "...", "city": ...}
-    Both are just internal keys, not confirmed indicator names - either way
+      3. Landing-page pillar tab clicks (home-pillar-atlas-btn) - NOTE this
+         one is keyed by "section", not "subdomain"/"tab" pointing anywhere
+         specific, and its "tab" value is literally "tab-home":
+         {"tab": "tab-home", "section": "Cross-Cutting Issues", "city": ...}
+         This shape was previously not checked for at all, so page context
+         from clicking a landing-page pillar tab was silently discarded
+         (treated as "no context") every time - confirmed via a real test
+         where the model answered correctly only because the user's own
+         question happened to name the pillar, not because this function
+         actually surfaced the real page state.
+    All are just internal keys, not confirmed indicator names - either way
     the model must still resolve them via list_available_indicators /
     describe_indicator rather than assuming the wording is exact.
+
+    is_screen_reference_question: whether THIS message actually asked about
+    what's on the user's screen (see _mentions_screen_reference). The
+    "state what you resolved to" opening (e.g. "You're currently viewing
+    X for Y") is only appropriate for that kind of question - it was
+    previously applied unconditionally whenever page context existed at
+    all, which caused it to fire on plain navigation-help requests too
+    (e.g. "help me find poverty data"), confidently announcing a screen
+    state the user never asked about and that didn't match what they were
+    actually looking at.
     """
     if not page_context:
         return None
 
     city = page_context.get("city") or "addis"
 
+    if is_screen_reference_question:
+        opening_instruction = (
+            "The user is asking about what's on their screen, so open your "
+            "reply by stating the exact indicator/pillar and city you "
+            "resolved this to (e.g. 'You're currently viewing [indicator] "
+            "for [city].') before anything else - this makes it visible if "
+            "the page you're actually on doesn't match what the "
+            "conversation implied."
+        )
+    else:
+        opening_instruction = (
+            "This is a general navigation/topic question, NOT a request to "
+            "explain the current screen - do NOT open with 'You're "
+            "currently viewing...'/'You're looking at...' or claim to know "
+            "what's on their screen. Just answer their actual question "
+            "directly; use this page context only as a soft hint for which "
+            "pillar/indicator is relevant, not as something to announce."
+        )
+
     if page_context.get("subdomain"):
         slug = page_context["subdomain"]
         readable_hint = slug.replace("-", " ").replace("_", " ")
+    elif page_context.get("section"):
+        # Pillar-level overview (landing page), not any one specific
+        # indicator - there's no single "graph" to explain here, so the
+        # grounded answer is to list what's actually in this pillar, not
+        # guess one indicator the way the other two shapes do.
+        section = page_context["section"]
+        return (
+            f"[Current page context: the user is browsing the pillar-level "
+            f"overview for pillar='{section}' (city='{city}') on the "
+            f"dashboard's home page - this is NOT a specific indicator's "
+            f"data or graph, just a list of what's in that pillar. If asked "
+            f"to 'explain this page/graph' or similar, do not guess a single "
+            f"indicator - call list_available_indicators(city='{city}', "
+            f"pillar='{section}') and summarize what's available in this "
+            f"pillar instead. Only resolve to one specific indicator if the "
+            f"user names one themselves. {opening_instruction}]"
+        )
     else:
         tab_id = page_context.get("tab")
         if not tab_id or tab_id == "tab-home":
@@ -154,8 +251,15 @@ def _page_context_note(page_context):
         f"than guessing. Do not describe what a bar/map/chart 'shows' or "
         f"'represents', even generically - only state what the indicator "
         f"means and its real values, as plain facts, never framed as a "
-        f"description of the visual.]"
+        f"description of the visual. {opening_instruction}]"
     )
+
+
+def get_provider_quota_status():
+    """Passthrough to chatbot_client's last-known Groq TPM/TPD quota snapshot -
+    kept here so app.py only ever imports chatbot_engine, not the provider
+    client directly (same layering as the rest of this module)."""
+    return chatbot_client.get_quota_status()
 
 
 def check_rate_limit(key):
@@ -205,9 +309,10 @@ def run_chat_turn(history, user_message, page_context=None):
     if not messages or messages[0].get("role") != "system":
         messages = [{"role": "system", "content": _SYSTEM_PROMPT}] + messages
 
-    context_note = _page_context_note(page_context)
+    is_screen_reference = _mentions_screen_reference(user_message)
+    context_note = _page_context_note(page_context, is_screen_reference)
 
-    if _mentions_screen_reference(user_message) and not context_note:
+    if is_screen_reference and not context_note:
         messages.append({"role": "user", "content": user_message})
         messages.append({"role": "assistant", "content": _CANNOT_SEE_SCREEN_RESPONSE})
         return messages
