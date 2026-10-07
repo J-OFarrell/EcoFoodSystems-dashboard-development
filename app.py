@@ -339,7 +339,7 @@ adm3_eth_gdf["adm3_id"] = adm3_eth_gdf.index.astype(str)
 adm3_eth_geojson = json.loads(adm3_eth_gdf[["adm3_id", "ADM3_EN", "geometry"]].to_json())
 
 # Load Hanoi commune boundaries
-hanoi_communes_path = os.path.join(homepath, "..", "..", "HàNội_AdministrativeBounderies_Level2.geojson")
+hanoi_communes_path = os.path.join(hanoi_food_env_dir, "hanoi_fev_vp_boundaries_communes_2025.geojson")
 adm3_vn_gdf = gpd.read_file(hanoi_communes_path).to_crs("EPSG:4326")
 adm3_vn_gdf = adm3_vn_gdf.reset_index(drop=True)
 adm3_vn_gdf["adm3_id"] = adm3_vn_gdf.index.astype(str)
@@ -1657,7 +1657,7 @@ def landing_page_layout(background_image=None, tab_backgrounds=None, selected_ci
                 'textAlign': 'center',
             }),
             html.P(
-                'Explore the EcoFoodSystems dashboard through six concise pillars adapted from the Food Systems Countdown framing.',
+                'Explore the EcoFoodSystems dashboard through six concise pillars adapted from the FAO food systems conceptual framework.',
                 style={
                     'color': 'rgba(255,255,255,0.85)',
                     'fontSize': '15px',
