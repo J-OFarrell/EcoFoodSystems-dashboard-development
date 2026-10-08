@@ -1,5 +1,6 @@
 import os
 import csv
+import time
 from dotenv import load_dotenv
 load_dotenv()
 from functools import lru_cache
@@ -94,8 +95,9 @@ import addis_config
 import hanoi_config
 from shared_components import sidebar, sidebar_hanoi, sidebar_addis, footer, city_selector
 from shared_components import _record_subdomain_key
-from chatbot_ui import chatbot_widget, render_messages
+from chatbot_ui import chatbot_widget, render_messages, render_pending_turn, render_quota_status
 import chatbot_engine
+import groq
 from flask import request as flask_request
 from addis_layouts import (
     governance_stakeholders_tab_layout as addis_governance_stakeholders_tab_layout,
@@ -1887,10 +1889,17 @@ def store_selected_city(city):
 # it completely.
 
 
+_CHATBOT_ERROR_STYLE_VISIBLE = {
+    "display": "block", "padding": "6px 12px", "color": "#a80050",
+    "fontSize": "0.85em", "backgroundColor": "white",
+}
+_CHATBOT_ERROR_STYLE_HIDDEN = {"display": "none"}
+
+
 @app.callback(
-    Output('chatbot-history', 'data'),
     Output('chatbot-messages', 'children'),
     Output('chatbot-input', 'value'),
+    Output('chatbot-pending-trigger', 'data'),
     Output('chatbot-error-banner', 'children'),
     Output('chatbot-error-banner', 'style'),
     Input('chatbot-send-btn', 'n_clicks'),
@@ -1900,32 +1909,92 @@ def store_selected_city(city):
     State('atlas-open-tab', 'data'),
     prevent_initial_call=True,
 )
-def handle_chatbot_send(n_clicks, n_submit, user_text, history, atlas_open_tab):
-    error_style_visible = {
-        "display": "block", "padding": "6px 12px", "color": "#a80050",
-        "fontSize": "0.85em", "backgroundColor": "white",
-    }
-    error_style_hidden = {"display": "none"}
-
+def handle_chatbot_send_optimistic(n_clicks, n_submit, user_text, history, atlas_open_tab):
+    """Stage 1 (fast): show the user's message + a 'Thinking...' placeholder
+    immediately, before the slow LLM call happens - same feel as Claude/ChatGPT,
+    where your own message never waits on the reply to appear. Does NOT call
+    the LLM and does NOT touch chatbot-history yet; stage 2
+    (handle_chatbot_send_real below) does the real work once triggered by the
+    chatbot-pending-trigger store changing.
+    """
     if not user_text or not user_text.strip():
         return dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update
 
     client_key = flask_request.remote_addr or "unknown"
     if not chatbot_engine.check_rate_limit(client_key):
-        return (dash.no_update, dash.no_update, "",
+        return (dash.no_update, "",
+                dash.no_update,
                 "Too many requests - please wait a moment before trying again.",
-                error_style_visible)
+                _CHATBOT_ERROR_STYLE_VISIBLE)
+
+    user_text = user_text.strip()
+    history = history or []
+    pending = {"text": user_text, "atlas_open_tab": atlas_open_tab, "sent_at": time.time()}
+    return (
+        render_pending_turn(history, user_text),
+        "",
+        pending,
+        "",
+        _CHATBOT_ERROR_STYLE_HIDDEN,
+    )
+
+
+@app.callback(
+    Output('chatbot-history', 'data'),
+    Output('chatbot-messages', 'children', allow_duplicate=True),
+    Output('chatbot-error-banner', 'children', allow_duplicate=True),
+    Output('chatbot-error-banner', 'style', allow_duplicate=True),
+    Output('chatbot-quota-display', 'children'),
+    Output('chatbot-quota-raw', 'data'),
+    Input('chatbot-pending-trigger', 'data'),
+    State('chatbot-history', 'data'),
+    prevent_initial_call=True,
+)
+def handle_chatbot_send_real(pending, history):
+    """Stage 2 (slow): actually calls the LLM (possibly several tool-call
+    round trips) and replaces the 'Thinking...' placeholder with the real
+    answer once it's ready. Triggered by stage 1 setting chatbot-pending-trigger."""
+    if not pending:
+        return dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update
 
     history = history or []
     try:
         updated_history = chatbot_engine.run_chat_turn(
-            history, user_text.strip(), page_context=atlas_open_tab
+            history, pending["text"], page_context=pending.get("atlas_open_tab")
         )
+    except groq.RateLimitError:
+        # Free-tier Groq TPM cap - a real, expected limit, not a bug. Shown
+        # plainly instead of dumping the raw provider error JSON into the chat.
+        quota = chatbot_engine.get_provider_quota_status()
+        return (dash.no_update, render_messages(history),
+                "The assistant is getting a lot of requests right now - please "
+                "wait a few seconds and try again.", _CHATBOT_ERROR_STYLE_VISIBLE,
+                render_quota_status(quota), quota)
     except Exception as exc:
-        return (dash.no_update, dash.no_update, "",
-                f"Something went wrong: {exc}", error_style_visible)
+        quota = chatbot_engine.get_provider_quota_status()
+        return (dash.no_update, render_messages(history),
+                f"Something went wrong: {exc}", _CHATBOT_ERROR_STYLE_VISIBLE,
+                render_quota_status(quota), quota)
 
-    return updated_history, render_messages(updated_history), "", "", error_style_hidden
+    quota = chatbot_engine.get_provider_quota_status()
+    return (updated_history, render_messages(updated_history), "", _CHATBOT_ERROR_STYLE_HIDDEN,
+            render_quota_status(quota), quota)
+
+
+@app.callback(
+    Output('chatbot-quota-display', 'children', allow_duplicate=True),
+    Input('chatbot-quota-tick', 'n_intervals'),
+    State('chatbot-quota-raw', 'data'),
+    prevent_initial_call=True,
+)
+def refresh_quota_display_age(_n_intervals, quota):
+    """Re-render the quota line periodically so the 'as of Xs/m ago' wording
+    keeps ticking up between messages - no new API call happens here, since
+    Groq only reveals quota state as a side effect of an actual request; this
+    just recomputes the age text from the already-known snapshot."""
+    if not quota:
+        return dash.no_update
+    return render_quota_status(quota)
 
 
 # Linking the dropdown to the bar chart for the MPI page    
