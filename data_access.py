@@ -29,9 +29,11 @@ _HANOI_MPI_DIR = os.path.join(_HANOI_ROOT, "drivers_income-growth-and-distributi
 _HANOI_STAKEHOLDERS_DIR = os.path.join(_HANOI_ROOT, "cross-cutting-issues_governance")
 _HANOI_POLICY_DIR = os.path.join(_HANOI_ROOT, "drivers_policies-and-leadership")
 _HANOI_SUPPLY_DIR = os.path.join(_HANOI_ROOT, "food-supply-chains_production-systems-and-input-supply")
+_HANOI_PROCESSING_DIR = os.path.join(_HANOI_ROOT, "food-supply-chains_processing-and-packaging")
 _HANOI_AFFORDABILITY_DIR = os.path.join(_HANOI_ROOT, "food-environments_food-affordability")
 _HANOI_NUTRITION_DIR = os.path.join(_HANOI_ROOT, "outcomes_nutritional-status")
 _HANOI_FOOD_ENV_DIR = os.path.join(_HANOI_ROOT, "food-environments_vendor-properties")
+_HANOI_ENV_OUTCOMES_DIR = os.path.join(_HANOI_ROOT, "outcomes_environmental-impacts")
 
 ATLAS_CSV_PATH = os.path.join(_HOMEPATH, "EcoFoodSystems_FCD_aligned_v6.csv")
 
@@ -228,13 +230,21 @@ if 'Website' in df_sh_hanoi.columns:
 
 # Policy database (Hanoi)
 df_policies_hanoi = pd.read_csv(os.path.join(_HANOI_POLICY_DIR, 'hanoi_drv_pl_pol_database_cleaned.csv'))
-if 'Document Link' in df_policies_hanoi.columns:
-    df_policies_hanoi['Document Link'] = df_policies_hanoi['Document Link'].apply(
-        lambda x: f'[Link Available]({x})' if x and str(x).startswith('http') else '--'
-    )
-    df_policies_hanoi['Available website'] = df_policies_hanoi['Available website'].apply(
-        lambda x: f'[Link Available]({x})' if x and str(x).startswith('http') else '--'
-    )
+for _date_col in ('Date of text', 'Last amended date'):
+    if _date_col in df_policies_hanoi.columns:
+        _parsed = pd.to_datetime(df_policies_hanoi[_date_col], errors='coerce')
+        # Display as date-only strings (yyyy-mm-dd) so the table doesn't show 00:00:00 times
+        df_policies_hanoi[_date_col] = _parsed.dt.strftime('%Y-%m-%d').fillna('')
+
+# Year derived from Date of text: keeps the table sortable/filterable by year
+if 'Date of text' in df_policies_hanoi.columns:
+    df_policies_hanoi['Year'] = pd.to_numeric(df_policies_hanoi['Date of text'].str[:4], errors='coerce')
+
+for _link_col in ('Document Link', 'Available website', 'Website'):
+    if _link_col in df_policies_hanoi.columns:
+        df_policies_hanoi[_link_col] = df_policies_hanoi[_link_col].apply(
+            lambda x: f'[Link Available]({x})' if x and str(x).startswith('http') else '--'
+        )
 
 # Isochrone GeoJSON file list (Hanoi)
 _isochrones_path_hanoi = os.path.join(_HANOI_FOOD_ENV_DIR, "isochrones_hanoi_all")
@@ -249,8 +259,37 @@ df_affordability_hanoi = pd.read_csv(
 
 # Dietary/nutrition data (Hanoi)
 df_diet_2_hanoi = pd.read_csv(
-    os.path.join(_HANOI_NUTRITION_DIR, 'hanoi_out_ns_nut_health_indicators_cleaned.csv')
+    os.path.join(_HANOI_NUTRITION_DIR, 'hanoi_out_ns_nut_health_indicators.csv')
 )
+
+# Emissions / LCA indicators per food item (Hanoi) - Processing & Packing tab
+df_emissions_hanoi = pd.read_csv(
+    os.path.join(_HANOI_ENV_OUTCOMES_DIR, 'hanoi_out_ei_emissions_indicators.csv')
+)
+for _col in df_emissions_hanoi.columns:
+    if _col in ('food_en', 'food_vi', 'food_group', 'vietnam_specific_farm_data', 'proxy_shared_with'):
+        continue
+    df_emissions_hanoi[_col] = pd.to_numeric(df_emissions_hanoi[_col], errors='coerce')
+
+df_nutrition_emissions_hanoi = pd.read_csv(
+    os.path.join(_HANOI_ENV_OUTCOMES_DIR, 'hanoi_out_ei_nutrition_emissions_indicators.csv'),
+    encoding='utf-8',
+    encoding_errors='replace',
+)
+df_nutrition_emissions_hanoi.columns = df_nutrition_emissions_hanoi.columns.str.strip()
+for _col in (
+    'NRF9.3 ( Nutritional Quality Score)',
+    'NR9',
+    'LIM3',
+    'gCO2e_100g_cradle_to_retail',
+    'gCO2e_per_NRF_point',
+    'gCO2e_per_NR9_point',
+    'rank_nutrient_density',
+):
+    if _col in df_nutrition_emissions_hanoi.columns:
+        df_nutrition_emissions_hanoi[_col] = pd.to_numeric(
+            df_nutrition_emissions_hanoi[_col], errors='coerce'
+        )
 
 # Accessibility outlet dropdown options + zonal stats (Addis) - needed by
 # both app.py's own accessibility-map callbacks and addis_layouts.py's

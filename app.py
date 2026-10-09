@@ -63,6 +63,8 @@ from data_access import (
     accessibility_subcity_columns_hanoi,
     accessibility_population_options_hanoi,
     accessibility_offer_options_hanoi,
+    df_emissions_hanoi,
+    df_nutrition_emissions_hanoi,
 )
 from config import (
     brand_colors,
@@ -116,7 +118,6 @@ from addis_layouts import (
     food_availability_tab as addis_food_availability_tab,
     food_affordability_tab as addis_food_affordability_tab,
     food_accessibility_vendor_properties_tab_layout as addis_vendor_properties_tab,
-    processing_packing_tab as addis_processing_packing_tab,
     production_systems_input_supply_tab as addis_production_systems_input_supply_tab,
     retail_markerting_tab as addis_retail_markerting_tab,
     storage_distrbution_tab as addis_storage_distrbution_tab,
@@ -129,35 +130,46 @@ from addis_layouts import (
     nutrional_status_tab as addis_nutrional_status_tab,
 )
 from hanoi_layouts import (
-    governance_stakeholders_tab_layout as hanoi_governance_stakeholders_tab_layout,
-    storage_distribution_tab_layout as hanoi_storage_distribution_tab_layout,
-    food_affordability_tab_layout as hanoi_food_affordability_tab_layout,
-    diets_nutrition_health_tab_layout as hanoi_diets_nutrition_health_tab_layout,
-    #governance_policies_tab_layout as hanoi_policies_leadership_tab,
-    policies_leadership_tab as hanoi_policies_leadership_tab,
-    sdg_indicator_atlas_tab_layout as hanoi_fcd_indicator_atlas_tab_layout,
-    climate_resilience_tab_layout as hanoi_climate_resilience_tab,
+    #---Driver Tabs
     environment_climate_change_tab as hanoi_environment_climate_change_tab,
     income_growth_distribution_tab as hanoi_income_growth_distribution_tab,
+    policies_leadership_tab as hanoi_policies_leadership_tab,
+    globalization_trade_tab as hanoi_globalization_trade_tab,
     population_growth_migration_tab as hanoi_population_growth_migration_tab,
     socio_cultural_context_tab as hanoi_socio_cultural_context_tab,
+    urbanisation_tab as hanoi_urbanisation_tab,
+
+    #---Food supply chains
+    processing_packaging_tab as hanoi_processing_packaging_tab,
+    #production_systems_input_supply_tab as hanoi_production_systems_input_supply_tab,
+    #retail_markerting_tab as hanoi_retail_markerting_tab,
+    #storage_distrbution_tab as hanoi_storage_distrbution_tab,
+
+    #---Food environments
     food_availability_tab as hanoi_food_availability_tab,
     food_affordability_tab as hanoi_food_affordability_tab,
     vendor_properties_tab as hanoi_vendor_properties_tab,
-    processing_packing_tab as hanoi_processing_packing_tab,
-    production_systems_input_supply_tab as hanoi_production_systems_input_supply_tab,
-    globalization_trade_tab as hanoi_globalization_trade_tab,
-    retail_markerting_tab as hanoi_retail_markerting_tab,
-    storage_distrbution_tab as hanoi_storage_distrbution_tab,
-    economic_tab as hanoi_economic_tab,
-    governance_tab as hanoi_governance_tab,
+    #food_safety_tab as hanoi_food_safety_tab,
+    #food_messaging_tab as hanoi_food_messaging_tab,
+
+    #---Individual factors
+    #economic_tab as hanoi_economic_tab,
+    #governance_tab as hanoi_governance_tab,
+
+    #---Cross-cutting issues
+    #goverance_stakeholders_tab as hanoi_governance_stakeholders_tab,
     temporal_resilience_tab as hanoi_temporal_resilience_tab,
-    food_security_tab as hanoi_food_security_tab,
-    noncommunicable_diseases_tab as hanoi_noncommunicable_diseases_tab,
-    nutrional_status_tab as hanoi_nutrional_status_tab,
-    render_spatial_climate_resilience_layout,
-    render_temporal_resilience_layout,
-    render_lulc_resilience_layout,
+
+    #---Outcomes
+    environmental_impacts_tab as hanoi_environmental_impacts_tab,
+    nutritional_status_tab as hanoi_nutritional_status_tab,
+
+    #---Shared layouts
+    render_spatial_climate_layout,
+    render_lulc_layout,
+    PP_STAGE_COLS_HANOI,
+    PP_STAGE_COLORS_HANOI,
+    PP_OTHER_INDICATORS_HANOI,
 )
 
 app = Dash(__name__, suppress_callback_exceptions=True, external_stylesheets=[dbc.themes.BOOTSTRAP])
@@ -1094,7 +1106,7 @@ def _pillar_for_subdomain(subdomain_key):
 # whether they're listed here - this set only controls the hub-card styling.
 _NOT_YET_BUILT_SUBDOMAINS = {
     'urbanization', 'food-safety', 'food-messaging',
-    'behavioral', 'environmental-impacts', 'dietary-intake'
+    'behavioral', 'dietary-intake', 
 }
 
 _COMING_SOON_SUBDOMAINS_BY_CITY = {
@@ -1116,12 +1128,12 @@ _COMING_SOON_SUBDOMAINS_BY_CITY = {
         'population-growth-migration',
         'socio-cultural-context',
         'food-availability',
-        'food-affordability',
         'processing-packing',
         'retail-markerting',
         'economic',
         'food-security',
         'noncommunicable-diseases',
+        'livelihoods-poverty-equity'
     } | _NOT_YET_BUILT_SUBDOMAINS,
 }
 
@@ -1203,7 +1215,7 @@ def _resolve_subdomain_layout(route_city, subdomain_key):
     if route_city == 'hanoi':
         if subdomain_key == 'environment-climate-change':
             resilience_ctx = _get_resilience_context()
-            return hanoi_climate_resilience_tab(list(resilience_ctx['all_quarters']), default_view='Biophysical shocks')
+            return hanoi_environment_climate_change_tab(list(resilience_ctx['all_quarters']), default_view='Biophysical shocks')
         if subdomain_key == 'income-growth-distribution':
             return hanoi_income_growth_distribution_tab()
         if subdomain_key == 'policies-leadership':
@@ -1218,8 +1230,8 @@ def _resolve_subdomain_layout(route_city, subdomain_key):
             return hanoi_food_affordability_tab()
         if subdomain_key == 'vendor-properties':
             return hanoi_vendor_properties_tab()
-        if subdomain_key == 'processing-packing':
-            return hanoi_processing_packing_tab()
+        if subdomain_key == 'environmental-impacts':
+            return hanoi_environmental_impacts_tab()
         if subdomain_key == 'production-systems-input-supply':
             return hanoi_production_systems_input_supply_tab()
         if subdomain_key == 'globalization-trade':
@@ -1239,7 +1251,7 @@ def _resolve_subdomain_layout(route_city, subdomain_key):
         if subdomain_key == 'noncommunicable-diseases':
             return hanoi_noncommunicable_diseases_tab()
         if subdomain_key == 'nutrional-status':
-            return hanoi_diets_nutrition_health_tab_layout()
+            return hanoi_nutritional_status_tab()
         return html.Div('Coming soon', style={'padding': '20px'})
 
     # Addis
@@ -1259,8 +1271,8 @@ def _resolve_subdomain_layout(route_city, subdomain_key):
         return addis_food_affordability_tab()
     if subdomain_key == 'vendor-properties':
         return addis_vendor_properties_tab()
-    if subdomain_key == 'processing-packing':
-        return addis_processing_packing_tab()
+    if subdomain_key == 'environmental-impacts':
+        return addis_environment_footprints_tab_layout()
     if subdomain_key == 'production-systems-input-supply':
         return addis_production_systems_input_supply_tab()
     if subdomain_key == 'retail-markerting':
@@ -1334,8 +1346,12 @@ def render_pillar_page(route_city, pillar_title, subdomain_key=None):
         city_selector(selected_city=route_city, visible=False),
 
         html.Div([sidebar_local], style={
-            "width": "15%",
+            "flex": "0 0 clamp(220px, 16vw, 280px)",
+            "minWidth": "220px",
+            "maxWidth": "280px",
             "height": "100%",
+            "minHeight": 0,
+            "boxSizing": "border-box",
             "display": "flex",
             "vertical-align": 'top',
             "flexDirection": "column",
@@ -1360,14 +1376,26 @@ def render_pillar_page(route_city, pillar_title, subdomain_key=None):
             html.Div(
                 id={'type': 'pillar-subview-container', 'pillar': pillar_title, 'city': route_city},
                 children=content,
-                style={"flex": "1", "display": "flex", "minHeight": 0}
+                style={
+                    "flex": "1 1 auto",
+                    "display": "flex",
+                    "minHeight": 0,
+                    "height": "100%",
+                    "boxSizing": "border-box",
+                    "overflow": "hidden",
+                }
             ),
         ], style={
-            "flex": "1", "height": "100%", "display": "flex", "flexDirection": "column",
+            "flex": "1 1 0%", "height": "100%", "minHeight": 0,
+            "minWidth": 0,
+            "display": "flex", "flexDirection": "column",
             "backgroundColor": "#FFFFFF", "padding": "10px",
-            "overflowY": "auto", "boxSizing": "border-box",
+            "overflow": "hidden", "boxSizing": "border-box",
         }),
-    ], style={"display": "flex", "width": "100vw", "height": "100%", "backgroundColor": "#F8FAF8"})
+    ], style={
+        "display": "flex", "width": "100vw", "height": "100%", "minHeight": 0,
+        "overflow": "hidden", "backgroundColor": "#F8FAF8",
+    })
 
 
 @app.callback(
@@ -1376,6 +1404,8 @@ def render_pillar_page(route_city, pillar_title, subdomain_key=None):
     State({'type': 'pillar-subview-select', 'pillar': MATCH, 'city': MATCH}, 'id'),
     prevent_initial_call=True,
 )
+
+
 def update_pillar_subview(subdomain_key, select_id):
     return _strip_duplicate_city_selector(_resolve_subdomain_layout(select_id['city'], subdomain_key))
 
@@ -1482,6 +1512,7 @@ def landing_page_layout(background_image=None, tab_backgrounds=None, selected_ci
         'livelihoods-poverty-equity': 'Income, wellbeing, and equity outcomes for people working in and depending on food systems.',
         'noncommunicable-diseases': 'Chronic diseases linked to diet quality including diabetes, hypertension, and obesity.',
         'nutrional-status': 'Nutritional outcomes including stunting, wasting, micronutrient deficiencies, and overweight.',
+        'environmental-impacts': 'Environmental footprints of food items, including greenhouse gas emissions, water and land use, eutrophication, and acidification.',
     }
 
     subdomains = _SUBDOMAIN_GROUPS.get(active_title, [])
@@ -1838,15 +1869,26 @@ app.layout = html.Div([
     dcc.Store(id='sh-table-page-size-store', data=13),
 
     dcc.Interval(id='resize-interval', interval=1000, n_intervals=0),
-    html.Div(id="tab-content", children=landing_page_layout(selected_city='hanoi'), style={"width": "100%",
-                                                                       "height": "100%"}),
+    html.Div(
+        id="tab-content",
+        children=landing_page_layout(selected_city='hanoi'),
+        style={
+            "width": "100%",
+            "flex": "1 1 auto",
+            "minHeight": 0,
+            "overflowY": "auto",
+            "overflowX": "hidden",
+        },
+    ),
     chatbot_widget(),
     # Parent container for full page
 ], style={
     "display": "flex",
     "flexDirection": "column",
     "height": "100vh",
-    "width": "100vw"
+    "width": "100vw",
+    "minHeight": 0,
+    "overflow": "hidden",
 })
 
 # ------------------------- Callbacks ------------------------- #
@@ -2884,6 +2926,200 @@ def update_food_items_grid(selected_group):
     
     return food_cards
 
+
+# ------------------------- Hanoi Processing & Packing Emissions ------------------------- #
+
+@app.callback(
+    Output("pp-emissions-chart-hanoi", "figure"),
+    Output("pp-emissions-chart-hanoi", "style"),
+    Output("pp-indicator-chart-hanoi", "figure"),
+    Output("pp-nutrition-emissions-chart-hanoi", "figure"),
+    Output("pp-kpi-median-hanoi", "children"),
+    Output("pp-kpi-top-hanoi", "children"),
+    Output("pp-kpi-top-value-hanoi", "children"),
+    Input("pp-food-group-select-hanoi", "value"),
+    Input("pp-scope-select-hanoi", "value"),
+    Input("pp-indicator-select-hanoi", "value"),
+)
+def update_processing_packing_hanoi(food_group, scope, indicator):
+    df = df_emissions_hanoi.copy()
+    if food_group and food_group != "ALL":
+        df = df[df["food_group"] == food_group]
+
+    include_home_cooking = (scope == "plate")
+    active_stages = [
+        (col, label) for col, label in PP_STAGE_COLS_HANOI
+        if include_home_cooking or col != "gCO2e_100g_home_cooking"
+    ]
+    stage_cols = [col for col, _ in active_stages]
+    df["_pp_total"] = df[stage_cols].sum(axis=1, min_count=1)
+    df = df.sort_values("_pp_total", ascending=True)
+    emissions_height = max(640, 20 * max(len(df), 1) + 160)
+
+    # Main stacked bar: one trace per supply-chain stage, totals labelled at bar ends
+    emissions_fig = go.Figure()
+    if df.empty or df["_pp_total"].dropna().empty:
+        emissions_fig.add_annotation(
+            text="No data for this selection.", showarrow=False,
+            xref="paper", yref="paper", x=0.5, y=0.5, font=dict(size=12),
+        )
+    else:
+        for col, label in active_stages:
+            emissions_fig.add_trace(go.Bar(
+                y=df["food_en"],
+                x=df[col].fillna(0),
+                name=label,
+                orientation="h",
+                marker_color=PP_STAGE_COLORS_HANOI[col],
+                customdata=df["food_vi"],
+                hovertemplate=(
+                    "<b>%{y}</b> (%{customdata})<br>"
+                    + label + ": %{x:,.2f} gCO₂e<extra></extra>"
+                ),
+            ))
+        emissions_fig.add_trace(go.Scatter(
+            y=df["food_en"],
+            x=df["_pp_total"],
+            mode="text",
+            text=df["_pp_total"].map(lambda v: f"{v:,.0f}"),
+            textposition="middle right",
+            textfont=dict(size=10, color=brand_colors["Brown"]),
+            showlegend=False,
+            hoverinfo="skip",
+            cliponaxis=False,
+        ))
+        # A few foods have negative land-use-change (sequestration) - leave room left of zero
+        neg_min = float(df[stage_cols].clip(upper=0).sum(axis=1).min())
+        emissions_fig.update_xaxes(range=[min(0, neg_min * 1.1), float(df["_pp_total"].max()) * 1.15])
+
+    emissions_fig.update_layout(
+        barmode="stack",
+        height=emissions_height,
+        margin=dict(l=10, r=60, t=0, b=40),
+        paper_bgcolor=brand_colors["White"],
+        plot_bgcolor=brand_colors["White"],
+        legend=dict(orientation="h", yanchor="bottom", y=1.0, x=0, title=None),
+        xaxis_title="gCO₂e per 100 g",
+        yaxis=dict(tickfont=dict(size=10)),
+        hoverlabel=dict(bgcolor="white", font_color="black"),
+        uirevision="pp-emissions-hanoi",
+    )
+
+    # Secondary chart: one bar per food for the selected environmental indicator
+    indicator_fig = go.Figure()
+    dfi = pd.DataFrame()
+    if indicator and indicator in df_emissions_hanoi.columns:
+        dfi = (
+            df[["food_en", "food_vi", indicator]]
+            .dropna(subset=[indicator])
+            .sort_values(indicator, ascending=True)
+        )
+    if dfi.empty:
+        indicator_fig.add_annotation(
+            text="No data for this indicator.", showarrow=False,
+            xref="paper", yref="paper", x=0.5, y=0.5, font=dict(size=12),
+        )
+    else:
+        indicator_fig.add_trace(go.Bar(
+            y=dfi["food_en"],
+            x=dfi[indicator],
+            orientation="h",
+            marker_color=brand_colors["Teal"],
+            customdata=dfi["food_vi"],
+            hovertemplate="<b>%{y}</b> (%{customdata})<br>%{x:,.4f}<extra></extra>",
+            showlegend=False,
+        ))
+    indicator_fig.update_layout(
+        height=min(500, max(320, 20 * max(len(dfi), 1) + 100)),
+        margin=dict(l=10, r=20, t=10, b=40),
+        paper_bgcolor=brand_colors["White"],
+        plot_bgcolor=brand_colors["White"],
+        xaxis_title=PP_OTHER_INDICATORS_HANOI.get(indicator, "per 100 g"),
+        yaxis=dict(tickfont=dict(size=10)),
+        hoverlabel=dict(bgcolor="white", font_color="black"),
+        uirevision="pp-indicator-hanoi",
+    )
+
+    nutrition_df = df_nutrition_emissions_hanoi.copy()
+    nutrition_df.drop('name_vi', axis=1, inplace=True)
+    if food_group and food_group != "ALL":
+        nutrition_df = nutrition_df[nutrition_df["food_group"] == food_group]
+    nutrition_df = nutrition_df.dropna(subset=[
+        "NRF9.3 ( Nutritional Quality Score)",
+        "gCO2e_100g_cradle_to_retail",
+    ])
+
+    nutrition_fig = px.scatter(
+        nutrition_df,
+        x="gCO2e_100g_cradle_to_retail",
+        y="NRF9.3 ( Nutritional Quality Score)",
+        color="food_group",
+        hover_name="item",
+        hover_data={
+            "food_group": False,
+            "rank_nutrient_density": False,
+            "gCO2e_per_NRF_point": ":.3f",
+        },
+        labels={
+            "gCO2e_100g_cradle_to_retail": "Cradle-to-retail emissions (gCO₂e/100 g)",
+            "NRF9.3 ( Nutritional Quality Score)": "Nutritional quality (NRF9.3 score)",
+            "food_group": "Food group",
+            #"rank_nutrient_density": "Nutrient-density rank",
+            "gCO2e_per_NRF_point": "gCO₂e per NRF point",
+        },
+        color_discrete_sequence=px.colors.qualitative.Safe,
+    )
+    if nutrition_df.empty:
+        nutrition_fig.add_annotation(
+            text="No nutrition-emissions data for this food group.",
+            showarrow=False,
+            xref="paper", yref="paper", x=0.5, y=0.5,
+        )
+    else:
+        nutrition_fig.add_vline(
+            x=nutrition_df["gCO2e_100g_cradle_to_retail"].median(),
+            line_dash="dot", line_color="#8b8b8b",
+        )
+        nutrition_fig.add_hline(
+            y=nutrition_df["NRF9.3 ( Nutritional Quality Score)"].median(),
+            line_dash="dot", line_color="#8b8b8b",
+        )
+    nutrition_fig.update_traces(
+        marker={"size": 10, "opacity": 0.8, "line": {"width": 0.6, "color": "white"}}
+    )
+    nutrition_fig.update_layout(
+        height=520,
+        autosize=True,
+        margin=dict(l=65, r=20, t=10, b=65),
+        paper_bgcolor=brand_colors["White"],
+        plot_bgcolor=brand_colors["White"],
+        hoverlabel=dict(bgcolor="white", font_color="black"),
+        legend=dict(title="Food group", orientation="h", yanchor="bottom", y=1.02, x=0),
+        uirevision="pp-nutrition-emissions-hanoi",
+    )
+    nutrition_fig.update_xaxes(gridcolor="#e5e7eb", zeroline=False)
+    nutrition_fig.update_yaxes(gridcolor="#e5e7eb", zeroline=False)
+
+    # KPI cards
+    if df.empty or df["_pp_total"].dropna().empty:
+        kpi_count, kpi_median, kpi_top, kpi_top_value = "0", "—", "—", ""
+    else:
+        kpi_count = str(len(df))
+        kpi_median = f"{df['_pp_total'].median():,.0f}"
+        top_row = df.loc[df["_pp_total"].idxmax()]
+        kpi_top = str(top_row["food_en"])
+        kpi_top_value = f"{top_row['_pp_total']:,.0f} gCO₂e per 100 g"
+
+    return (
+        emissions_fig,
+        {"width": "100%", "height": f"{emissions_height}px"},
+        indicator_fig,
+        nutrition_fig,
+        kpi_median,
+        kpi_top,
+        kpi_top_value,
+    )
+
 # Callback for SDG filter buttons
 @app.callback(
     [Output('indicators_table', 'data'),
@@ -2981,6 +3217,18 @@ def filter_by_sdg(*args):
         return filtered_df[display_cols].to_dict('records'), status, *button_styles
     
     return df_indicators[display_cols].to_dict('records'), "Click an SDG icon to filter indicators", *button_styles
+
+@app.callback(
+    Output('policies-table-count-hanoi', 'children'),
+    Input('policies_table', 'derived_virtual_data')
+)
+def update_policies_table_count(rows):
+    total = len(df_policies_hanoi)
+    n = len(rows) if rows else 0
+    if n == total:
+        return f"Showing {total} policies"
+    return f"Showing {n} of {total} policies"
+
 
 @app.callback(
     Output('addis-resilience-view-container', 'children'),
@@ -3422,55 +3670,6 @@ def update_sankey_hanoi(value):
     return total_flow_text, urban_fig, fig
 
 
-# Hanoi affordability trend
-@app.callback(
-    Output('affordability-trend-hanoi','figure'),
-    Input('affordability-filter-dropdown-hanoi','value')
-)
-def update_affordability_trend_hanoi(selected_variable):
-    titles = {
-        'foodExp_totalExp': 'Food Expenditure from Total Expenses (%)',
-        'foodExp_totalInc': 'Food Expenditure from Household Income (%)',
-        'riceExp_House': 'Rice Expenditure from Household Income (%)',
-        'riceAfford': 'Rice Affordability'
-    }
-
-    y_labels = {
-        'foodExp_totalExp': '%',
-        'foodExp_totalInc': '%',
-        'riceExp_House': '%',
-        'riceAfford': '%'
-    }
-
-    df_filt = df_affordability_hanoi[df_affordability_hanoi['Cat']==selected_variable]
-
-    fig = px.line(df_filt, 
-                  x='Year', 
-                  y='value', 
-                  color='Reg', 
-                  markers=True,
-                  color_discrete_sequence=[brand_colors['Red'], brand_colors['Dark green']]
-    )
-    
-    fig.update_traces(marker=dict(size=8))
-    fig.update_layout(
-        margin=dict(l=0.25, r=0, t=0, b=0.25),
-        hoverlabel=dict(bgcolor="white", font_color="black"),
-        legend=dict(
-            title=None,
-            x=1.1, y=1.1,
-            xanchor='right', yanchor='top',
-            bgcolor='rgba(255,255,255,0.7)',
-            bordercolor='rgba(0,0,0,0.1)',
-            borderwidth=1,
-            font=dict(size=12)
-        )
-    )
-    fig.update_xaxes(title_text=None)  
-    fig.update_yaxes(title_text=y_labels[selected_variable])
-    return fig
-
-
 # Hanoi health trend
 @app.callback(
     Output('health-trend-hanoi','figure'),
@@ -3900,7 +4099,7 @@ def update_resilience_view_layout(_n_bio, _n_lulc, spatial_data):
     if ctx.triggered_id == "env-climate-view-tab-lulc":
         lulc_ctx = _get_lulc_context()
         return (
-            render_lulc_resilience_layout(lulc_ctx["indicator_options"]),
+            render_lulc_layout(lulc_ctx["indicator_options"]),
             "dash-subview-tab-inactive", "dash-subview-tab-active",
         )
 
@@ -3923,7 +4122,7 @@ def update_resilience_view_layout(_n_bio, _n_lulc, spatial_data):
     quarter_marks = {int(k): v for k, v in quarter_marks_raw.items()}
 
     return (
-        render_spatial_climate_resilience_layout(
+        render_spatial_climate_layout(
             climate_indicator_options,
             indicator_descriptions,
             infrastructure_options,
