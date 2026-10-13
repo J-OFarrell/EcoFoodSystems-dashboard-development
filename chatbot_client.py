@@ -6,6 +6,7 @@ Switching providers later (e.g. to Claude) means rewriting this file only -
 nothing else in the app talks to the provider directly.
 """
 
+import json
 import os
 import re
 import time
@@ -18,6 +19,16 @@ from groq import Groq
 # rejected it with "tool_use_failed"). gpt-oss-120b handles tool calling
 # reliably in testing.
 MODEL = "openai/gpt-oss-120b"
+
+# Used only by route_tools() below, to decide which of the (expensive, verbose)
+# tool definitions MODEL actually needs for a given question - smaller/faster
+# than MODEL, and on a completely separate per-model Groq rate-limit budget,
+# so routing calls never eat into MODEL's TPM quota. llama-3.1-8b-instant
+# (the usual pick for this) isn't in this account's model catalog any more
+# (confirmed via a direct models.list() call, not assumed) - gpt-oss-20b is
+# the smaller sibling of MODEL itself, so it's available and behaves
+# consistently with it (JSON mode, instruction-following).
+ROUTER_MODEL = "openai/gpt-oss-20b"
 
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 if not GROQ_API_KEY:
@@ -104,3 +115,50 @@ def ask(messages, tools=None):
     response = raw.parse()
     _record_quota_from_headers(raw.headers)
     return response.choices[0].message
+
+
+def route_tools(user_message, tool_catalog):
+    """Ask ROUTER_MODEL which of the given (expensive) data tools a question
+    plausibly needs, so MODEL only has to receive those few tool definitions
+    instead of all of them on every call.
+
+    tool_catalog: list of (name, one_line_description) tuples.
+    Returns a list of tool names, or None if the router call failed or
+    answered unusably - callers should treat None as "send every tool" (the
+    safe fallback, same behaviour as before routing existed).
+
+    Deliberately does NOT update the quota snapshot get_quota_status() reads -
+    that's MODEL's budget, shown to users as "how close to the limit are we";
+    recording ROUTER_MODEL's headers there would show the wrong model's quota.
+    """
+    catalog_text = "\n".join(f"- {name}: {desc}" for name, desc in tool_catalog)
+    router_messages = [
+        {
+            "role": "system",
+            "content": (
+                "You route a user's question to the tool(s) it will need. "
+                "Available tools:\n" + catalog_text + "\n\n"
+                "Respond with ONLY a JSON object: {\"tools\": [\"name1\", \"name2\"]}. "
+                "Include every tool that might plausibly be needed - when "
+                "unsure, include more rather than fewer. If truly none apply "
+                "(e.g. small talk, a question about dashboard navigation with "
+                "no number involved), return an empty list."
+            ),
+        },
+        {"role": "user", "content": user_message},
+    ]
+    try:
+        raw = _client.with_raw_response.chat.completions.create(
+            model=ROUTER_MODEL,
+            messages=router_messages,
+            response_format={"type": "json_object"},
+            temperature=0,
+        )
+        response = raw.parse()
+        data = json.loads(response.choices[0].message.content)
+        names = data.get("tools")
+        if isinstance(names, list) and all(isinstance(n, str) for n in names):
+            return names
+    except Exception:
+        pass
+    return None

@@ -7,8 +7,10 @@ independently.
 """
 
 import csv
+import glob
 import json
 import os
+import re
 from io import StringIO
 
 import geopandas as gpd
@@ -499,4 +501,47 @@ _accessibility_zonal_stats_path_hanoi = os.path.join(_HANOI_FOOD_ENV_DIR, "hanoi
     accessibility_population_options_hanoi,
     accessibility_offer_options_hanoi,
 ) = _load_accessibility_zonal_stats(_accessibility_zonal_stats_path_hanoi)
+
+
+# Per-subdomain time-series search, used by chatbot_tools.get_subdomain_indicator_value.
+# Mirrors hanoi_layouts._find_indicator_series's *_temporal_indicators.csv glob
+# convention (same file-naming contract the dashboard's own sparkline charts
+# rely on), but scans every subdomain folder for a city rather than one named
+# pillar/subdomain, since the chatbot doesn't know the subdomain up front.
+def _normalize_indicator_text(name):
+    return re.sub(r"\s+", " ", (name or "").strip().lower())
+
+
+def find_temporal_indicator(city, indicator_name):
+    """Search assets/data/{city}/*/*_temporal_indicators.csv for a column
+    matching indicator_name (exact match preferred, substring as fallback).
+    Returns (dataframe, matched_column_name, subdomain_folder_name), or None
+    if no file/column matches anything.
+    """
+    base_dir = {"hanoi": _HANOI_ROOT, "addis": _ADDIS_ROOT}.get((city or "").strip().lower())
+    if not base_dir or not os.path.isdir(base_dir):
+        return None
+
+    indicator_norm = _normalize_indicator_text(indicator_name)
+    substring_fallback = None
+
+    for subdomain_dir in sorted(os.listdir(base_dir)):
+        subdomain_path = os.path.join(base_dir, subdomain_dir)
+        if not os.path.isdir(subdomain_path):
+            continue
+        for csv_path in sorted(glob.glob(os.path.join(subdomain_path, "*_temporal_indicators.csv"))):
+            try:
+                df = pd.read_csv(csv_path)
+            except Exception:
+                continue
+            for col in df.columns:
+                if col in ("Year", "Quarter", "Month"):
+                    continue
+                col_norm = _normalize_indicator_text(col)
+                if col_norm == indicator_norm:
+                    return df, col, subdomain_dir
+                if substring_fallback is None and (indicator_norm in col_norm or col_norm in indicator_norm):
+                    substring_fallback = (df, col, subdomain_dir)
+
+    return substring_fallback
 
