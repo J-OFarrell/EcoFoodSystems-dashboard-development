@@ -23,7 +23,7 @@ from data_access import (
     df_affordability_hanoi, df_indicators, df_policies_hanoi,
     atlas_records, outlets_geojson_files_hanoi,
     accessibility_outlet_options_hanoi, accessibility_population_options_hanoi,
-    accessibility_zonal_stats_hanoi,
+    accessibility_zonal_stats_hanoi, df_emissions_hanoi,
 )
 
 def _red_graph_loading(children, loading_id=None):
@@ -45,6 +45,44 @@ def _red_graph_loading(children, loading_id=None):
         ),
         children=children,
     )
+
+
+def _chart_help_button(btn_id, tips, placement="bottom"):
+    """Hoverable '?' icon listing chart interaction tips (companion to the info icons)."""
+    return html.Div([
+        dbc.Button("?", id=btn_id, style={
+            "fontSize": "1.1em",
+            "fontWeight": "bold",
+            "color": brand_colors['Teal'],
+            "background": "none",
+            "border": f"2px solid {brand_colors['Teal']}",
+            "borderRadius": "50%",
+            "width": "26px",
+            "height": "26px",
+            "lineHeight": "1",
+            "padding": "0",
+            "cursor": "default",
+            "flexShrink": "0",
+        }),
+        dbc.Tooltip(
+            html.Div([
+                html.Div("How to use this chart:", style={"fontWeight": "bold", "marginBottom": "4px"}),
+                html.Ul([html.Li(tip) for tip in tips], style={"margin": "0", "paddingLeft": "18px"}),
+            ], style={"textAlign": "left"}),
+            target=btn_id,
+            placement=placement,
+            style={"fontSize": "0.85em", "maxWidth": "320px", "padding": "8px"},
+        ),
+    ])
+
+
+# Default tip set shared by most Plotly charts on the dashboard
+_CHART_TIPS_DEFAULT = [
+    "Hover over bars for exact values",
+    "Drag a box over the chart to zoom in",
+    "Double-click to recentre or reset the view",
+    "Scroll inside the chart to show more items",
+]
 
 
 def _slugify_for_data_path(text):
@@ -476,7 +514,6 @@ def governance_stakeholders_tab_layout():
             "flexDirection": "column",
             "overflow": "hidden",
             "borderRadius": "12px",
-            "backgroundColor": "#FFFFFF",
             "margin": "10px 10px 10px 10px"
         })
 
@@ -818,135 +855,31 @@ def income_growth_distribution_tab():
     })
 
 
-def food_affordability_tab_layout_hanoi_arch():
-    """Hà Nội affordability tab layout"""
-    return html.Div([
-        city_selector(selected_city='hanoi', visible=False),  # Hidden but present for callback
-        
-        #html.Div([sidebar], style={
-        #    "width": "15%",
-        #    "height": "100%",
-        #    "display": "flex",
-        #    "vertical-align":'top',
-        #    "flexDirection": "column",
-        #    "justifyContent": "flex-start",
-        #}),
-
-        # Left Panel
-        html.Div([
-            dbc.Card([
-                dbc.CardBody([
-                    html.H2('Dietary Mapping & Affordability', 
-                            style=header_style),
-                ])
-            ], style={"height": "auto",
-                      "width":"100%",
-                      "padding":"1px",
-                      "boxShadow": "0 2px 12px rgba(0,0,0,0.08)",
-                      "backgroundColor": brand_colors['Mid green'],
-                      "borderRadius": "12px",
-                      'margin':"0px 0px 16px 0px",
-                      "justifyContent": "center"
-            }),
-            
-            html.Div([
-                dbc.Card([
-                    dbc.CardBody([         
-                        dcc.Dropdown(
-                            id='affordability-filter-dropdown-hanoi',
-                            options=[
-                                {'label': 'Food Expenditure from Total Expenses', 'value': 'foodExp_totalExp'},
-                                {'label': 'Food Expenditure from Household Income', 'value': 'foodExp_totalInc'},
-                                {'label': 'Rice Expenditure from Household Income', 'value': 'riceExp_House'},
-                                {'label': 'Rice Affordability', 'value': 'riceAfford'},
-                            ],
-                            value='riceAfford',
-                            clearable=False,
-                            style={"margin-bottom": "0", 
-                                    'fontSize': 'clamp(0.8em, 1em, 1.4em)',
-                                    'width':'100%'
-                        })
-                    ], style={  "display":'flex',
-                                "flexDirection":'column',
-                                'width':'100%'
-                    })
-                ])
-            ], style={  "height": "auto",
-                        "padding":"2px",
-                        "boxShadow": "0 2px 12px rgba(0,0,0,0.08)",
-                        "marginBottom": "16px",
-                        "backgroundColor": "#FFFFFF",
-                        "borderRadius": "12px"
-            }),
-
-            dbc.Card([
-                dbc.CardBody([
-                    _red_graph_loading(
-                        dcc.Graph(id='affordability-trend-hanoi',
-                                style={
-                                    "flex": "1 1 auto",
-                                    "height":"98%",
-                                    'padding': '4px',
-                                    'margin': '0',
-                                    "borderRadius": "8px",
-                                    "boxShadow": "0 2px 8px rgba(0,0,0,0.15)",
-                                }),
-                        loading_id="loading-affordability-trend-hanoi",
-                    )
-                ],style={
-                        "display": "flex",
-                        "flexDirection": "column",
-                        "height": "100%"
-                })
-            ], style={"height": "100%",
-                        "padding":"2px",
-                        "boxShadow": "0 2px 12px rgba(0,0,0,0.08)",
-                        "backgroundColor": "#FFFFFF",
-                        "borderRadius": "12px"
-            })
-
-        ], style={
-            "width": "min(50%)",
-            "height": "100%",
-            "padding": "10px",
-            "backgroundColor": "#FFFFFF",
-            "borderRadius": "0",
-            "margin": "0",
-            "boxShadow": "0 2px 8px rgba(0,0,0,0.05)",
-            "display": "flex",
-            "flexDirection": "column",
-            "justifyContent": "flex-start",
-            "overflowY": "auto",
-            "boxSizing": "border-box",
-            "position": "relative",
-        }),
-
-    ], style={
-        "display": "flex",
-        "width": "100%",
-        "height": "100%",
-        "backgroundColor": "#F8FAF8"
-    })
-
-
-def diets_nutrition_health_tab_layout():
+def nutritional_status_tab():
     """Hà Nội health & nutrition tab layout"""
     labels = df_diet_2_hanoi['Cat'].unique()
     
     tile_width, lg = 12, 3
     years = list(range(2010, 2024))
 
+    def _nutrition_card(cat_label, lower_is_better=True):
+        """KPI card for one indicator with Hanoi + national trend sparklines."""
+        cat_mask = df_diet_2_hanoi['Cat'] == cat_label
+        hanoi_df = df_diet_2_hanoi[cat_mask & (df_diet_2_hanoi['Reg'] == 'Hanoi')][['Year', 'value']]
+        national_df = df_diet_2_hanoi[cat_mask & (df_diet_2_hanoi['Reg'] == 'Vietnam')][['Year', 'value']]
+        source = df_diet_2_hanoi[cat_mask]['Data source'].values[0]
+        return create_nutrition_kpi_card_hanoi(
+            hanoi_df,
+            cat_label.split(' in ')[0],
+            hanoi_df['value'].dropna().values[-1],
+            national_df['value'].dropna().values[-1],
+            lower_is_better=lower_is_better,
+            data_source=source,
+            national_timeseries=national_df,
+        )
+
     return html.Div([
         city_selector(selected_city='hanoi', visible=False),  # Hidden but present for callback
-        
-        #html.Div([sidebar], style={
-        #    "width": "15%",
-        #    "height": "100%",
-        #    "display": "flex",
-        #    "vertical-align":'top',
-        #    "flexDirection": "column",
-        #    "justifyContent": "flex-start",
-        #}),
 
         # KPI cards (left)
         dbc.Card([
@@ -960,33 +893,10 @@ def diets_nutrition_health_tab_layout():
             ),
             dbc.CardBody(
                 dbc.Row([
-                        dbc.Col([create_nutrition_kpi_card_hanoi(
-                                        df_diet_2_hanoi[(df_diet_2_hanoi['Cat'] == labels[0]) & (df_diet_2_hanoi['Reg'] == 'Hanoi')][['Year', 'value']],
-                                        labels[0].split(' in ')[0], 
-                                        df_diet_2_hanoi[(df_diet_2_hanoi['Cat'] == labels[0]) & (df_diet_2_hanoi['Reg'] == 'Hanoi')]['value'].dropna().values[-1], 
-                                        df_diet_2_hanoi[(df_diet_2_hanoi['Cat'] == labels[0]) & (df_diet_2_hanoi['Reg'] == 'Vietnam')]['value'].dropna().values[-1], 
-                                        lower_is_better=True, data_source="Nutrition Survailance (NIN)")], width=tile_width, lg=lg),
-
-                        dbc.Col([create_nutrition_kpi_card_hanoi(
-                                        df_diet_2_hanoi[(df_diet_2_hanoi['Cat'] == labels[1]) & (df_diet_2_hanoi['Reg'] == 'Hanoi')][['Year', 'value']],
-                                        labels[1].split(' in ')[0], 
-                                        df_diet_2_hanoi[(df_diet_2_hanoi['Cat'] == labels[1]) & (df_diet_2_hanoi['Reg'] == 'Hanoi')]['value'].dropna().values[-1], 
-                                        df_diet_2_hanoi[(df_diet_2_hanoi['Cat'] == labels[1]) & (df_diet_2_hanoi['Reg'] == 'Vietnam')]['value'].dropna().values[-1], 
-                                        lower_is_better=True, data_source="Nutrition Survailance (NIN)")], width=tile_width, lg=lg),
-
-                        dbc.Col([create_nutrition_kpi_card_hanoi(
-                                        df_diet_2_hanoi[(df_diet_2_hanoi['Cat'] == labels[2]) & (df_diet_2_hanoi['Reg'] == 'Hanoi')][['Year', 'value']],
-                                        labels[2].split(' in ')[0], 
-                                        df_diet_2_hanoi[(df_diet_2_hanoi['Cat'] == labels[2]) & (df_diet_2_hanoi['Reg'] == 'Hanoi')]['value'].dropna().values[-1], 
-                                        df_diet_2_hanoi[(df_diet_2_hanoi['Cat'] == labels[2]) & (df_diet_2_hanoi['Reg'] == 'Vietnam')]['value'].dropna().values[-1], 
-                                        lower_is_better=True, data_source="Nutrition Survailance (NIN)")], width=tile_width, lg=lg),
-
-                        dbc.Col([create_nutrition_kpi_card_hanoi(
-                                        df_diet_2_hanoi[(df_diet_2_hanoi['Cat'] == labels[3]) & (df_diet_2_hanoi['Reg'] == 'Hanoi')][['Year', 'value']],
-                                        labels[3].split(' in ')[0], 
-                                        df_diet_2_hanoi[(df_diet_2_hanoi['Cat'] == labels[3]) & (df_diet_2_hanoi['Reg'] == 'Hanoi')]['value'].dropna().values[-1], 
-                                        df_diet_2_hanoi[(df_diet_2_hanoi['Cat'] == labels[3]) & (df_diet_2_hanoi['Reg'] == 'Vietnam')]['value'].dropna().values[-1], 
-                                        lower_is_better=True, data_source="Nutrition Survailance (NIN)")], width=tile_width, lg=lg),
+                        dbc.Col([_nutrition_card(labels[0])], width=tile_width, lg=lg),
+                        dbc.Col([_nutrition_card(labels[1])], width=tile_width, lg=lg),
+                        dbc.Col([_nutrition_card(labels[2])], width=tile_width, lg=lg),
+                        dbc.Col([_nutrition_card(labels[3])], width=tile_width, lg=lg),
                     ]),
                 style={"padding": "12px", "borderRadius": "10px"}
             ),
@@ -1008,14 +918,29 @@ def diets_nutrition_health_tab_layout():
             ),
             dbc.CardBody(
                 dbc.Row([
-                        dbc.Col([create_nutrition_kpi_card_hanoi(
-                                        df_diet_2_hanoi[(df_diet_2_hanoi['Cat'] == labels[4]) & (df_diet_2_hanoi['Reg'] == 'Hanoi')][['Year', 'value']],
-                                        labels[4].split(' in ')[0], 
-                                        df_diet_2_hanoi[(df_diet_2_hanoi['Cat'] == labels[4]) & (df_diet_2_hanoi['Reg'] == 'Hanoi')]['value'].dropna().values[-1], 
-                                        df_diet_2_hanoi[(df_diet_2_hanoi['Cat'] == labels[4]) & (df_diet_2_hanoi['Reg'] == 'Vietnam')]['value'].dropna().values[-1], 
-                                        lower_is_better=True, data_source="Nutrition Survailance (NIN)")], width=tile_width, lg=lg),
-                    ]),
-                style={"padding": "12px", "borderRadius": "10px"}
+                    dbc.Col([_nutrition_card(labels[4])], width=tile_width, lg=lg),
+                ]), style={"padding": "12px", "borderRadius": "10px"}
+            ),
+        ], style={
+            "marginBottom": "14px",
+            "borderRadius": "10px",
+            "backgroundColor": sidebar_colors['Hover (dark card)'],
+            "boxShadow": "0 2px 6px rgba(0,0,0,0.1)",
+        }),
+
+        dbc.Card([
+            dbc.CardHeader(
+                html.H4("Adults", style={
+                    "color": brand_colors['White'],
+                    "fontWeight": "bold",
+                    "margin": "0",
+                }),
+                style={"backgroundColor": hero_gradient['50%'], "borderRadius": "9px 9px 0 0"}
+            ),
+            dbc.CardBody(
+                dbc.Row([
+                    dbc.Col([_nutrition_card(labels[5])], width=tile_width, lg=lg),
+                ]), style={"padding": "12px", "borderRadius": "10px"}
             ),
         ], style={
             "marginBottom": "14px",
@@ -1028,209 +953,6 @@ def diets_nutrition_health_tab_layout():
         "width": "100%", "height": "100%", "display": "flex", "flexDirection": "column",
         "padding": "6px", "backgroundColor": sidebar_colors['Hover (dark card)'], "overflowY": "auto",
     })
-
-
-def food_affordability_tab_layout():
-    """Hanoi affordability tab layout"""
-    # NOTE: outlets_geojson_files_hanoi was never defined anywhere (commented
-    # out in the original app.py) - this import is EXPECTED to fail. This
-    # preserves a pre-existing bug where this tab has always raised on open;
-    # not fixed here since fixing it is a data/design decision, not a refactor.
-    from data_access import outlets_geojson_files_hanoi
-    data_labels_food_env = []  # always empty today (naming-mismatch bug, preserved)
-    cols_food_env = []  # always empty today (naming-mismatch bug, preserved)
-
-    return html.Div([
-        city_selector(selected_city='hanoi', visible=False),  # Hidden but present for callback
-        
-            #html.Div([sidebar], style={
-            #                    "width": "15%",
-            #                    "height": "100%",
-            #                    "display": "flex",
-            #                    "vertical-align":'top',
-            #                    "flexDirection": "column",
-            #                    "justifyContent": "flex-start",
-            #}),
-
-            # Left Panel
-            html.Div([
-                dbc.Card([
-                    dbc.CardBody([
-                        html.Div([ 
-                            html.H2("Food Environment Analysis", style=header_style),
-                            html.P("This map shows the distribution of healthy and unhealthy food outlets across Hanoi's districts. The obesogenic ratio reveals where unhealthy outlets dominate, indicating areas with limited access to nutritious food. Population exposure metrics highlight which communities face the greatest imbalance, providing evidence to guide equitable food policy interventions. This analysis forms part of a broader assessment integrating socioeconomic and built environment factors.",
-                                       style={  "margin": "10px 6px", 
-                                                "fontSize": 'clamp(0.7em, 0.9em, 1.0em)',
-                                                #"textAlign": "justify",
-                                                "whiteSpace": "normal",
-                                                })],
-                                style={
-                                    'margin': '2px 0px',
-                                    'zIndex': '1000',
-                                    'justifyContent': 'end',
-                                    'alignItems': 'center',
-                                    'textAlign': 'center'
-                    })],style={
-                                "display": "flex",
-                                "flexDirection": "column",
-                                "height": "100%"             
-                            })
-                ], style={"height": "auto",
-                            "padding":"6px",
-                            "boxShadow": "0 2px 12px rgba(0,0,0,0.08)",
-                            "backgroundColor": "#FFFFFF",
-                            "borderRadius": "12px"}),
-
-
-                # Food outlets selector first (ensure high z-index so dropdown menus render above others)
-                dbc.Card([
-                    dbc.CardBody([
-                        html.Div([
-                                html.P(["Select food outlets (30-minute walkability zones display automatically)."],
-                                       style={"margin": "6px", 'fontSize': 'clamp(0.7em, 1em, 1.0em)',
-                                              "textAlign": "center", "whiteSpace": "normal", "fontStyle": "italic"}),
-                                dcc.Dropdown(
-                                    id="food-outlets-and-isochrones-hanoi",
-                                    options=[
-                                        {"label": "Select All", "value": "SELECT_ALL"}
-                                    ] + [{
-                                        "label": f.split('_')[1] if len(f.split('_')) < 4 else f"{f.split('_')[1]} {f.split('_')[2]}",
-                                        "value": f
-                                    } for f in outlets_geojson_files_hanoi],
-                                    value=None,
-                                    multi=True,
-                                    placeholder="Select outlet layers to display",
-                                    style={'zIndex': '5000', 'position': 'relative'})
-                                ],
-                                style={'margin': '2px 0px', 'justifyContent': 'end', 'alignItems': 'center', 'textAlign': 'center'}),
-                    ])
-                ], style={"height": "auto", "padding":"6px", "boxShadow": "0 2px 12px rgba(0,0,0,0.08)",
-                            "backgroundColor": "#FFFFFF", "borderRadius": "12px",
-                            "zIndex": "5000", "position": "relative", "marginTop": "4px"}),
-
-                # Choropleth metric selector below outlets
-                dbc.Card([
-                    dbc.CardBody([
-                        html.Div([
-                                html.P(["Select a food environment metric to display as a choropleth layer."],
-                                       style={"margin": "6px", 'fontSize': 'clamp(0.7em, 1em, 1.0em)',
-                                              "textAlign": "center", "whiteSpace": "normal", "fontStyle": "italic"}),
-                                dcc.Dropdown(
-                                    id="choropleth-select-hanoi",
-                                    options=[{"label": label, "value": col} for label, col in zip(data_labels_food_env, cols_food_env)],
-                                    multi=False,
-                                    #value='ratio_obesogenic' if 'ratio_obesogenic' in cols_food_env else (cols_food_env[0] if cols_food_env else None),
-                                    placeholder="Select metric to display",
-                                    style={'zIndex': '1900', 'position': 'relative'})
-                                ],
-                                style={'margin': '2px 0px', 'justifyContent': 'end', 'alignItems': 'center', 'textAlign': 'center'})
-                    ])
-                ], style={"height": "auto", "padding":"6px", "boxShadow": "0 2px 12px rgba(0,0,0,0.08)",
-                            "backgroundColor": "#FFFFFF", "borderRadius": "12px", "marginTop": "4px"}),
-                                
-                html.H5(" ", style={
-                        "color": brand_colors['Brown'],
-                        "fontWeight": "bold",
-                        "marginTop": "20px",
-                        "marginBottom": "15px",
-                        "borderBottom": f"3px solid {brand_colors['Mid green']}",
-                        "paddingBottom": "10px"
-                    }),
-                
-                dbc.Row([
-                    dbc.Col([create_nutrition_kpi_card_hanoi(
-                    df_affordability_hanoi[(df_affordability_hanoi['Cat'] == 'foodExp_totalExp') & (df_affordability_hanoi['Reg'] == 'Hanoi')][['Year', 'value']],
-                    "Food Expenditure from Total Expenses",
-                    df_affordability_hanoi[(df_affordability_hanoi['Cat'] == 'foodExp_totalExp') & (df_affordability_hanoi['Reg'] == 'Hanoi')]['value'].dropna().values[-1],
-                    df_affordability_hanoi[(df_affordability_hanoi['Cat'] == 'foodExp_totalExp') & (df_affordability_hanoi['Reg'] == 'Vietnam')]['value'].dropna().values[-1],
-                    lower_is_better=True, data_source="Household expenditure survey")], width=12, lg=6),
-                
-                    dbc.Col([create_nutrition_kpi_card_hanoi(
-                    df_affordability_hanoi[(df_affordability_hanoi['Cat'] == 'foodExp_totalInc') & (df_affordability_hanoi['Reg'] == 'Hanoi')][['Year', 'value']],
-                    "Food Expenditure from Household Income",
-                    df_affordability_hanoi[(df_affordability_hanoi['Cat'] == 'foodExp_totalInc') & (df_affordability_hanoi['Reg'] == 'Hanoi')]['value'].dropna().values[-1],
-                    df_affordability_hanoi[(df_affordability_hanoi['Cat'] == 'foodExp_totalInc') & (df_affordability_hanoi['Reg'] == 'Vietnam')]['value'].dropna().values[-1],
-                    lower_is_better=True, data_source="Household expenditure survey")], width=12, lg=6)
-                ]),
-                
-            ], style={
-                    "width": "min(40%)",
-                    "height": "100%",
-                    "padding": "10px",
-                    "backgroundColor": "#FFFFFF",
-                    "borderRadius": "0",
-                    "margin": "0",
-                    "boxShadow": "0 2px 8px rgba(0,0,0,0.05)",
-                    "display": "flex",
-                    "flexDirection": "column",
-                    "justifyContent": "flex-start",
-                    "overflowY": "auto",
-                    "boxSizing": "border-box",
-                    "position": "relative",
-                }),
-
-                # Right panel: map, full height
-                html.Div([
-                    dcc.Loading(
-                        id="loading-affordability-map-hanoi",
-                        parent_style={
-                            "height": "100%",
-                            "width": "100%",
-                            "position": "relative"
-                        },
-                        style={"height": "100%", "width": "100%"},
-                        custom_spinner=html.Div(
-                            dbc.Spinner(color="danger", type="border"),
-                            style={
-                                "position": "absolute",
-                                "inset": "0",
-                                "display": "flex",
-                                "alignItems": "center",
-                                "justifyContent": "center",
-                                "zIndex": 1000,
-                                "pointerEvents": "none",
-                            }
-                        ),
-                        children=html.Div(
-                            dcc.Graph(
-                                id='affordability-map-hanoi',
-                                figure=go.Figure().update_layout(
-                                    map=dict(
-                                        style=_BASEMAP_STYLE,
-                                        center={"lat": 21.0, "lon": 105.85},
-                                        zoom=9
-                                    ),
-                                    margin=dict(l=0, r=0, t=0, b=0),
-                                    paper_bgcolor=brand_colors['White']
-                                ),
-                                config={"displayModeBar": False, "scrollZoom": True, "responsive": True},
-                                style={"height": "100%", "width": "100%", "padding": "0", "margin": "0"}
-                            ),
-                            style={"height": "100%", "width": "100%"}
-                        )
-                    )
-                ], style={
-                    "flex": "1",
-                    "height": "100%",
-                    "padding": "0",
-                    "margin": "0",
-                    "backgroundColor": brand_colors['White'],
-                    "border-radius": "0",
-                    "display": "flex",
-                    "flexDirection": "column",
-                    "alignItems": "stretch",
-                    "justifyContent": "center",
-                    "box-sizing": "border-box",
-                    "zIndex": 1000,
-                    "position": "relative",
-                })
-
-        ], style={
-                    "display": "flex",
-                    "width": "100%",
-                    "height": "100%",
-                    "backgroundColor": "#F8FAF8"
-        })
 
 
 def sdg_indicator_atlas_tab_layout():
@@ -1364,7 +1086,8 @@ def sdg_indicator_atlas_tab_layout():
                                 col: {
                                     'value': str(row[col]) if (col.lower() in ['abstract', 'title', 'keywords'] or len(str(row[col])) > 20) else '',
                                     'type': 'text'
-                                } for col in display_cols
+                                }
+                                for col in display_cols
                             } for row in df_display.to_dict('records')
                         ],
                         tooltip_duration=None,
@@ -1472,7 +1195,7 @@ def _create_resilience_temporal_kpi_card(df, indicator_col, time_labels, line_co
         line=dict(color=line_color, width=2),
         marker=dict(size=4, color=line_color),
         text=time_labels,
-        hovertemplate="%{text}: %{y:.3f}<extra></extra>"
+        hovertemplate="%{text}: %{y:,.3f}<extra></extra>"
     ))
     sparkline.update_layout(
         height=80,
@@ -1899,7 +1622,7 @@ def render_temporal_resilience_layout():
     })
 
 
-def render_spatial_climate_resilience_layout(climate_indicator_options, indicator_descriptions, infrastructure_options, n, quarter_marks):
+def render_spatial_climate_layout(climate_indicator_options, indicator_descriptions, infrastructure_options, n, quarter_marks):
     """Spatial (map) sub-layout for the resilience tab."""
     return html.Div([
 
@@ -1918,7 +1641,7 @@ def render_spatial_climate_resilience_layout(climate_indicator_options, indicato
                         "Select an indicator below to explore how different aspects of biophysical shocks have evolved over time. ",
                         style={
                             "margin": "10px 6px",
-                            "fontSize": 'clamp(0.6em, 0.9em, 1.0em)',
+                            "fontSize": "clamp(0.6em, 0.9em, 1.0em)",
                             "whiteSpace": "normal",
                         }
                     )
@@ -2032,7 +1755,7 @@ def render_spatial_climate_resilience_layout(climate_indicator_options, indicato
                         step=1,
                         value=50,
                         marks=quarter_marks,
-                        updatemode="mouseup",
+                        updatemode="mouseup"
                     ),
                 ])
             ], id="date-slider-card", style={
@@ -2128,14 +1851,22 @@ def render_spatial_climate_resilience_layout(climate_indicator_options, indicato
         html.Div(
             dcc.Loading(
                 id="loading-drought-map",
-                parent_style={"height": "100%", "width": "100%", "position": "relative"},
+                parent_style={
+                    "height": "100%",
+                    "width": "100%",
+                    "position": "relative"
+                },
                 style={"height": "100%", "width": "100%"},
                 custom_spinner=html.Div(
                     dbc.Spinner(color="danger", type="border"),
                     style={
-                        "position": "absolute", "inset": "0", "display": "flex",
-                        "alignItems": "center", "justifyContent": "center",
-                        "zIndex": 1000, "pointerEvents": "none",
+                        "position": "absolute",
+                        "inset": "0",
+                        "display": "flex",
+                        "alignItems": "center",
+                        "justifyContent": "center",
+                        "zIndex": 1000,
+                        "pointerEvents": "none",
                     }
                 ),
                 children=html.Div(
@@ -2143,10 +1874,10 @@ def render_spatial_climate_resilience_layout(climate_indicator_options, indicato
                     children=dcc.Graph(
                         id="resilience-map",
                         figure=go.Figure(),
-                        config={"displayModeBar": False, "scrollZoom": True},
-                        style={"height": "100%", "width": "100%"},
+                        config={"displayModeBar": False, "scrollZoom": True, "responsive": True},
+                        style={"height": "100%", "width": "100%"}
                     ),
-                    style={"height": "100%", "width": "100%"},
+                    style={"height": "100%", "width": "100%"}
                 ),
             ),
             style={"flex": "1", "height": "100%", "minHeight": "calc(100vh - 140px)"}
@@ -2155,7 +1886,7 @@ def render_spatial_climate_resilience_layout(climate_indicator_options, indicato
     ], style={"display": "flex", "width": "100%", "height": "100%"})
 
 
-def render_lulc_resilience_layout(lulc_indicator_options):
+def render_lulc_layout(lulc_indicator_options):
     """Land-use & Land-cover sub-layout for the resilience tab."""
     default_value = None
     if lulc_indicator_options:
@@ -2220,14 +1951,22 @@ def render_lulc_resilience_layout(lulc_indicator_options):
         html.Div(
             dcc.Loading(
                 id="loading-lulc-map",
-                parent_style={"height": "100%", "width": "100%", "position": "relative"},
+                parent_style={
+                    "height": "100%",
+                    "width": "100%",
+                    "position": "relative"
+                },
                 style={"height": "100%", "width": "100%"},
                 custom_spinner=html.Div(
                     dbc.Spinner(color="danger", type="border"),
                     style={
-                        "position": "absolute", "inset": "0", "display": "flex",
-                        "alignItems": "center", "justifyContent": "center",
-                        "zIndex": 1000, "pointerEvents": "none",
+                        "position": "absolute",
+                        "inset": "0",
+                        "display": "flex",
+                        "alignItems": "center",
+                        "justifyContent": "center",
+                        "zIndex": 1000,
+                        "pointerEvents": "none",
                     }
                 ),
                 children=html.Div(
@@ -2241,7 +1980,7 @@ def render_lulc_resilience_layout(lulc_indicator_options):
     ], style={"display": "flex", "width": "100%", "height": "100%"})
 
 
-def climate_resilience_tab_layout(all_quarters, default_view='Biophysical shocks'):
+def environment_climate_change_tab(all_quarters, default_view='Biophysical shocks'):
     """Hà Nội climate tab layout - Multi-dimensional Climate Stress Indicators"""
 
     n = len(all_quarters)
@@ -2304,11 +2043,15 @@ def climate_resilience_tab_layout(all_quarters, default_view='Biophysical shocks
     selected_view = default_view if default_view in view_options else 'Biophysical shocks'
 
     if selected_view == 'Biophysical shocks':
-        initial_view_content = render_spatial_climate_resilience_layout(climate_indicator_options, indicator_descriptions, infrastructure_options, n, quarter_marks)
+        initial_view_content = render_spatial_climate_resilience_layout(
+            climate_indicator_options,
+            indicator_descriptions,
+            infrastructure_options,
+            n,
+            quarter_marks,
+        )
     elif selected_view == 'Land-use & Land-cover':
         initial_view_content = render_lulc_resilience_layout([])
-    else:
-        initial_view_content = render_spatial_climate_resilience_layout(climate_indicator_options, indicator_descriptions, infrastructure_options, n, quarter_marks)
 
     return html.Div([
         city_selector(selected_city='hanoi', visible=False),
@@ -2434,15 +2177,15 @@ def environment_climate_change_tab(all_quarters, default_view='Biophysical shock
         {"label": "Water Storage Anomalies", "value": "grace_trend"},
         {"label": "Soil Moisture Stress (coming soon)", "value": "soil_moisture", "disabled": True},
         {"label": "── Precipitation Deficit (SPEI) ──", "value": "divider_spei", "disabled": True},
-        {"label": "Short-term Moderate Drought", "value": "class_-3_months_SPEI3"},
+        {"label": "Short-term Moderate Drought", "value": "class_-1_months_SPEI3"},
         {"label": "Short-term Severe Drought", "value": "class_-2_months_SPEI3"},
-        {"label": "Short-term Extreme Drought", "value": "class_-1_months_SPEI3"},
-        {"label": "Seasonal Moderate Drought", "value": "class_-3_months_SPEI6"},
+        {"label": "Short-term Extreme Drought", "value": "class_-3_months_SPEI3"},
+        {"label": "Seasonal Moderate Drought", "value": "class_-1_months_SPEI6"},
         {"label": "Seasonal Severe Drought", "value": "class_-2_months_SPEI6"},
-        {"label": "Seasonal Extreme Drought", "value": "class_-1_months_SPEI6"},
-        {"label": "Long-term Moderate Drought", "value": "class_-3_months_SPEI12"},
+        {"label": "Seasonal Extreme Drought", "value": "class_-3_months_SPEI6"},
+        {"label": "Long-term Moderate Drought", "value": "class_-1_months_SPEI12"},
         {"label": "Long-term Severe Drought", "value": "class_-2_months_SPEI12"},
-        {"label": "Long-term Extreme Drought", "value": "class_-1_months_SPEI12"},
+        {"label": "Long-term Extreme Drought", "value": "class_-3_months_SPEI12"},
     ]
 
     indicator_descriptions = {
@@ -2535,6 +2278,7 @@ def environment_climate_change_tab(all_quarters, default_view='Biophysical shock
 
     ], style={"display": "flex", "width": "100vw", "height": "100%", "backgroundColor": "#F8FAF8"})
 
+
 def policies_leadership_tab():
     """Hanoi policies tab layout"""
     df_policies = df_policies_hanoi
@@ -2582,12 +2326,19 @@ def policies_leadership_tab():
                         id='policies_table',
                         data=df_policies.to_dict('records'),
                         columns=[
-                            {"name": str(col), "id": str(col), "presentation": "markdown"} if any(k in str(col).lower() for k in ['link', 'website', 'url']) else {"name": str(col), "id": str(col)}
+                            {"name": str(col), "id": str(col), "type": "numeric"}
+                            if str(col) == 'Year'
+                            else (
+                                {"name": str(col), "id": str(col), "presentation": "markdown"}
+                                if any(k in str(col).lower() for k in ['link', 'website', 'url'])
+                                else {"name": str(col), "id": str(col)}
+                            )
                             for col in df_policies.columns
                         ],
                         page_size=14,
                         page_action='native',
                         filter_action='native',
+                        filter_options={"case": "insensitive"},
                         sort_action='native',
                         sort_mode='multi',
                         style_cell={
@@ -2664,6 +2415,17 @@ def policies_leadership_tab():
                             'overflowY': 'auto'
                         },
                         style_as_list_view=True
+                    ),
+                    html.Div(
+                        id='policies-table-count-hanoi',
+                        children=f"Showing {len(df_policies)} policies",
+                        style={
+                            'fontSize': 'clamp(0.64em, 0.85vw, 0.9em)',
+                            'color': '#666',
+                            'fontStyle': 'italic',
+                            'padding': '6px 6px 0 6px',
+                            'textAlign': 'left',
+                        }
                     )
                 ], style={"flex": "1", "display": "flex", "flexDirection": "column", "minHeight": "0"})
             ], style={"height": "100%", "padding": "10px", "box-shadow": "0 2px 6px rgba(0,0,0,0.1)", "backgroundColor": brand_colors['White'], "border-radius": "10px", "display": "flex", "flexDirection": "column"}),
@@ -2725,7 +2487,18 @@ def socio_cultural_context_tab():
     """
     return 'coming-soon'
 
+def urbanisation_tab():
+    """ Will need to move some of the temporal resilience pieces here under new classification scheme
+    """
+    return 'coming-soon'
+
+
 # NEW TAB LAYOUTS ==== FOOD ENVIRONMENTS ====
+
+def processing_packaging_tab():
+    """ Will need to move some of the temporal resilience pieces here under new classification scheme
+    """
+    return 'coming-soon'
 
 def food_availability_tab():
     """ Refers to food nutrient availability, not developed yet
@@ -2733,9 +2506,73 @@ def food_availability_tab():
     return "coming-soon"
 
 def food_affordability_tab():
-    return "coming-soon"
+    """Hanoi affordability indicators and household expenditure trends."""
+    affordability_indicators = [
+        ("foodExp_totalExp", "Food share of household expenditure", True),
+        ("foodExp_totalInc", "Food share of household income", True),
+        ("riceExp_House", "Rice share of household expenditure", True),
+        ("riceAfford", "Rice affordability", False),
+    ]
 
-def food_accessibility_vendor_properties_tab_layout(selected_city='hanoi'):
+    def _affordability_card(category, title, lower_is_better):
+        category_df = df_affordability_hanoi[
+            df_affordability_hanoi["Cat"] == category
+        ]
+        hanoi_df = (
+            category_df[category_df["Reg"] == "Hanoi"][["Year", "value"]]
+            .sort_values("Year")
+        )
+        national_df = (
+            category_df[category_df["Reg"] == "Vietnam"][["Year", "value"]]
+            .sort_values("Year")
+        )
+        if hanoi_df.empty or national_df.empty:
+            return dbc.Alert(f"No Hanoi and national series available for {title}.", color="warning")
+
+        return create_nutrition_kpi_card_hanoi(
+            hanoi_df,
+            title,
+            hanoi_df["value"].dropna().iloc[-1],
+            national_df["value"].dropna().iloc[-1],
+            lower_is_better=lower_is_better,
+            data_source="Vietnam household expenditure survey",
+            national_timeseries=national_df,
+        )
+
+    return html.Div([
+        city_selector(selected_city='hanoi', visible=False),
+        html.Div([
+            html.H4("Household affordability trends", style={
+                "color": brand_colors['Brown'],
+                "fontWeight": "bold",
+                "fontSize": "1.1em",
+                "margin": "4px 0 10px",
+            }),
+            dbc.Row([
+                dbc.Col(
+                    _affordability_card(category, title, lower_is_better),
+                    xs=12, sm=6, xl=3,
+                    style={"display": "flex", "marginBottom": "12px"},
+                )
+                for category, title, lower_is_better in affordability_indicators
+            ], className="g-3"),
+            html.H4("Food price pressure", style={
+                "color": brand_colors['Brown'],
+                "fontWeight": "bold",
+                "fontSize": "1.1em",
+                "margin": "8px 0 10px",
+            }),
+            _build_indicator_kpi_cards_by_subdomain('hanoi', 'Food affordability'),
+        ], style={
+            "width": "100%",
+            "padding": "12px",
+            "height": "100%",
+            "overflowY": "auto",
+            "backgroundColor": "#F8FAF8",
+        }),
+    ], style={"width": "100%", "height": "100%"})
+
+def vendor_properties_tab(selected_city='hanoi'):
     """Hanoi vendor properties/accessibility tab layout"""
     outlets_geojson_files = outlets_geojson_files_hanoi
     if selected_city == 'hanoi':
@@ -2871,51 +2708,6 @@ def food_accessibility_vendor_properties_tab_layout(selected_city='hanoi'):
                                 "position": "relative",
                                 "marginBottom": "16px"}),
 
-
-                dbc.Card([
-                    dbc.CardBody([
-                        html.Div([
-                            html.H3(["Population In Accessibility Zones"], style={"fontSize": "16px", "fontWeight": "600", "color": "#1d574f", 'marginBottom': '5px'}),
-                            dcc.Dropdown(
-                                id="population-category-select",
-                                options=population_options,
-                                value=population_default,
-                                clearable=False,
-                                placeholder="Select a population category",
-                                style={'zIndex': '3000'}
-                            ),
-                            html.Div([
-                                dcc.Graph(
-                                    id="accessibility-population-bar-chart",
-                                    config={"displayModeBar": False, "responsive": True},
-                                    style={"width": "100%", "margin": "0"}
-                                ),
-                            ], style={
-                                "height": "480px",
-                                "overflowY": "auto",
-                                "width": "100%",
-                                "border": "1px solid #f0f0f0",
-                                "borderRadius": "4px"
-                            }),
-                        ], style={
-                            'margin': '2px 0px',
-                            'justifyContent': 'end',
-                            'alignItems': 'center',
-                            'textAlign': 'center'
-                        })
-                    ], style={
-                        "display": "flex",
-                        "flexDirection": "column",
-                        "height": "100%",
-                        "padding": "14px 24px",
-                    })
-                ], style={"height": "auto",
-                            "padding": "0",
-                            "boxShadow": "0 2px 12px rgba(0,0,0,0.08)",
-                            "backgroundColor": "#FFFFFF",
-                            "borderRadius": "12px",
-                            "marginBottom": "16px"}),
-
                             
             ], style={
                     "width": "min(50%)",
@@ -2997,76 +2789,264 @@ def food_accessibility_vendor_properties_tab_layout(selected_city='hanoi'):
         })
 
 
-def vendor_properties_tab():
-    """Hanoi vendor properties tab - displays food vendor accessibility analysis"""
-    return food_accessibility_vendor_properties_tab_layout(selected_city='hanoi')
-
 # NEW TAB LAYOUTS ==== FOOD SUPPLY CHAINS ====
 
-def processing_packing_tab():
-    """ Environmental footprinting not complete for Hanoi
-    """
-    return "coming-soon"
+# ── Processing & Packing tab (Hanoi) ─────────────────────────────────────────
+# The PP_* constants are shared with app.py's update_processing_packing_hanoi
+# callback so the layout and the figures/table never drift apart.
 
-def production_systems_input_supply_tab():
-    """Production systems & input supply indicators from atlas."""
+PP_STAGE_COLS_HANOI = [
+    ("gCO2e_100g_farm", "Farm"),
+    ("gCO2e_100g_land_use_change", "Land use change"),
+    ("gCO2e_100g_processing", "Processing"),
+    ("gCO2e_100g_packaging", "Packaging"),
+    ("gCO2e_100g_transport", "Transport"),
+    ("gCO2e_100g_retail", "Retail"),
+    ("gCO2e_100g_home_cooking", "Home cooking"),
+]
+
+# Processing & packaging (this tab's focus) get the loudest brand colours;
+# the other stages sit back in muted greens/teals.
+PP_STAGE_COLORS_HANOI = {
+    "gCO2e_100g_farm": "#939f5c",
+    "gCO2e_100g_land_use_change": "#c1d88e",
+    "gCO2e_100g_processing": "#A80050",
+    "gCO2e_100g_packaging": "#D9A85C",
+    "gCO2e_100g_transport": "#1d574f",
+    "gCO2e_100g_retail": "#4e998c",
+    "gCO2e_100g_home_cooking": "#84003d",
+}
+
+PP_OTHER_INDICATORS_HANOI = {
+    "water_use_m3_world-eq_deprived_per100g": "Water use (m³ world-eq deprived per 100 g)",
+    "land_use_Pt_(soil_quality_index)_per100g": "Land use (soil quality index, Pt per 100 g)",
+    "eutroph_freshwater_kg_P-eq_per100g": "Eutrophication - freshwater (kg P-eq per 100 g)",
+    "eutroph_marine_kg_N-eq_per100g": "Eutrophication - marine (kg N-eq per 100 g)",
+    "acidification_mol_H+-eq_per100g": "Acidification (mol H⁺-eq per 100 g)",
+}
+
+def environmental_impacts_tab():
+    """Hanoi environmental impacts tab - per-food LCA emissions and indicators."""
+    food_groups = sorted(df_emissions_hanoi["food_group"].dropna().unique())
+    group_options = [{"label": "All food groups", "value": "ALL"}] + [
+        {"label": group, "value": group} for group in food_groups
+    ]
+    indicator_options = [
+        {"label": label, "value": column}
+        for column, label in PP_OTHER_INDICATORS_HANOI.items()
+    ]
+
+    label_style = {
+        "fontWeight": "normal",
+        "fontSize": "clamp(0.6em, 0.8em, 1.2em)",
+        "color": brand_colors["Brown"],
+        "marginBottom": "4px",
+    }
+    value_style = {
+        "fontWeight": "bold",
+        "fontSize": "clamp(1.2em, 2em, 2.8em)",
+        "color": brand_colors["Red"],
+        "margin": "0",
+    }
+    section_card_style = {
+        **card_style,
+        "borderRadius": "12px",
+        "boxShadow": "0 2px 12px rgba(0,0,0,0.08)"
+    }
+
     return html.Div([
-        city_selector(selected_city='hanoi', visible=False),
-
-        dbc.Card([
-            dbc.CardHeader(
-                html.H4("Temporal Indicators", style={
-                    "color": brand_colors['White'],
-                    "fontWeight": "bold",
-                    "margin": "0",
+        city_selector(selected_city="hanoi", visible=False),
+        html.Div([
+            html.Div([
+                dbc.Card([
+                    dbc.CardBody([
+                        html.H2("Environmental Impacts", style=header_style),
+                        html.P(
+                            f"Compare greenhouse gas emissions across supply-chain stages by food item "
+                            "and inspect water use, land use, eutrophication and acidification. The "
+                            "scatterplot compares each food's nutritional quality with its cradle-to-retail emissions.",
+                            style={"margin": "6px 4px 0", "fontSize": "0.9em", "color": "#4B5563"},
+                        ),
+                    ])
+                ], style={
+                    "width": "100%",
+                    "marginBottom": "16px",
+                    "boxShadow": "0 2px 12px rgba(0,0,0,0.08)",
+                    "backgroundColor": brand_colors["White"],
+                    "borderRadius": "10px",
                 }),
-                style={"backgroundColor": hero_gradient['50%'], "borderRadius": "9px 9px 0 0"}
-            ),
-            dbc.CardBody(
-                _build_indicator_kpi_cards_by_subdomain('hanoi', 'Production systems and input supply'),
-                style={"padding": "12px", "borderRadius": "10px"}
-            ),
+                dbc.Card([
+                    dbc.CardBody([
+                        html.H6("Food group", style={
+                            "fontWeight": "bold",
+                            "color": brand_colors["Brown"],
+                            "marginBottom": "6px",
+                        }),
+                        dcc.Dropdown(
+                            id="pp-food-group-select-hanoi",
+                            options=group_options,
+                            value="ALL",
+                            clearable=False,
+                        ),
+                        html.H6("Emissions boundary", style={
+                            "fontWeight": "bold",
+                            "color": brand_colors["Brown"],
+                            "marginTop": "12px",
+                            "marginBottom": "6px",
+                        }),
+                        dbc.RadioItems(
+                            id="pp-scope-select-hanoi",
+                            options=[
+                                {"label": "Cradle-to-retail", "value": "retail"},
+                                {"label": "Cradle-to-plate (incl. home cooking)", "value": "plate"},
+                            ],
+                            value="retail",
+                            style={"color": brand_colors["Brown"]},
+                        ),
+                    ], style={"padding": "8px 10px"}),
+                ], style={
+                    "width": "100%",
+                    "marginBottom": "16px",
+                    "boxShadow": "0 2px 12px rgba(0,0,0,0.08)",
+                    "backgroundColor": brand_colors["White"],
+                    "borderRadius": "10px",
+                }),
+                dbc.Card([
+                    dbc.CardBody([
+                        html.H5("Median emissions", style=label_style),
+                        html.H2(id="pp-kpi-median-hanoi", style=value_style),
+                        html.Div("gCO₂e per 100 g", style={"color": brand_colors["Brown"]}),
+                    ])
+                ], style=kpi_card_style_2),
+                dbc.Card([
+                    dbc.CardBody([
+                        html.H5("Highest-emission food", style=label_style),
+                        html.H3(id="pp-kpi-top-hanoi", style={**value_style, "fontSize": "1.3em"}),
+                        html.Div(id="pp-kpi-top-value-hanoi", style={"color": brand_colors["Brown"]}),
+                    ])
+                ], style=kpi_card_style_2),
+            ], style={
+                "flex": "0 0 20%",
+                "minWidth": "250px",
+                "minHeight": "0",
+                "height": "100%",
+                "display": "flex",
+                "flexDirection": "column",
+                "padding": "10px",
+                "overflowY": "scroll",
+            }),
+            html.Div([
+                dbc.Card([
+                    dbc.CardBody([
+                        html.Div([
+                            html.H4("Greenhouse gas emissions by supply-chain stage", style={
+                                "color": brand_colors["Brown"], "fontWeight": "bold",
+                                "fontSize": "1.15em", "margin": "0",
+                            }),
+                            _chart_help_button(
+                                "pp-emissions-help-btn-hanoi",
+                                _CHART_TIPS_DEFAULT + ["Click legend items to show or hide stages"],
+                            ),
+                        ], style={"display": "flex", "justifyContent": "space-between", "alignItems": "center"}),
+                        html.P("Stacked gCO₂e per 100 g; totals appear at bar ends.", style={"color": "#6B7280", "marginBottom": "8px"}),
+                        html.Div(
+                            _red_graph_loading(
+                                dcc.Graph(
+                                    id="pp-emissions-chart-hanoi",
+                                    config={"displayModeBar": False, "responsive": True},
+                                    style={"width": "100%", "height": "640px"},
+                                ),
+                                loading_id="loading-pp-emissions-chart-hanoi",
+                            ),
+                            style={
+                                "height": "640px",
+                                "maxHeight": "640px",
+                                "overflowY": "auto",
+                                "overflowX": "hidden",
+                            },
+                        ),
+                    ])
+                ], style=section_card_style),
+                dbc.Card([
+                    dbc.CardBody([
+                        html.Div([
+                            html.H4("Other environmental indicators", style={
+                                "color": brand_colors["Brown"], "fontWeight": "bold",
+                                "fontSize": "1.15em", "margin": "0",
+                            }),
+                            dcc.Dropdown(
+                                id="pp-indicator-select-hanoi",
+                                options=indicator_options,
+                                value="water_use_m3_world-eq_deprived_per100g",
+                                clearable=False,
+                                style={"flex": "1", "minWidth": "0"},
+                            ),
+                        ], style={"display": "flex", "alignItems": "center", "justifyContent": "space-between", "flexWrap": "wrap", "gap": "12px", "marginBottom": "8px"}),
+                        _red_graph_loading(
+                            dcc.Graph(
+                                id="pp-indicator-chart-hanoi",
+                                config={"displayModeBar": False, "responsive": True},
+                                style={"width": "100%", "height": "500px", 'overflowY': 'auto'},
+                            ),
+                            loading_id="loading-pp-indicator-chart-hanoi",
+                        ),
+                    ])
+                ], style=section_card_style),
+                dbc.Card([
+                    dbc.CardBody([
+                        html.Div([
+                            html.H4("Nutritional quality and emissions", style={
+                                "color": brand_colors["Brown"], "fontWeight": "bold",
+                                "fontSize": "1.15em", "margin": "0",
+                            }),
+                            _chart_help_button(
+                                "pp-nutrition-emissions-help-hanoi",
+                                [
+                                    "Each point is one food item; hover to see its item name and values",
+                                    "Higher NRF9.3 scores indicate greater nutritional quality",
+                                    "Higher gCO₂e values indicate greater cradle-to-retail emissions",
+                                    "Drag a box to zoom; double-click to reset the axes",
+                                ],
+                            ),
+                        ], style={"display": "flex", "justifyContent": "space-between", "alignItems": "center", "gap": "12px"}),
+                        html.P(
+                            "One point per food item. Dotted lines show the selected foods' median score and emissions; "
+                            "the food-group filter also applies here.",
+                            style={"color": "#6B7280", "fontSize": "0.85em", "marginBottom": "4px"},
+                        ),
+                        _red_graph_loading(
+                            dcc.Graph(
+                                id="pp-nutrition-emissions-chart-hanoi",
+                                config={"displayModeBar": False, "responsive": True},
+                                style={"width": "100%", "height": "560px", 'overflowY': 'auto'},
+                            ),
+                            loading_id="loading-pp-nutrition-emissions-chart-hanoi",
+                        ),
+                    ])
+                ], style=section_card_style),
+            ], style={
+                "flex": "1 1 60%",
+                "minWidth": "0",
+                "minHeight": "0",
+                "height": "100%",
+                "boxSizing": "border-box",
+                "display": "flex",
+                "flexDirection": "column",
+                "gap": "14px",
+                "padding": "10px",
+                "overflowY": "auto",
+            }),
         ], style={
-            "marginBottom": "14px",
-            "borderRadius": "10px",
-            "backgroundColor": brand_colors['White'],
-            "boxShadow": "0 2px 6px rgba(0,0,0,0.1)",
+            "display": "flex",
+            "flexWrap": "nowrap",
+            "width": "100%",
+            "height": "100%",
+            "minHeight": "0",
+            "overflow": "hidden",
+            "boxSizing": "border-box",
+            "backgroundColor": "#F8FAF8",
         }),
     ], style={
-        "width": "100%", "height": "100%", "display": "flex", "flexDirection": "column",
-        "padding": "6px", "backgroundColor": brand_colors['White'], "overflowY": "auto",
+        "width": "100%", "height": "100%", "minHeight": "0",
+        "overflow": "hidden", "boxSizing": "border-box",
     })
-
-def retail_markerting_tab():
-    """ Only data available for Hanoi right now is from repurposing vars from resilience temporal trends
-    """
-    return "coming-soon"
-
-def storage_distrbution_tab():
-    """ Repurposing the sankey flow of rice production for now
-    """
-    return storage_distribution_tab_layout()
-# NEW TAB LAYOUTS ==== INDIVIDUAL FACTORS ====
-
-def economic_tab():
-    """ Need to develop a tab around the food expenditure shares, data available but elsewhere right now
-    """
-    return 'coming-soon'
-
-# NEW TAB LAYOUTS ==== CROSS-CUTTING FACTORS ====
-
-def governance_tab():
-    return governance_stakeholders_tab_layout()
-
-
-
-# NEW TAB LAYOUTS ==== OUTCOMES ====
-
-def food_security_tab():
-    return 'coming-soon'
-
-def noncommunicable_diseases_tab():
-    return 'coming-soon'
-
-def nutrional_status_tab():
-    return diets_nutrition_health_tab_layout(selected_city='hanoi')

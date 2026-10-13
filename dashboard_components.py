@@ -122,7 +122,7 @@ def create_nutrition_kpi_card(outcome_name, addis_value, national_value, lower_i
 
 
 
-def create_nutrition_kpi_card_hanoi(timeseries, outcome_name, hanoi_value, national_value, lower_is_better=True, data_source=""):
+def create_nutrition_kpi_card_hanoi(timeseries, outcome_name, hanoi_value, national_value, lower_is_better=True, data_source="", national_timeseries=None):
     import plotly.graph_objects as go
     
     """
@@ -134,6 +134,9 @@ def create_nutrition_kpi_card_hanoi(timeseries, outcome_name, hanoi_value, natio
     - national_value: Percentage value for National
     - lower_is_better: True if lower values are better (default), False otherwise
     - data_source: Source of the data (displayed in info tooltip)
+    - national_timeseries: Optional DataFrame with ['Year', 'value'] for the national
+      series; when given, the sparkline shows the national trend (grey dashed) behind
+      the Hanoi trend so the trajectories can be compared, not just the latest values.
     """
     difference = hanoi_value - national_value
     
@@ -157,15 +160,28 @@ def create_nutrition_kpi_card_hanoi(timeseries, outcome_name, hanoi_value, natio
 
     timeseries = timeseries.interpolate().dropna()  # Ensure we have a continuous line for the sparkline
 
+    # National trend first (underneath), styled to match the "National:" text colour
+    if national_timeseries is not None:
+        national_ts = national_timeseries.interpolate().dropna()
+        sparkline.add_trace(go.Scatter(
+            x=national_ts['Year'], y=national_ts['value'],
+            mode="lines",
+            line={"color": "#999999", "width": 1.5, "dash": "dot"},
+            name="National",
+            hovertemplate="National %{x}: %{y:.1f}<extra></extra>"
+        ))
+
     sparkline.add_trace(go.Scatter(
         x=timeseries['Year'], y=timeseries['value'],
         mode="lines",
+        line={"color": color, "width": 2},
         marker={    "size": 5,
                     "symbol": "circle",
                     "color": color,
                     "line": {"color": color, "width": 1.5}
                 },
-        hovertemplate="%{x}: %{y:.1f}<extra></extra>"
+        name="Hanoi",
+        hovertemplate="Hanoi %{x}: %{y:.1f}<extra></extra>"
     ))
 
     sparkline.update_layout(
@@ -201,10 +217,6 @@ def create_nutrition_kpi_card_hanoi(timeseries, outcome_name, hanoi_value, natio
                 }),
                 dbc.Tooltip(
                     html.Div([
-                        html.Div([
-                            html.Span("Indicator: ", style={"fontWeight": "bold"}),
-                            html.Span(outcome_name, style={"fontWeight": "bold"})
-                        ]),
                         html.Div([
                             html.Span("Data source: ", style={"fontStyle": "italic"}),
                             html.Span(data_source if data_source else "Not provided", style={"fontStyle": "italic"})
