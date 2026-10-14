@@ -1641,7 +1641,7 @@ def render_spatial_climate_layout(climate_indicator_options, indicator_descripti
                         "Select an indicator below to explore how different aspects of biophysical shocks have evolved over time. ",
                         style={
                             "margin": "10px 6px",
-                            "fontSize": "clamp(0.6em, 0.9em, 1.0em)",
+                            "fontSize": 'clamp(0.6em, 0.9em, 1.0em)',
                             "whiteSpace": "normal",
                         }
                     )
@@ -1755,7 +1755,7 @@ def render_spatial_climate_layout(climate_indicator_options, indicator_descripti
                         step=1,
                         value=50,
                         marks=quarter_marks,
-                        updatemode="mouseup"
+                        updatemode="mouseup",
                     ),
                 ])
             ], id="date-slider-card", style={
@@ -1851,22 +1851,14 @@ def render_spatial_climate_layout(climate_indicator_options, indicator_descripti
         html.Div(
             dcc.Loading(
                 id="loading-drought-map",
-                parent_style={
-                    "height": "100%",
-                    "width": "100%",
-                    "position": "relative"
-                },
+                parent_style={"height": "100%", "width": "100%", "position": "relative"},
                 style={"height": "100%", "width": "100%"},
                 custom_spinner=html.Div(
                     dbc.Spinner(color="danger", type="border"),
                     style={
-                        "position": "absolute",
-                        "inset": "0",
-                        "display": "flex",
-                        "alignItems": "center",
-                        "justifyContent": "center",
-                        "zIndex": 1000,
-                        "pointerEvents": "none",
+                        "position": "absolute", "inset": "0", "display": "flex",
+                        "alignItems": "center", "justifyContent": "center",
+                        "zIndex": 1000, "pointerEvents": "none",
                     }
                 ),
                 children=html.Div(
@@ -1874,16 +1866,17 @@ def render_spatial_climate_layout(climate_indicator_options, indicator_descripti
                     children=dcc.Graph(
                         id="resilience-map",
                         figure=go.Figure(),
-                        config={"displayModeBar": False, "scrollZoom": True, "responsive": True},
-                        style={"height": "100%", "width": "100%"}
+                        config={"displayModeBar": False, "scrollZoom": True},
+                        style={"height": "100%", "width": "100%"},
                     ),
-                    style={"height": "100%", "width": "100%"}
+                    style={"height": "100%", "width": "100%"},
                 ),
             ),
             style={"flex": "1", "height": "100%", "minHeight": "calc(100vh - 140px)"}
         ),
 
     ], style={"display": "flex", "width": "100%", "height": "100%"})
+
 
 
 def render_lulc_layout(lulc_indicator_options):
@@ -2043,7 +2036,7 @@ def environment_climate_change_tab(all_quarters, default_view='Biophysical shock
     selected_view = default_view if default_view in view_options else 'Biophysical shocks'
 
     if selected_view == 'Biophysical shocks':
-        initial_view_content = render_spatial_climate_resilience_layout(
+        initial_view_content = render_spatial_climate_layout(
             climate_indicator_options,
             indicator_descriptions,
             infrastructure_options,
@@ -2051,7 +2044,15 @@ def environment_climate_change_tab(all_quarters, default_view='Biophysical shock
             quarter_marks,
         )
     elif selected_view == 'Land-use & Land-cover':
-        initial_view_content = render_lulc_resilience_layout([])
+        initial_view_content = render_lulc_layout([])
+    else:
+        initial_view_content = render_spatial_climate_layout(
+            climate_indicator_options,
+            indicator_descriptions,
+            infrastructure_options,
+            n,
+            quarter_marks,
+        )
 
     return html.Div([
         city_selector(selected_city='hanoi', visible=False),
@@ -2170,6 +2171,7 @@ def environment_climate_change_tab(all_quarters, default_view='Biophysical shock
     quarter_marks[0] = {"label": all_quarters[0][:4], "style": {"fontSize": "10px", "color": "#8c8590"}}
 
     climate_indicator_options = [
+        {"label": "Cropland Area (ha)", "value": "ag_area_ha"},
         {"label": "── Vegetation ──", "value": "divider_veg", "disabled": True},
         {"label": "Vegetative Stress (VCI)", "value": "vci_severe_pct"},
         {"label": "Vegetation Drought Resistance", "value": "drought_resistance"},
@@ -2189,6 +2191,7 @@ def environment_climate_change_tab(all_quarters, default_view='Biophysical shock
     ]
 
     indicator_descriptions = {
+        'ag_area_ha': "Cropland Area (ha) represents the total area of land under cultivation for crops in each district. This indicator provides context for understanding the scale of agricultural activity and potential exposure to climate stressors.",
         "vci_severe_pct": "The Vegetation Condition Index (VCI) measures relative vegetation health compared to historical conditions. Quantiles are applied to calculate indicators of stress; this map shows the percentage of each district under severe vegetative stress.",
         "drought_resistance": "Vegetation Drought Resistance measures how well cropland vegetation maintained healthy VCI during SPEI6 drought events, weighted by how severe the stress conditions were. Higher values indicate crops sustained better health under equivalent stress. Grey districts recorded no drought that year.",
         "grace_trend": "GRACE Terrestrial Water Storage Anomalies (TWSA) capture changes in total water storage — including groundwater, surface water, and soil moisture — relative to a long-term baseline. Negative anomalies signal depletion.",
@@ -2214,7 +2217,7 @@ def environment_climate_change_tab(all_quarters, default_view='Biophysical shock
     selected_view = default_view if default_view in view_options else 'Biophysical shocks'
 
     if selected_view == 'Biophysical shocks':
-        initial_view_content = render_spatial_climate_resilience_layout(
+        initial_view_content = render_spatial_climate_layout(
             climate_indicator_options,
             indicator_descriptions,
             infrastructure_options,
@@ -2222,7 +2225,7 @@ def environment_climate_change_tab(all_quarters, default_view='Biophysical shock
             quarter_marks,
         )
     elif selected_view == 'Land-use & Land-cover':
-        initial_view_content = render_lulc_resilience_layout([])
+        initial_view_content = render_lulc_layout([])
 
     return html.Div([
         city_selector(selected_city='hanoi', visible=False),
@@ -2598,7 +2601,7 @@ def vendor_properties_tab(selected_city='hanoi'):
                         html.Div([
                             html.H2("Food Vendor Analysis", style={**header_style, "fontSize": "22px", "fontWeight": "700", "color": "#1d574f"}),
                             html.P(f"This map shows a number of urban food vendor metrics across {cityname}'s districts. These metrics include food outlet density, and highlights areas accessible through a combination of walking, public transportation or driving to identify areas of the city that have prominent food deserts and swamps.",
-                                       style={  "margin": "10px 6px",
+                                        style={  "margin": "10px 6px",
                                                 "fontSize": "14px",
                                                 "color": "#4B5563",
                                                 "whiteSpace": "normal",
@@ -2707,6 +2710,51 @@ def vendor_properties_tab(selected_city='hanoi'):
                                 "borderRadius": "12px",
                                 "position": "relative",
                                 "marginBottom": "16px"}),
+
+
+                dbc.Card([
+                    dbc.CardBody([
+                        html.Div([
+                            html.H3(["Population In Accessibility Zones"], style={"fontSize": "16px", "fontWeight": "600", "color": "#1d574f", 'marginBottom': '5px'}),
+                            dcc.Dropdown(
+                                id="population-category-select",
+                                options=population_options,
+                                value=population_default,
+                                clearable=False,
+                                placeholder="Select a population category",
+                                style={'zIndex': '3000'}
+                            ),
+                            html.Div([
+                                dcc.Graph(
+                                    id="accessibility-population-bar-chart",
+                                    config={"displayModeBar": False, "responsive": True},
+                                    style={"width": "100%", "margin": "0"}
+                                ),
+                            ], style={
+                                "height": "480px",
+                                "overflowY": "auto",
+                                "width": "100%",
+                                "border": "1px solid #f0f0f0",
+                                "borderRadius": "4px"
+                            }),
+                        ], style={
+                            'margin': '2px 0px',
+                            'justifyContent': 'end',
+                            'alignItems': 'center',
+                            'textAlign': 'center'
+                        })
+                    ], style={
+                        "display": "flex",
+                        "flexDirection": "column",
+                        "height": "100%",
+                        "padding": "14px 24px",
+                    })
+                ], style={"height": "auto",
+                            "padding": "0",
+                            "boxShadow": "0 2px 12px rgba(0,0,0,0.08)",
+                            "backgroundColor": "#FFFFFF",
+                            "borderRadius": "12px",
+                            "marginBottom": "16px"}),
 
                             
             ], style={
