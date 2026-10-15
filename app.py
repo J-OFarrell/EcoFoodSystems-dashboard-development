@@ -141,9 +141,9 @@ from hanoi_layouts import (
 
     #---Food supply chains
     processing_packaging_tab as hanoi_processing_packaging_tab,
-    #production_systems_input_supply_tab as hanoi_production_systems_input_supply_tab,
+    #production_systems_input_supply_tab as hanoi_production_systems_input_supply_tab,  # never built - see _COMING_SOON_SUBDOMAINS_BY_CITY
     #retail_markerting_tab as hanoi_retail_markerting_tab,
-    #storage_distrbution_tab as hanoi_storage_distrbution_tab,
+    storage_distribution_tab_layout as hanoi_storage_distrbution_tab,
 
     #---Food environments
     food_availability_tab as hanoi_food_availability_tab,
@@ -154,10 +154,9 @@ from hanoi_layouts import (
 
     #---Individual factors
     #economic_tab as hanoi_economic_tab,
-    #governance_tab as hanoi_governance_tab,
 
     #---Cross-cutting issues
-    #goverance_stakeholders_tab as hanoi_governance_stakeholders_tab,
+    governance_stakeholders_tab_layout as hanoi_governance_tab,
     temporal_resilience_tab as hanoi_temporal_resilience_tab,
 
     #---Outcomes
@@ -1129,6 +1128,7 @@ _COMING_SOON_SUBDOMAINS_BY_CITY = {
         'socio-cultural-context',
         'food-availability',
         'processing-packing',
+        'production-systems-input-supply',  # content was never built - see the commented import above
         'retail-markerting',
         'economic',
         'food-security',
