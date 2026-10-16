@@ -18,8 +18,10 @@ import json
 import dash
 from dash import Dash, html, dcc, Output, Input, State, callback, dash_table, ALL, MATCH, ctx
 import dash_bootstrap_components as dbc
-import dash_auth  
+import dash_auth
 import dash_leaflet as dl
+from flask import request
+from flask_compress import Compress
 from dash_extensions.javascript import assign
 import random
 from matplotlib.colors import ListedColormap, LinearSegmentedColormap
@@ -174,6 +176,10 @@ from hanoi_layouts import (
 app = Dash(__name__, suppress_callback_exceptions=True, external_stylesheets=[dbc.themes.BOOTSTRAP])
 app.server.secret_key = os.environ.get('SECRET_KEY') or os.urandom(24).hex()
 
+# Gzips JSON/HTML responses - cuts payload size for the geojson-heavy
+# callbacks (isochrones, choropleths) with no callback changes needed.
+Compress(app.server)
+
 VALID_USERNAME = os.environ.get('DASH_USERNAME')
 VALID_PASSWORD = os.environ.get('DASH_PASSWORD')
 
@@ -187,6 +193,25 @@ auth = dash_auth.BasicAuth(
     app,
     {VALID_USERNAME: VALID_PASSWORD}
 )
+
+
+@app.server.route('/healthz')
+def healthz():
+    # Lightweight, unauthenticated target for uptime pingers, so keep-awake
+    # checks don't exercise the full Dash layout/BasicAuth path.
+    return 'ok', 200
+
+
+@app.server.after_request
+def _add_static_cache_headers(response):
+    # Dash's own JS/CSS bundles and /assets are immutable per deploy - let
+    # the browser cache them instead of re-fetching on every page nav.
+    if response.status_code == 200 and (
+        request.path.startswith('/assets/')
+        or request.path.startswith('/_dash-component-suites/')
+    ):
+        response.headers['Cache-Control'] = 'public, max-age=86400'
+    return response
 
 
 _cmap_full = plt.get_cmap('RdYlBu_r')
