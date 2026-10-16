@@ -4,6 +4,12 @@
 # permission errors. See: https://huggingface.co/docs/hub/spaces-sdks-docker
 FROM python:3.11-slim
 
+# rasterio/rioxarray's manylinux wheels dynamically link against libexpat at
+# runtime even though it's not a build-time pip dependency - python:3.11-slim
+# doesn't ship it, so the container built and started but crashed on import.
+RUN apt-get update && apt-get install -y --no-install-recommends libexpat1 && \
+    rm -rf /var/lib/apt/lists/*
+
 RUN useradd -m -u 1000 user
 USER user
 ENV HOME=/home/user \
