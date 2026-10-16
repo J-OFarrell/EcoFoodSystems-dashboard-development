@@ -8,13 +8,25 @@
 .git
 .gitignore
 
-# Confirmed (via grep) nothing in the running app reads from these at
-# runtime - cache/ is osmnx's own local download cache from an offline
-# precompute step, and assets/data/archive/ is superseded data. ~530MB
-# combined; excluding them is most of why this build is fast instead of
-# transferring that for nothing on every push.
+# cache/ is osmnx's own local download cache from an offline precompute
+# step - confirmed nothing in the running app reads from it.
 cache/
-assets/data/archive/
+
+# assets/data/archive/ is mostly superseded data EXCEPT 4 small CSVs that
+# hanoi_layouts.py's resilience tab genuinely still reads (confirmed via
+# grep across the whole codebase, not assumed) - exclude the folder, then
+# explicitly re-include exactly those 4 files. Docker requires walking back
+# down the path with the parent directories re-included too, or the '!'
+# re-includes below never get evaluated.
+assets/data/archive/*
+!assets/data/archive/hanoi
+assets/data/archive/hanoi/*
+!assets/data/archive/hanoi/resilience
+assets/data/archive/hanoi/resilience/*
+!assets/data/archive/hanoi/resilience/resilience_indicators_ref.csv
+!assets/data/archive/hanoi/resilience/resilience_indicators_p1.csv
+!assets/data/archive/hanoi/resilience/resilience_indicators_p2.csv
+!assets/data/archive/hanoi/resilience/resilience_indicators_p3.csv
 
 # Python build artifacts
 __pycache__/
