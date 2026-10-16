@@ -91,7 +91,6 @@ def _slugify_for_data_path(text):
     text = re.sub(r"\s+", "-", text)
     return re.sub(r"-+", "-", text)
 
-
 def _match_indicator_column(df_columns, indicator_name):
     indicator_norm = re.sub(r"\s+", " ", indicator_name.strip().lower())
     for col in df_columns:
@@ -102,7 +101,6 @@ def _match_indicator_column(df_columns, indicator_name):
         if indicator_norm in col_norm or col_norm in indicator_norm:
             return col
     return None
-
 
 def _find_indicator_series(city, pillar_title, subdomain_key, indicator_name):
     """Search assets/data/{city}/{pillar}_{subdomain}/*_temporal_indicators.csv for a matching column."""
@@ -122,7 +120,6 @@ def _find_indicator_series(city, pillar_title, subdomain_key, indicator_name):
         if match_col is not None:
             return df, match_col
     return None
-
 
 def _try_load_temporal_indicator_data(city, pillar_title, subdomain_key, indicator_name):
     """
@@ -320,7 +317,6 @@ def _build_indicator_kpi_card_with_sparkline(indicator_name, definition, unit, s
         dbc.CardBody(card_body)
     ], style={**kpi_card_style_2, "height": "100%"})
 
-
 def _build_indicator_kpi_cards_by_subdomain(city, subdomain_key, pillar_title=None):
     """
     Build KPI cards with sparklines for indicators in a specific sub-domain,
@@ -396,563 +392,6 @@ def _build_indicator_kpi_cards_by_subdomain(city, subdomain_key, pillar_title=No
             for card in cards
         ], className="g-2")
     ], style={"padding": "8px"})
-
-
-def governance_stakeholders_tab_layout():
-    """Hà Nội stakeholders tab layout"""
-    return html.Div([
-        city_selector(selected_city='hanoi', visible=False),  # Hidden but present for callback
-        
-        #html.Div([sidebar], style={
-        #    "width": "15%",
-        #    "height": "100%",
-        #    "display": "flex",
-        #    "vertical-align": 'top',
-        #    "flexDirection": "column",
-        #    "justifyContent": "flex-start",
-        #}),
-
-        # Main content: full-page DataTable for stakeholders
-        html.Div([
-            dbc.Card([
-                dbc.CardHeader(html.H3("Food System Stakeholder Database", style=header_style)),
-                dbc.CardBody([
-                    dash_table.DataTable(
-                        id='sh_table_hanoi',
-                        data=df_sh_hanoi.to_dict('records'),
-                        columns=[
-                            {"name": str(i), "id": str(i), "presentation": "markdown"} if i == "Website" else {"name": str(i), "id": str(i)}
-                            for i in df_sh_hanoi.columns
-                        ],
-                        page_size=15,
-                        page_action='native',
-                        filter_action='native',
-                        sort_action='native',
-                        sort_mode='multi',
-                        style_cell={
-                            'textAlign': 'left',
-                            'padding': '2px 6px',                     
-                            'whiteSpace': 'nowrap',
-                            'overflow': 'hidden',
-                            'textOverflow': 'ellipsis',
-                            'fontSize': 'clamp(0.64em, 0.85vw, 0.9em)',
-                            'lineHeight': '1.1',                       
-                            'minWidth': '120px',
-                            'maxWidth': '320px',
-                            'height': '36px'                          
-                        },
-                        style_cell_conditional=[
-                            {
-                                'if': {'column_id': 'Organisation Name'},
-                                'width': '40vw',
-                                'minWidth': '40vw',
-                                'maxWidth': '40vw'
-                            }
-                        ],
-                        style_header={
-                            'fontWeight': 'bold',
-                            'backgroundColor': hero_gradient['50%'],
-                            'color': 'white',
-                            'textAlign': 'center',
-                            'fontSize': 'clamp(0.8em, 1vw, 1.1em)'
-                        },
-                        style_filter={
-                            'backgroundColor': sidebar_colors['Hover (dark card)'],
-                            'fontSize': 'clamp(0.64em, 0.85vw, 0.9em)',
-                            'padding': '5px 6px'
-                        },
-                        style_data_conditional=[
-                            {'if': {'row_index': 'odd'}, 'backgroundColor': '#f9f9f9'}
-                        ],
-                        tooltip_data=[
-                            {
-                                col: {
-                                    'value': str(row[col]) if (col.lower() in ['abstract', 'title', 'keywords'] or len(str(row[col])) > 20) else '',
-                                    'type': 'text'
-                                }
-                                for col in df_sh_hanoi.columns
-                            } for row in df_sh_hanoi.to_dict('records')
-                        ],
-                        tooltip_duration=4000,
-                        css=[
-                        {
-                                'selector': '.dash-table-tooltip',
-                                'rule': 'position: fixed !important; background-color: ' + sidebar_colors['Hover (dark card)'] + '; color: ' + brand_colors['Black'] + '; border: 2px solid ' + hero_gradient['0%'] + '; padding: 6px; font-size: 14px; box-shadow: 0 4px 8px ' + brand_colors['Black'] + ';'
-                            },
-                            {
-                                'selector': '.dash-table-container .dash-spreadsheet-container',
-                                'rule': 'overflow-x: scroll !important; scrollbar-width: auto;'
-                            },
-                            {
-                                'selector': '.dash-table-container .dash-spreadsheet-container::-webkit-scrollbar',
-                                'rule': 'height: 14px; width: 24px; -webkit-appearance: none;'
-                            },
-                            {
-                                'selector': '.dash-table-container .dash-spreadsheet-container::-webkit-scrollbar-track',
-                                'rule': 'background: #f0f0f0; border-radius: 8px;'
-                            },
-                            {
-                                'selector': '.dash-table-container .dash-spreadsheet-container::-webkit-scrollbar-thumb',
-                                'rule': 'background: ' + hero_gradient['0%'] + '; border-radius: 8px; border: 2px solid #f0f0f0;'
-                            }
-                        ],
-                        style_table={
-                            'overflowX': 'scroll',
-                            'width': '100%',
-                            'height': '100%',
-                            'overflowY': 'auto'
-                        }
-                    ,
-                        style_as_list_view=True
-                    )
-                ], style={"flex": "1", "display": "flex", "flexDirection": "column", "minHeight": "0"})
-            ], style={"height": "100%", "padding": "10px", "boxShadow": "0 2px 12px rgba(0,0,0,0.08)", "backgroundColor": "#FFFFFF", "borderRadius": "12px", "display": "flex", "flexDirection": "column"}),
-        ], style={
-            "flex": "1 1 85%",
-            "height": "96vh",
-            "display": "flex",
-            "flexDirection": "column",
-            "overflow": "hidden",
-            "borderRadius": "12px",
-            "margin": "10px 10px 10px 10px"
-        })
-
-    ], style={
-        "display": "flex",
-        "width": "100%",
-        "height": "100vh",
-        "backgroundColor": "#F8FAF8"
-    })
-
-
-def storage_distribution_tab_layout():
-    """Hà Nội supply tab layout"""
-    return html.Div([
-        city_selector(selected_city='hanoi', visible=False),  # Hidden but present for callback
-        
-        #html.Div([sidebar], style={
-        #    "width": "15%",
-        #    "height": "100%",
-        #    "display": "flex",
-        #    "vertical-align":'top',
-        #    "flexDirection": "column",
-        #    "justifyContent": "flex-start"}),
-
-        # Left Panel
-        html.Div([
-            # Intro card
-            dbc.Card([
-                dbc.CardBody([
-                    html.H2("Storage & Distribution", style=header_style),
-                    html.P(
-                        "This analysis maps the flow of food commodities into and across Hà Nội, "
-                        "tracing supply routes from producing provinces and international sources. "
-                        "Understanding where food comes from—and in what quantities—reveals the city's "
-                        "dependence on external supply chains and highlights vulnerabilities to disruption. "
-                        "It supports evidence-based planning for food system resilience, local sourcing "
-                        "strategies, and equitable distribution across urban and peri-urban populations.",
-                        style={
-                            "margin": "6px 4px 0 4px",
-                            "fontSize": "clamp(0.6em, 0.8em, 1.0em)",
-                            "whiteSpace": "normal",
-                        }
-                    ),
-                ])
-            ], style={
-                "flex": "0 0 auto",
-                "width": "100%",
-                "padding": "6px",
-                "marginBottom": "16px",
-                "boxShadow": "0 2px 12px rgba(0,0,0,0.08)",
-                "backgroundColor": "#FFFFFF",
-                "borderRadius": "12px",
-            }),
-
-            # Commodity selector
-            dbc.Card([
-                dbc.CardBody([
-                    html.H6("Commodity", style={
-                        "fontWeight": "bold",
-                        "color": brand_colors['Brown'],
-                        "fontSize": "clamp(0.7em, 0.85em, 1em)",
-                        "marginBottom": "6px",
-                    }),
-                    dcc.Dropdown(
-                        id="supply-commodity-dropdown-hanoi",
-                        options=[
-                            {"label": "Rice", "value": "rice"},
-                            {"label": "Other commodities (coming soon)", "value": "coming_soon", "disabled": True},
-                        ],
-                        value="rice",
-                        clearable=False,
-                        style={"fontSize": "clamp(0.75em, 0.9em, 1em)"},
-                    ),
-                ], style={"padding": "8px 10px"}),
-            ], style={
-                "flex": "0 0 auto",
-                "width": "100%",
-                "marginBottom": "16px",
-                "boxShadow": "0 2px 12px rgba(0,0,0,0.08)",
-                "backgroundColor": "#FFFFFF",
-                "borderRadius": "12px",
-            }),
-
-            dbc.Card([
-                dbc.CardBody([
-                    html.H5("Total Flow", className="card-title", style={
-                        "fontWeight": "normal",
-                        "fontSize": "clamp(0.6em, 0.8em, 1.2em)",
-                        "color": brand_colors['Brown'],
-                        "marginBottom": "4px"
-                    }),
-                    html.H1(id="kpi-total-flow-hanoi", className="card-text", style={
-                        "fontWeight": "bold",
-                        "fontSize": "clamp(1.2em, 2em, 2.8em)",
-                        "color": brand_colors['Red'],
-                        "margin": "0"
-                    }),
-                    html.H5("tons", style={
-                        "fontSize": "clamp(0.6em, 0.8em, 1em)",
-                        "color": brand_colors['Brown'],
-                        "marginTop": "4px",
-                        "fontWeight": "normal",
-                    })
-                ])
-            ], style={**kpi_card_style_2}),
-
-            dbc.Card([
-                dbc.CardBody([
-                    html.H5("Urban Share", className="card-title", style={
-                        "fontWeight": "normal",
-                        "fontSize": "clamp(0.6em, 0.8em, 1.2em)",
-                        "color": brand_colors['Brown'],
-                        "marginBottom": "10px"
-                    }),
-                    _red_graph_loading(
-                        dcc.Graph(id="urban-indicator-hanoi", style={"height": "clamp(80px, 10vh, 200px)"}, config={"displayModeBar": False}),
-                        loading_id="loading-urban-indicator-hanoi",
-                    )
-                ])
-            ], style={**kpi_card_style_2}),
-
-
-
-        ], style={
-            "flex": "0 0 20%",
-            "height": "100%",
-            "display": "flex",
-            "flexDirection": "column",
-            "padding": "10px",
-            "margin-left":"20px",
-            "alignItems": "center",
-            "marginBottom": "auto",
-            "overflowY": "auto",
-        }),
-
-        # Sankey + Slider (right)
-        html.Div([
-            dbc.Card([
-                dbc.CardBody([
-                    html.Div([
-                        _red_graph_loading(
-                            dcc.Graph(
-                                id="sankey-graph-hanoi", 
-                                style={"width": "100%", "height":"70vh"}  
-                            ),
-                            loading_id="loading-sankey-graph-hanoi",
-                        ),
-                    ], style={"width": "100%"}),
-
-                    html.Div([
-                        dbc.Button("ⓘ", id="sankey-info-btn-hanoi", style={
-                            "fontSize": "1.5em",
-                            "color": brand_colors['Red'],
-                            "background": "none",
-                            "border": "none",
-                            "padding": "0",
-                            "cursor": "pointer"
-                        }),
-                        dbc.Tooltip(
-                            "Data Source: General Statistics Office of Vietnam (GSO). 2025. Production of paddy by province. Consulted on: June 2025. Link: https://www.nso.gov.vn/en/agriculture-forestry-and-fishery/. Estimation method: Trade attractiveness method, including two steps as follows: A) Estimation of Rice Net Supply (Consumption – Production) for every province, based on Consumption (Population * Consumption per person), and Production (Paddy production/Live weight/Raw production * Conversion rate). B) Distribute the rice consumption of Hanoi, considering: Province Production, National Production, and International Import.",
-                            target="sankey-info-btn-hanoi",
-                            placement="bottom",
-                            style={"fontSize": "0.5em", "maxWidth": "500px"}
-                        )
-                    ], style={
-                        "position": "absolute",
-                        "top": "12px",
-                        "right": "18px",
-                        "zIndex": 10
-                    }),
-
-                    html.Div([dcc.Slider(
-                        id='slider-hanoi', min=2010, max=2022, value=2022, step=2,
-                        marks={year: str(year) for year in range(2010,2023,2)},
-                        tooltip={"placement": "bottom", "always_visible": True},
-                        updatemode='mouseup'
-                        )
-                    ], style={"margin-top":"10px", 
-                                   "color":brand_colors['Brown'],
-                                   "width": "100%", 
-                                   "height":"10%"}),
-
-                ],style={"display": "flex", "flexDirection": "column", "height": "100%"})
-            ],style={**card_style, "height": "90vh", "width":"60vw", "borderRadius": "12px", "boxShadow": "0 2px 12px rgba(0,0,0,0.08)"}),
-
-        ], style={
-            "flex": "1 1 60%",
-            "height": "calc(100vh - 20px)",
-            "display": "flex",
-            "flexDirection": "column",
-            "padding": "10px",
-            "margin":"0",
-            "backgroundColor": "#FFFFFF",
-            "marginBottom": "auto"
-        }),
-    ], style={
-        "display": "flex",
-        "width": "100%",
-        "height": "100%",
-        "backgroundColor": "#F8FAF8"
-    })
-
-
-def income_growth_distribution_tab():
-    """Hà Nội poverty tab layout"""
-    return html.Div([
-        city_selector(selected_city='hanoi', visible=False),  # Hidden but present for callback
-        
-        #html.Div([sidebar], style={
-        #    "width": "15%",
-        #    "height": "100%",
-        #    "display": "flex",
-        #    "vertical-align":'top',
-        #    "flexDirection": "column",
-        #    "justifyContent": "flex-start",
-        #}),
-
-        html.Div([
-            dbc.Card([
-                dbc.CardBody([
-                    html.H2("Multidimensional Poverty Index", style=header_style),
-                    html.P("The Multidimensional Poverty Index (MPI) assesses poverty across health, education, and living standards using ten indicators including nutrition, schooling, sanitation, water, electricity, and housing. This spatial analysis maps deprivation levels across Hanoi's districts, revealing where households face multiple overlapping disadvantages. These insights identify priority areas for targeted interventions, supporting equitable resource allocation and sustainable poverty reduction strategies aligned with SDG goals.",
-                            style={  "margin": "10px 6px", 
-                                    "fontSize": 'clamp(0.6em, 0.8em, 1.0em)',
-                                    #"textAlign": "justify",
-                                    "whiteSpace": "normal",
-                                    })
-                ])
-            ], style={  "flex": "0 0 auto",
-                        "padding":"6px",
-                        "marginBottom": "16px",
-                        "boxShadow": "0 2px 12px rgba(0,0,0,0.08)",
-                        "backgroundColor": "#FFFFFF",
-                        "borderRadius": "12px"}),
-
-            html.Div([
-                dbc.Card([
-                    dbc.CardBody([
-                        dcc.Dropdown(
-                            id='variable-dropdown-hanoi',
-                            options=[{'label': v, 'value': v} for v in mpi_vars],
-                            value=mpi_vars[0],
-                            persistence=True,
-                            persistence_type='session',
-                            style={"margin-bottom": "12px"}
-                        ),
-                        _red_graph_loading(
-                            dcc.Graph(
-                                id='bar-plot-hanoi',
-                                config={"displayModeBar": False, "responsive": True},
-                                style={
-                                    "minHeight": 0,
-                                    "width": "100%",
-                                    "flex": "1 1 auto",
-                                    'padding': '4px',
-                                    'margin': '8px',
-                                    "border-radius": "8px",
-                                    "box-shadow": "0 2px 8px rgba(0,0,0,0.15)",
-                                    "overflowY": "auto"
-                                }
-                            ),
-                            loading_id="loading-bar-plot-hanoi",
-                        )
-                    ], style={
-                        "display": "flex",
-                        "flexDirection": "column",
-                        "flex": "1 1 auto",
-                        "minHeight": 0,
-                        "overflow": "hidden"
-                    })
-                ], style={
-                    "flex": "1 1 auto",
-                    "width": "100%",
-                    "padding": "6px",
-                    "boxShadow": "0 2px 12px rgba(0,0,0,0.08)",
-                    "backgroundColor": "#FFFFFF",
-                    "borderRadius": "12px",
-                    "overflow": "hidden",
-                    "display": "flex",
-                    "flexDirection": "column"
-                }),
-
-            ], style={
-                "height": "100%",
-                "backgroundColor": "#FFFFFF",
-                "borderRadius": "0",
-                "margin": "0",
-                "display": "flex",
-                "flexDirection": "column",
-                "boxSizing": "border-box",
-                "zIndex": 2,
-                "position": "relative",
-                "overflowY": "auto"
-            }),
-        ],style={
-            "overflowY": "auto",
-            "display": "flex",
-            "flexDirection": "column",
-            "flex": "0 0 40%",
-            "minWidth": "40%",
-            "height": "100%",
-            "minHeight": 0,
-            "padding": "10px",
-            "backgroundColor": "#FFFFFF"
-        }),
-
-        # Right panel: map
-        html.Div([
-            _red_graph_loading(
-                dcc.Graph(
-                    id='map-hanoi',
-                    config={"displayModeBar": False, "scrollZoom": True, "responsive": True},
-                    style={"height": "100%",
-                           "width": "100%",
-                           "padding": "0",
-                           "margin": "0"}),
-                loading_id="loading-map-hanoi",
-            )
-        ], style={
-            "flex": "1",
-            "height": "100%",
-            "padding": "0",
-            "margin": "0",
-            "backgroundColor": "#FFFFFF",
-            "borderRadius": "0",
-            "display": "flex",
-            "alignItems": "stretch",
-            "justifyContent": "center",
-            "boxSizing": "border-box",
-            "zIndex": 1000,
-            "position": "relative",
-        })
-
-    ], style={
-        "display": "flex",
-        "width": "100vw",
-        "height": "100vh",
-        "backgroundColor": "#F8FAF8"
-    })
-
-
-def nutritional_status_tab():
-    """Hà Nội health & nutrition tab layout"""
-    labels = df_diet_2_hanoi['Cat'].unique()
-    
-    tile_width, lg = 12, 3
-    years = list(range(2010, 2024))
-
-    def _nutrition_card(cat_label, lower_is_better=True):
-        """KPI card for one indicator with Hanoi + national trend sparklines."""
-        cat_mask = df_diet_2_hanoi['Cat'] == cat_label
-        hanoi_df = df_diet_2_hanoi[cat_mask & (df_diet_2_hanoi['Reg'] == 'Hanoi')][['Year', 'value']]
-        national_df = df_diet_2_hanoi[cat_mask & (df_diet_2_hanoi['Reg'] == 'Vietnam')][['Year', 'value']]
-        source = df_diet_2_hanoi[cat_mask]['Data source'].values[0]
-        return create_nutrition_kpi_card_hanoi(
-            hanoi_df,
-            cat_label.split(' in ')[0],
-            hanoi_df['value'].dropna().values[-1],
-            national_df['value'].dropna().values[-1],
-            lower_is_better=lower_is_better,
-            data_source=source,
-            national_timeseries=national_df,
-        )
-
-    return html.Div([
-        city_selector(selected_city='hanoi', visible=False),  # Hidden but present for callback
-
-        # KPI cards (left)
-        dbc.Card([
-            dbc.CardHeader(
-                html.H4("Children under 5 years", style={
-                    "color": brand_colors['White'],
-                    "fontWeight": "bold",
-                    "margin": "0",
-                }),
-                style={"backgroundColor": hero_gradient['50%'], "borderRadius": "9px 9px 0 0"}
-            ),
-            dbc.CardBody(
-                dbc.Row([
-                        dbc.Col([_nutrition_card(labels[0])], width=tile_width, lg=lg),
-                        dbc.Col([_nutrition_card(labels[1])], width=tile_width, lg=lg),
-                        dbc.Col([_nutrition_card(labels[2])], width=tile_width, lg=lg),
-                        dbc.Col([_nutrition_card(labels[3])], width=tile_width, lg=lg),
-                    ]),
-                style={"padding": "12px", "borderRadius": "10px"}
-            ),
-        ], style={
-            "marginBottom": "14px",
-            "borderRadius": "10px",
-            "backgroundColor": sidebar_colors['Hover (dark card)'],
-            "boxShadow": "0 2px 6px rgba(0,0,0,0.1)",
-        }),
-
-        dbc.Card([
-            dbc.CardHeader(
-                html.H4("Women of reproductive age", style={
-                    "color": brand_colors['White'],
-                    "fontWeight": "bold",
-                    "margin": "0",
-                }),
-                style={"backgroundColor": hero_gradient['50%'], "borderRadius": "9px 9px 0 0"}
-            ),
-            dbc.CardBody(
-                dbc.Row([
-                    dbc.Col([_nutrition_card(labels[4])], width=tile_width, lg=lg),
-                ]), style={"padding": "12px", "borderRadius": "10px"}
-            ),
-        ], style={
-            "marginBottom": "14px",
-            "borderRadius": "10px",
-            "backgroundColor": sidebar_colors['Hover (dark card)'],
-            "boxShadow": "0 2px 6px rgba(0,0,0,0.1)",
-        }),
-
-        dbc.Card([
-            dbc.CardHeader(
-                html.H4("Adults", style={
-                    "color": brand_colors['White'],
-                    "fontWeight": "bold",
-                    "margin": "0",
-                }),
-                style={"backgroundColor": hero_gradient['50%'], "borderRadius": "9px 9px 0 0"}
-            ),
-            dbc.CardBody(
-                dbc.Row([
-                    dbc.Col([_nutrition_card(labels[5])], width=tile_width, lg=lg),
-                ]), style={"padding": "12px", "borderRadius": "10px"}
-            ),
-        ], style={
-            "marginBottom": "14px",
-            "borderRadius": "10px",
-            "backgroundColor": sidebar_colors['Hover (dark card)'],
-            "boxShadow": "0 2px 6px rgba(0,0,0,0.1)",
-        }),
-
-    ], style={
-        "width": "100%", "height": "100%", "display": "flex", "flexDirection": "column",
-        "padding": "6px", "backgroundColor": sidebar_colors['Hover (dark card)'], "overflowY": "auto",
-    })
 
 
 def sdg_indicator_atlas_tab_layout():
@@ -1156,7 +595,6 @@ def _format_indicator_value(value):
         return f"{value:,.1f}"
     return f"{value:,.2f}"
 
-
 def _build_temporal_time_labels(df):
     if {'Year', 'Quarter', 'Month'}.issubset(df.columns):
         return [f"{int(y)}-Q{int(q)} M{int(m)}" for y, q, m in zip(df['Year'], df['Quarter'], df['Month'])]
@@ -1165,7 +603,6 @@ def _build_temporal_time_labels(df):
     if 'Year' in df.columns:
         return [str(int(y)) for y in df['Year']]
     return [str(i + 1) for i in range(len(df))]
-
 
 def _load_resilience_metadata_df():
     metadata_path = os.path.join(
@@ -1180,7 +617,6 @@ def _load_resilience_metadata_df():
         return ref_df[["Indicator", "Pillar", "Component", "Unit", "Source"]].copy()
     except Exception:
         return pd.DataFrame(columns=["Indicator", "Pillar", "Component", "Unit", "Source"])
-
 
 def _create_resilience_temporal_kpi_card(df, indicator_col, time_labels, line_color, unit=None, source=None):
     values = pd.to_numeric(df[indicator_col], errors='coerce')
@@ -1247,7 +683,6 @@ def _create_resilience_temporal_kpi_card(df, indicator_col, time_labels, line_co
             })
         ])
     ], style={**kpi_card_style_2, "height": "100%"})
-
 
 def _build_temporal_pillar_section(title, csv_filename, line_color, pillar_num, ref_df):
     data_path = os.path.join(
@@ -1422,7 +857,6 @@ def _build_temporal_pillar_section(title, csv_filename, line_color, pillar_num, 
         "borderRadius": "12px"
     })
 
-
 def _load_sos_data():
     """Load Resilience_SOS.csv and return annual-averaged DataFrame."""
     sos_path = os.path.join(
@@ -1441,7 +875,6 @@ def _load_sos_data():
         return res_ann
     except Exception:
         return pd.DataFrame()
-
 
 def _create_sos_figure(pillar_num, title, res_ann, show_legend=False):
     """Create a Plotly Safe Operating Space chart for one pillar."""
@@ -1549,6 +982,7 @@ def _create_sos_figure(pillar_num, title, res_ann, show_legend=False):
     return fig
 
 
+
 def render_temporal_resilience_layout():
     """Temporal (city-level indicators) sub-layout for the resilience tab."""
     sections = [
@@ -1620,7 +1054,6 @@ def render_temporal_resilience_layout():
         "padding": "6px",
         "backgroundColor": sidebar_colors['Hover (dark card)']
     })
-
 
 def render_spatial_climate_layout(climate_indicator_options, indicator_descriptions, infrastructure_options, n, quarter_marks):
     """Spatial (map) sub-layout for the resilience tab."""
@@ -1877,8 +1310,6 @@ def render_spatial_climate_layout(climate_indicator_options, indicator_descripti
 
     ], style={"display": "flex", "width": "100%", "height": "100%"})
 
-
-
 def render_lulc_layout(lulc_indicator_options):
     """Land-use & Land-cover sub-layout for the resilience tab."""
     default_value = None
@@ -1971,7 +1402,6 @@ def render_lulc_layout(lulc_indicator_options):
         ),
 
     ], style={"display": "flex", "width": "100%", "height": "100%"})
-
 
 def environment_climate_change_tab(all_quarters, default_view='Biophysical shocks'):
     """Hà Nội climate tab layout - Multi-dimensional Climate Stress Indicators"""
@@ -2107,7 +1537,6 @@ def environment_climate_change_tab(all_quarters, default_view='Biophysical shock
         }),
 
     ], style={"display": "flex", "width": "100vw", "height": "100%", "backgroundColor": "#F8FAF8"})
-
 
 def temporal_resilience_tab():
     """ We need to find a way to combine the sustainability metrics database with additional resliene indicators for Hanoi
@@ -2281,7 +1710,6 @@ def environment_climate_change_tab(all_quarters, default_view='Biophysical shock
 
     ], style={"display": "flex", "width": "100vw", "height": "100%", "backgroundColor": "#F8FAF8"})
 
-
 def policies_leadership_tab():
     """Hanoi policies tab layout"""
     df_policies = df_policies_hanoi
@@ -2449,7 +1877,6 @@ def policies_leadership_tab():
         "backgroundColor": brand_colors['White']
     })
 
-
 def globalization_trade_tab():
     """Globalization & trade indicators from atlas."""
     return html.Div([
@@ -2478,7 +1905,6 @@ def globalization_trade_tab():
         "width": "100%", "height": "100%", "display": "flex", "flexDirection": "column",
         "padding": "6px", "backgroundColor": brand_colors['White'], "overflowY": "auto",
     })
-
 
 def population_growth_migration_tab():
     """ Will need to move some of the temporal resilience pieces here under new classification scheme
@@ -2836,12 +2262,357 @@ def vendor_properties_tab(selected_city='hanoi'):
                     "backgroundColor": "#F8FAF8"
         })
 
-
 # NEW TAB LAYOUTS ==== FOOD SUPPLY CHAINS ====
 
-# ── Processing & Packing tab (Hanoi) ─────────────────────────────────────────
-# The PP_* constants are shared with app.py's update_processing_packing_hanoi
-# callback so the layout and the figures/table never drift apart.
+def production_systems_input_supply_tab():
+    """Production systems & input supply indicators from atlas."""
+    return html.Div([
+        city_selector(selected_city='hanoi', visible=False),
+
+        dbc.Card([
+            dbc.CardHeader(
+                html.H4("Temporal Indicators", style={
+                    "color": brand_colors['White'],
+                    "fontWeight": "bold",
+                    "margin": "0",
+                }),
+                style={"backgroundColor": hero_gradient['50%'], "borderRadius": "9px 9px 0 0"}
+            ),
+            dbc.CardBody(
+                _build_indicator_kpi_cards_by_subdomain('hanoi', 'Production systems and input supply'),
+                style={"padding": "12px", "borderRadius": "10px"}
+            ),
+        ], style={
+            "marginBottom": "14px",
+            "borderRadius": "10px",
+            "backgroundColor": brand_colors['White'],
+            "boxShadow": "0 2px 6px rgba(0,0,0,0.1)",
+        }),
+    ], style={
+        "width": "100%", "height": "100%", "display": "flex", "flexDirection": "column",
+        "padding": "6px", "backgroundColor": brand_colors['White'], "overflowY": "auto",
+    })
+
+def storage_distribution_tab_layout():
+    """Hà Nội supply tab layout"""
+    return html.Div([
+        city_selector(selected_city='hanoi', visible=False),  # Hidden but present for callback
+        
+        #html.Div([sidebar], style={
+        #    "width": "15%",
+        #    "height": "100%",
+        #    "display": "flex",
+        #    "vertical-align":'top',
+        #    "flexDirection": "column",
+        #    "justifyContent": "flex-start"}),
+
+        # Left Panel
+        html.Div([
+            # Intro card
+            dbc.Card([
+                dbc.CardBody([
+                    html.H2("Storage & Distribution", style=header_style),
+                    html.P(
+                        "This analysis maps the flow of food commodities into and across Hà Nội, "
+                        "tracing supply routes from producing provinces and international sources. "
+                        "Understanding where food comes from—and in what quantities—reveals the city's "
+                        "dependence on external supply chains and highlights vulnerabilities to disruption. "
+                        "It supports evidence-based planning for food system resilience, local sourcing "
+                        "strategies, and equitable distribution across urban and peri-urban populations.",
+                        style={
+                            "margin": "6px 4px 0 4px",
+                            "fontSize": "clamp(0.6em, 0.8em, 1.0em)",
+                            "whiteSpace": "normal",
+                        }
+                    ),
+                ])
+            ], style={
+                "flex": "0 0 auto",
+                "width": "100%",
+                "padding": "6px",
+                "marginBottom": "16px",
+                "boxShadow": "0 2px 12px rgba(0,0,0,0.08)",
+                "backgroundColor": "#FFFFFF",
+                "borderRadius": "12px",
+            }),
+
+            # Commodity selector
+            dbc.Card([
+                dbc.CardBody([
+                    html.H6("Commodity", style={
+                        "fontWeight": "bold",
+                        "color": brand_colors['Brown'],
+                        "fontSize": "clamp(0.7em, 0.85em, 1em)",
+                        "marginBottom": "6px",
+                    }),
+                    dcc.Dropdown(
+                        id="supply-commodity-dropdown-hanoi",
+                        options=[
+                            {"label": "Rice", "value": "rice"},
+                            {"label": "Other commodities (coming soon)", "value": "coming_soon", "disabled": True},
+                        ],
+                        value="rice",
+                        clearable=False,
+                        style={"fontSize": "clamp(0.75em, 0.9em, 1em)"},
+                    ),
+                ], style={"padding": "8px 10px"}),
+            ], style={
+                "flex": "0 0 auto",
+                "width": "100%",
+                "marginBottom": "16px",
+                "boxShadow": "0 2px 12px rgba(0,0,0,0.08)",
+                "backgroundColor": "#FFFFFF",
+                "borderRadius": "12px",
+            }),
+
+            dbc.Card([
+                dbc.CardBody([
+                    html.H5("Total Flow", className="card-title", style={
+                        "fontWeight": "normal",
+                        "fontSize": "clamp(0.6em, 0.8em, 1.2em)",
+                        "color": brand_colors['Brown'],
+                        "marginBottom": "4px"
+                    }),
+                    html.H1(id="kpi-total-flow-hanoi", className="card-text", style={
+                        "fontWeight": "bold",
+                        "fontSize": "clamp(1.2em, 2em, 2.8em)",
+                        "color": brand_colors['Red'],
+                        "margin": "0"
+                    }),
+                    html.H5("tons", style={
+                        "fontSize": "clamp(0.6em, 0.8em, 1em)",
+                        "color": brand_colors['Brown'],
+                        "marginTop": "4px",
+                        "fontWeight": "normal",
+                    })
+                ])
+            ], style={**kpi_card_style_2}),
+
+            dbc.Card([
+                dbc.CardBody([
+                    html.H5("Urban Share", className="card-title", style={
+                        "fontWeight": "normal",
+                        "fontSize": "clamp(0.6em, 0.8em, 1.2em)",
+                        "color": brand_colors['Brown'],
+                        "marginBottom": "10px"
+                    }),
+                    _red_graph_loading(
+                        dcc.Graph(id="urban-indicator-hanoi", style={"height": "clamp(80px, 10vh, 200px)"}, config={"displayModeBar": False}),
+                        loading_id="loading-urban-indicator-hanoi",
+                    )
+                ])
+            ], style={**kpi_card_style_2}),
+
+
+
+        ], style={
+            "flex": "0 0 20%",
+            "height": "100%",
+            "display": "flex",
+            "flexDirection": "column",
+            "padding": "10px",
+            "margin-left":"20px",
+            "alignItems": "center",
+            "marginBottom": "auto",
+            "overflowY": "auto",
+        }),
+
+        # Sankey + Slider (right)
+        html.Div([
+            dbc.Card([
+                dbc.CardBody([
+                    html.Div([
+                        _red_graph_loading(
+                            dcc.Graph(
+                                id="sankey-graph-hanoi", 
+                                style={"width": "100%", "height":"70vh"}  
+                            ),
+                            loading_id="loading-sankey-graph-hanoi",
+                        ),
+                    ], style={"width": "100%"}),
+
+                    html.Div([
+                        dbc.Button("ⓘ", id="sankey-info-btn-hanoi", style={
+                            "fontSize": "1.5em",
+                            "color": brand_colors['Red'],
+                            "background": "none",
+                            "border": "none",
+                            "padding": "0",
+                            "cursor": "pointer"
+                        }),
+                        dbc.Tooltip(
+                            "Data Source: General Statistics Office of Vietnam (GSO). 2025. Production of paddy by province. Consulted on: June 2025. Link: https://www.nso.gov.vn/en/agriculture-forestry-and-fishery/. Estimation method: Trade attractiveness method, including two steps as follows: A) Estimation of Rice Net Supply (Consumption – Production) for every province, based on Consumption (Population * Consumption per person), and Production (Paddy production/Live weight/Raw production * Conversion rate). B) Distribute the rice consumption of Hanoi, considering: Province Production, National Production, and International Import.",
+                            target="sankey-info-btn-hanoi",
+                            placement="bottom",
+                            style={"fontSize": "0.5em", "maxWidth": "500px"}
+                        )
+                    ], style={
+                        "position": "absolute",
+                        "top": "12px",
+                        "right": "18px",
+                        "zIndex": 10
+                    }),
+
+                    html.Div([dcc.Slider(
+                        id='slider-hanoi', min=2010, max=2022, value=2022, step=2,
+                        marks={year: str(year) for year in range(2010,2023,2)},
+                        tooltip={"placement": "bottom", "always_visible": True},
+                        updatemode='mouseup'
+                        )
+                    ], style={"margin-top":"10px", 
+                                   "color":brand_colors['Brown'],
+                                   "width": "100%", 
+                                   "height":"10%"}),
+
+                ],style={"display": "flex", "flexDirection": "column", "height": "100%"})
+            ],style={**card_style, "height": "90vh", "width":"60vw", "borderRadius": "12px", "boxShadow": "0 2px 12px rgba(0,0,0,0.08)"}),
+
+        ], style={
+            "flex": "1 1 60%",
+            "height": "calc(100vh - 20px)",
+            "display": "flex",
+            "flexDirection": "column",
+            "padding": "10px",
+            "margin":"0",
+            "backgroundColor": "#FFFFFF",
+            "marginBottom": "auto"
+        }),
+    ], style={
+        "display": "flex",
+        "width": "100%",
+        "height": "100%",
+        "backgroundColor": "#F8FAF8"
+    })
+
+# NEW TAB LAYOUTS === CROSS CUTTING ===
+
+def governance_stakeholders_tab_layout():
+    """Hà Nội stakeholders tab layout"""
+    return html.Div([
+        city_selector(selected_city='hanoi', visible=False),  # Hidden but present for callback
+        
+        #html.Div([sidebar], style={
+        #    "width": "15%",
+        #    "height": "100%",
+        #    "display": "flex",
+        #    "vertical-align": 'top',
+        #    "flexDirection": "column",
+        #    "justifyContent": "flex-start",
+        #}),
+
+        # Main content: full-page DataTable for stakeholders
+        html.Div([
+            dbc.Card([
+                dbc.CardHeader(html.H3("Food System Stakeholder Database", style=header_style)),
+                dbc.CardBody([
+                    dash_table.DataTable(
+                        id='sh_table_hanoi',
+                        data=df_sh_hanoi.to_dict('records'),
+                        columns=[
+                            {"name": str(i), "id": str(i), "presentation": "markdown"} if i == "Website" else {"name": str(i), "id": str(i)}
+                            for i in df_sh_hanoi.columns
+                        ],
+                        page_size=15,
+                        page_action='native',
+                        filter_action='native',
+                        sort_action='native',
+                        sort_mode='multi',
+                        style_cell={
+                            'textAlign': 'left',
+                            'padding': '2px 6px',                     
+                            'whiteSpace': 'nowrap',
+                            'overflow': 'hidden',
+                            'textOverflow': 'ellipsis',
+                            'fontSize': 'clamp(0.64em, 0.85vw, 0.9em)',
+                            'lineHeight': '1.1',                       
+                            'minWidth': '120px',
+                            'maxWidth': '320px',
+                            'height': '36px'                          
+                        },
+                        style_cell_conditional=[
+                            {
+                                'if': {'column_id': 'Organisation Name'},
+                                'width': '40vw',
+                                'minWidth': '40vw',
+                                'maxWidth': '40vw'
+                            }
+                        ],
+                        style_header={
+                            'fontWeight': 'bold',
+                            'backgroundColor': hero_gradient['50%'],
+                            'color': 'white',
+                            'textAlign': 'center',
+                            'fontSize': 'clamp(0.8em, 1vw, 1.1em)'
+                        },
+                        style_filter={
+                            'backgroundColor': sidebar_colors['Hover (dark card)'],
+                            'fontSize': 'clamp(0.64em, 0.85vw, 0.9em)',
+                            'padding': '5px 6px'
+                        },
+                        style_data_conditional=[
+                            {'if': {'row_index': 'odd'}, 'backgroundColor': '#f9f9f9'}
+                        ],
+                        tooltip_data=[
+                            {
+                                col: {
+                                    'value': str(row[col]) if (col.lower() in ['abstract', 'title', 'keywords'] or len(str(row[col])) > 20) else '',
+                                    'type': 'text'
+                                }
+                                for col in df_sh_hanoi.columns
+                            } for row in df_sh_hanoi.to_dict('records')
+                        ],
+                        tooltip_duration=4000,
+                        css=[
+                        {
+                                'selector': '.dash-table-tooltip',
+                                'rule': 'position: fixed !important; background-color: ' + sidebar_colors['Hover (dark card)'] + '; color: ' + brand_colors['Black'] + '; border: 2px solid ' + hero_gradient['0%'] + '; padding: 6px; font-size: 14px; box-shadow: 0 4px 8px ' + brand_colors['Black'] + ';'
+                            },
+                            {
+                                'selector': '.dash-table-container .dash-spreadsheet-container',
+                                'rule': 'overflow-x: scroll !important; scrollbar-width: auto;'
+                            },
+                            {
+                                'selector': '.dash-table-container .dash-spreadsheet-container::-webkit-scrollbar',
+                                'rule': 'height: 14px; width: 24px; -webkit-appearance: none;'
+                            },
+                            {
+                                'selector': '.dash-table-container .dash-spreadsheet-container::-webkit-scrollbar-track',
+                                'rule': 'background: #f0f0f0; border-radius: 8px;'
+                            },
+                            {
+                                'selector': '.dash-table-container .dash-spreadsheet-container::-webkit-scrollbar-thumb',
+                                'rule': 'background: ' + hero_gradient['0%'] + '; border-radius: 8px; border: 2px solid #f0f0f0;'
+                            }
+                        ],
+                        style_table={
+                            'overflowX': 'scroll',
+                            'width': '100%',
+                            'height': '100%',
+                            'overflowY': 'auto'
+                        }
+                    ,
+                        style_as_list_view=True
+                    )
+                ], style={"flex": "1", "display": "flex", "flexDirection": "column", "minHeight": "0"})
+            ], style={"height": "100%", "padding": "10px", "boxShadow": "0 2px 12px rgba(0,0,0,0.08)", "backgroundColor": "#FFFFFF", "borderRadius": "12px", "display": "flex", "flexDirection": "column"}),
+        ], style={
+            "flex": "1 1 85%",
+            "height": "96vh",
+            "display": "flex",
+            "flexDirection": "column",
+            "overflow": "hidden",
+            "borderRadius": "12px",
+            "margin": "10px 10px 10px 10px"
+        })
+
+    ], style={
+        "display": "flex",
+        "width": "100%",
+        "height": "100vh",
+        "backgroundColor": "#F8FAF8"
+    })
+
+# NEW TAB LAYOUTS === OUTCOMES ====
 
 PP_STAGE_COLS_HANOI = [
     ("gCO2e_100g_farm", "Farm"),
@@ -2853,8 +2624,6 @@ PP_STAGE_COLS_HANOI = [
     ("gCO2e_100g_home_cooking", "Home cooking"),
 ]
 
-# Processing & packaging (this tab's focus) get the loudest brand colours;
-# the other stages sit back in muted greens/teals.
 PP_STAGE_COLORS_HANOI = {
     "gCO2e_100g_farm": "#939f5c",
     "gCO2e_100g_land_use_change": "#c1d88e",
@@ -3097,4 +2866,240 @@ def environmental_impacts_tab():
     ], style={
         "width": "100%", "height": "100%", "minHeight": "0",
         "overflow": "hidden", "boxSizing": "border-box",
+    })
+
+def nutritional_status_tab():
+    """Hà Nội health & nutrition tab layout"""
+    labels = df_diet_2_hanoi['Cat'].unique()
+    
+    tile_width, lg = 12, 3
+    years = list(range(2010, 2024))
+
+    def _nutrition_card(cat_label, lower_is_better=True):
+        """KPI card for one indicator with Hanoi + national trend sparklines."""
+        cat_mask = df_diet_2_hanoi['Cat'] == cat_label
+        hanoi_df = df_diet_2_hanoi[cat_mask & (df_diet_2_hanoi['Reg'] == 'Hanoi')][['Year', 'value']]
+        national_df = df_diet_2_hanoi[cat_mask & (df_diet_2_hanoi['Reg'] == 'Vietnam')][['Year', 'value']]
+        source = df_diet_2_hanoi[cat_mask]['Data source'].values[0]
+        return create_nutrition_kpi_card_hanoi(
+            hanoi_df,
+            cat_label.split(' in ')[0],
+            hanoi_df['value'].dropna().values[-1],
+            national_df['value'].dropna().values[-1],
+            lower_is_better=lower_is_better,
+            data_source=source,
+            national_timeseries=national_df,
+        )
+
+    return html.Div([
+        city_selector(selected_city='hanoi', visible=False),  # Hidden but present for callback
+
+        # KPI cards (left)
+        dbc.Card([
+            dbc.CardHeader(
+                html.H4("Children under 5 years", style={
+                    "color": brand_colors['White'],
+                    "fontWeight": "bold",
+                    "margin": "0",
+                }),
+                style={"backgroundColor": hero_gradient['50%'], "borderRadius": "9px 9px 0 0"}
+            ),
+            dbc.CardBody(
+                dbc.Row([
+                        dbc.Col([_nutrition_card(labels[0])], width=tile_width, lg=lg),
+                        dbc.Col([_nutrition_card(labels[1])], width=tile_width, lg=lg),
+                        dbc.Col([_nutrition_card(labels[2])], width=tile_width, lg=lg),
+                        dbc.Col([_nutrition_card(labels[3])], width=tile_width, lg=lg),
+                    ]),
+                style={"padding": "12px", "borderRadius": "10px"}
+            ),
+        ], style={
+            "marginBottom": "14px",
+            "borderRadius": "10px",
+            "backgroundColor": sidebar_colors['Hover (dark card)'],
+            "boxShadow": "0 2px 6px rgba(0,0,0,0.1)",
+        }),
+
+        dbc.Card([
+            dbc.CardHeader(
+                html.H4("Women of reproductive age", style={
+                    "color": brand_colors['White'],
+                    "fontWeight": "bold",
+                    "margin": "0",
+                }),
+                style={"backgroundColor": hero_gradient['50%'], "borderRadius": "9px 9px 0 0"}
+            ),
+            dbc.CardBody(
+                dbc.Row([
+                    dbc.Col([_nutrition_card(labels[4])], width=tile_width, lg=lg),
+                ]), style={"padding": "12px", "borderRadius": "10px"}
+            ),
+        ], style={
+            "marginBottom": "14px",
+            "borderRadius": "10px",
+            "backgroundColor": sidebar_colors['Hover (dark card)'],
+            "boxShadow": "0 2px 6px rgba(0,0,0,0.1)",
+        }),
+
+        dbc.Card([
+            dbc.CardHeader(
+                html.H4("Adults", style={
+                    "color": brand_colors['White'],
+                    "fontWeight": "bold",
+                    "margin": "0",
+                }),
+                style={"backgroundColor": hero_gradient['50%'], "borderRadius": "9px 9px 0 0"}
+            ),
+            dbc.CardBody(
+                dbc.Row([
+                    dbc.Col([_nutrition_card(labels[5])], width=tile_width, lg=lg),
+                ]), style={"padding": "12px", "borderRadius": "10px"}
+            ),
+        ], style={
+            "marginBottom": "14px",
+            "borderRadius": "10px",
+            "backgroundColor": sidebar_colors['Hover (dark card)'],
+            "boxShadow": "0 2px 6px rgba(0,0,0,0.1)",
+        }),
+
+    ], style={
+        "width": "100%", "height": "100%", "display": "flex", "flexDirection": "column",
+        "padding": "6px", "backgroundColor": sidebar_colors['Hover (dark card)'], "overflowY": "auto",
+    })
+
+def income_growth_distribution_tab():
+    """Hà Nội poverty tab layout"""
+    return html.Div([
+        city_selector(selected_city='hanoi', visible=False),  # Hidden but present for callback
+        
+        #html.Div([sidebar], style={
+        #    "width": "15%",
+        #    "height": "100%",
+        #    "display": "flex",
+        #    "vertical-align":'top',
+        #    "flexDirection": "column",
+        #    "justifyContent": "flex-start",
+        #}),
+
+        html.Div([
+            dbc.Card([
+                dbc.CardBody([
+                    html.H2("Multidimensional Poverty Index", style=header_style),
+                    html.P("The Multidimensional Poverty Index (MPI) assesses poverty across health, education, and living standards using ten indicators including nutrition, schooling, sanitation, water, electricity, and housing. This spatial analysis maps deprivation levels across Hanoi's districts, revealing where households face multiple overlapping disadvantages. These insights identify priority areas for targeted interventions, supporting equitable resource allocation and sustainable poverty reduction strategies aligned with SDG goals.",
+                            style={  "margin": "10px 6px", 
+                                    "fontSize": 'clamp(0.6em, 0.8em, 1.0em)',
+                                    #"textAlign": "justify",
+                                    "whiteSpace": "normal",
+                                    })
+                ])
+            ], style={  "flex": "0 0 auto",
+                        "padding":"6px",
+                        "marginBottom": "16px",
+                        "boxShadow": "0 2px 12px rgba(0,0,0,0.08)",
+                        "backgroundColor": "#FFFFFF",
+                        "borderRadius": "12px"}),
+
+            html.Div([
+                dbc.Card([
+                    dbc.CardBody([
+                        dcc.Dropdown(
+                            id='variable-dropdown-hanoi',
+                            options=[{'label': v, 'value': v} for v in mpi_vars],
+                            value=mpi_vars[0],
+                            persistence=True,
+                            persistence_type='session',
+                            style={"margin-bottom": "12px"}
+                        ),
+                        _red_graph_loading(
+                            dcc.Graph(
+                                id='bar-plot-hanoi',
+                                config={"displayModeBar": False, "responsive": True},
+                                style={
+                                    "minHeight": 0,
+                                    "width": "100%",
+                                    "flex": "1 1 auto",
+                                    'padding': '4px',
+                                    'margin': '8px',
+                                    "border-radius": "8px",
+                                    "box-shadow": "0 2px 8px rgba(0,0,0,0.15)",
+                                    "overflowY": "auto"
+                                }
+                            ),
+                            loading_id="loading-bar-plot-hanoi",
+                        )
+                    ], style={
+                        "display": "flex",
+                        "flexDirection": "column",
+                        "flex": "1 1 auto",
+                        "minHeight": 0,
+                        "overflow": "hidden"
+                    })
+                ], style={
+                    "flex": "1 1 auto",
+                    "width": "100%",
+                    "padding": "6px",
+                    "boxShadow": "0 2px 12px rgba(0,0,0,0.08)",
+                    "backgroundColor": "#FFFFFF",
+                    "borderRadius": "12px",
+                    "overflow": "hidden",
+                    "display": "flex",
+                    "flexDirection": "column"
+                }),
+
+            ], style={
+                "height": "100%",
+                "backgroundColor": "#FFFFFF",
+                "borderRadius": "0",
+                "margin": "0",
+                "display": "flex",
+                "flexDirection": "column",
+                "boxSizing": "border-box",
+                "zIndex": 2,
+                "position": "relative",
+                "overflowY": "auto"
+            }),
+        ],style={
+            "overflowY": "auto",
+            "display": "flex",
+            "flexDirection": "column",
+            "flex": "0 0 40%",
+            "minWidth": "40%",
+            "height": "100%",
+            "minHeight": 0,
+            "padding": "10px",
+            "backgroundColor": "#FFFFFF"
+        }),
+
+        # Right panel: map
+        html.Div([
+            _red_graph_loading(
+                dcc.Graph(
+                    id='map-hanoi',
+                    config={"displayModeBar": False, "scrollZoom": True, "responsive": True},
+                    style={"height": "100%",
+                           "width": "100%",
+                           "padding": "0",
+                           "margin": "0"}),
+                loading_id="loading-map-hanoi",
+            )
+        ], style={
+            "flex": "1",
+            "height": "100%",
+            "padding": "0",
+            "margin": "0",
+            "backgroundColor": "#FFFFFF",
+            "borderRadius": "0",
+            "display": "flex",
+            "alignItems": "stretch",
+            "justifyContent": "center",
+            "boxSizing": "border-box",
+            "zIndex": 1000,
+            "position": "relative",
+        })
+
+    ], style={
+        "display": "flex",
+        "width": "100vw",
+        "height": "100vh",
+        "backgroundColor": "#F8FAF8"
     })

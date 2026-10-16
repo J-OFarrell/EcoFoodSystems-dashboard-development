@@ -141,7 +141,7 @@ from hanoi_layouts import (
 
     #---Food supply chains
     processing_packaging_tab as hanoi_processing_packaging_tab,
-    #production_systems_input_supply_tab as hanoi_production_systems_input_supply_tab,  # never built - see _COMING_SOON_SUBDOMAINS_BY_CITY
+    production_systems_input_supply_tab as hanoi_production_systems_input_supply_tab,
     #retail_markerting_tab as hanoi_retail_markerting_tab,
     storage_distribution_tab_layout as hanoi_storage_distrbution_tab,
 
