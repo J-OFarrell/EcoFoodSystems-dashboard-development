@@ -1,0 +1,35 @@
+# Secrets - these must never be baked into the image. GROQ_API_KEY,
+# DASH_USERNAME, DASH_PASSWORD are set as Hugging Face "Secrets" on the
+# Space instead (injected as env vars at runtime), never committed here.
+.env
+.env.example
+
+# Git itself - not needed inside the image, and large
+.git
+.gitignore
+
+# Confirmed (via grep) nothing in the running app reads from these at
+# runtime - cache/ is osmnx's own local download cache from an offline
+# precompute step, and assets/data/archive/ is superseded data. ~530MB
+# combined; excluding them is most of why this build is fast instead of
+# transferring that for nothing on every push.
+cache/
+assets/data/archive/
+
+# Python build artifacts
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# Local dev/test scratch, not part of the app
+Claude outputs/
+_index_response.html
+_layout_response.json
+_server_boot*.log
+_server_verify.log
+
+# Editor/OS cruft
+.vscode/
+.idea/
+.DS_Store
