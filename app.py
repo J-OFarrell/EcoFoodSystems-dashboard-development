@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 import pandas as pd
 import geopandas as gpd
+import shapely
 from shapely.ops import unary_union
 import seaborn as sns
 import plotly.express as px
@@ -475,10 +476,17 @@ def _get_resilience_context():
             .reset_index(drop=True)
         )
 
+    # Round coordinates to 6 decimals (~10cm) for the map payload only - the
+    # source file carries ~15 decimals, which roughly doubled the size of
+    # every resilience-map response (and the gzip/serialization time with it)
+    # with no visible difference at city zoom.
+    rounded_geoms = shapely.transform(communes_unique.geometry.values, lambda c: np.round(c, 6))
+    communes_for_map = communes_unique.set_geometry(gpd.GeoSeries(rounded_geoms, index=communes_unique.index, crs=communes_unique.crs))
+
     return {
         "commune_climate_df": commune_climate_df,
         "communes_unique": communes_unique,
-        "resilience_base_geojson": json.loads(communes_unique.to_json()),
+        "resilience_base_geojson": json.loads(communes_for_map.to_json()),
         "join_key": join_key,
         "featureidkey": featureidkey,
         "all_quarters": tuple(sorted(commune_climate_df["quarter"].unique())),
@@ -4066,8 +4074,11 @@ def update_drought_map(slider_idx, indicator, min_ag_area, infrastructure_layer,
     #        style={"display": "flex"},
     #    )
 
+    # Plain dict rather than _figure_from_json(): rebuilding a validated
+    # go.Figure from the cached JSON (and Dash serializing it back) cost
+    # ~1.8s per request on this ~7MB figure, even on a cache hit.
     return (
-        _figure_from_json(fig_json),
+        json.loads(fig_json),
         quarter,
         slider_style,
         #dbc.Row(cards),
@@ -4277,6 +4288,16 @@ def update_lulc_map(indicator):
 
 # Expose the Flask server for production deployment
 server = app.server
+
+# Pre-build the resilience map's default view at import time, so gunicorn's
+# --preload shares it with every worker instead of each worker (and each of
+# its threads, if many users open the map at once) building it on first
+# request. Args must match update_drought_map's positional call exactly to
+# hit the same lru_cache entry.
+try:
+    _build_drought_map_cached(50, "ag_area_ha", 0.0, (), None)
+except Exception as _e:
+    print(f"Resilience map warm-up skipped: {_e}")
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8051))
