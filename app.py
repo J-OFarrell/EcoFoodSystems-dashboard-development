@@ -57,6 +57,7 @@ from data_access import (
     isochrones_geojson_files_hanoi,
     df_affordability_hanoi,
     df_diet_2_hanoi,
+    df_dqq_hanoi,
     accessibility_outlet_options_addis,
     accessibility_zonal_stats_addis,
     accessibility_subcity_columns_addis,
@@ -165,6 +166,11 @@ from hanoi_layouts import (
     #---Outcomes
     environmental_impacts_tab as hanoi_environmental_impacts_tab,
     nutritional_status_tab as hanoi_nutritional_status_tab,
+    dietary_intake_tab as hanoi_dietary_intake_tab,
+    DQQ_INDICATOR_GROUPS_HANOI,
+    DQQ_SCORES_HANOI,
+    DQQ_BREAKDOWNS_HANOI,
+    round_half_up,
 
     #---Shared layouts
     render_spatial_climate_layout,
@@ -1138,7 +1144,7 @@ def _pillar_for_subdomain(subdomain_key):
 # whether they're listed here - this set only controls the hub-card styling.
 _NOT_YET_BUILT_SUBDOMAINS = {
     'urbanization', 'food-safety', 'food-messaging',
-    'behavioral', 'dietary-intake', 
+    'behavioral',
 }
 
 _COMING_SOON_SUBDOMAINS_BY_CITY = {
@@ -1155,6 +1161,7 @@ _COMING_SOON_SUBDOMAINS_BY_CITY = {
         'economic',
         'food-security',
         'noncommunicable-diseases',
+        'dietary-intake',  # built for Hanoi only so far
     } | _NOT_YET_BUILT_SUBDOMAINS,
     'hanoi': {
         'population-growth-migration',
@@ -1285,6 +1292,8 @@ def _resolve_subdomain_layout(route_city, subdomain_key):
             return hanoi_noncommunicable_diseases_tab()
         if subdomain_key == 'nutrional-status':
             return hanoi_nutritional_status_tab()
+        if subdomain_key == 'dietary-intake':
+            return hanoi_dietary_intake_tab()
         return html.Div('Coming soon', style={'padding': '20px'})
 
     # Addis
@@ -1521,6 +1530,7 @@ def landing_page_layout(background_image=None, tab_backgrounds=None, selected_ci
         'livelihoods-poverty-equity': '#7A9A3A',
         'noncommunicable-diseases': '#ef4444',
         'nutrional-status': '#22c55e',
+        'dietary-intake': '#7A9A3A',
     }
 
     _SUBDOMAIN_DESCRIPTIONS = {
@@ -1546,6 +1556,7 @@ def landing_page_layout(background_image=None, tab_backgrounds=None, selected_ci
         'noncommunicable-diseases': 'Chronic diseases linked to diet quality including diabetes, hypertension, and obesity.',
         'nutrional-status': 'Nutritional outcomes including stunting, wasting, micronutrient deficiencies, and overweight.',
         'environmental-impacts': 'Environmental footprints of food items, including greenhouse gas emissions, water and land use, eutrophication, and acidification.',
+        'dietary-intake': 'What people eat: consumption of key food groups and diet-quality scores from the Diet Quality Questionnaire.',
     }
 
     subdomains = _SUBDOMAIN_GROUPS.get(active_title, [])
@@ -3736,6 +3747,69 @@ def update_health_trend_hanoi(selected_variable):
     fig.update_xaxes(title_text=None)  
     fig.update_yaxes(title_text=selected_variable)
     return fig
+
+
+# Hanoi dietary intake (DQQ) charts
+def _dqq_series(breakdown, indicators):
+    """Yield (label, colour, values) per group of the chosen breakdown, values aligned to `indicators`."""
+    sub, groups = DQQ_BREAKDOWNS_HANOI.get(breakdown, DQQ_BREAKDOWNS_HANOI['overall'])
+    rows = df_dqq_hanoi[df_dqq_hanoi['Sub'] == sub].set_index('Indicator')
+    for col, label, colour in groups:
+        vals = pd.to_numeric(rows[col], errors='coerce').reindex(indicators)
+        yield label, colour, vals
+
+
+@app.callback(
+    Output('dietary-intake-chart-hanoi', 'figure'),
+    Output('dietary-intake-scores-hanoi', 'figure'),
+    Input('dietary-intake-breakdown-hanoi', 'value'),
+    Input('dietary-intake-group-hanoi', 'value'),
+)
+def update_dietary_intake_hanoi(breakdown, group):
+    indicators = DQQ_INDICATOR_GROUPS_HANOI.get(group) or next(iter(DQQ_INDICATOR_GROUPS_HANOI.values()))
+    series = list(_dqq_series(breakdown, indicators))
+
+    y_labels = [{"All-5": "All five food groups"}.get(i, i) for i in indicators]
+    fig = go.Figure()
+    for label, colour, vals in series:
+        fig.add_trace(go.Bar(
+            y=y_labels, x=vals.values, name=label, orientation='h', marker_color=colour,
+            text=[f"{round_half_up(v, 1):.1f}%" if pd.notna(v) else "" for v in vals.values], textposition='outside',
+            textfont=dict(size=11), cliponaxis=False,
+            hovertemplate="%{y}<br>" + label + ": %{x:.1f}%<extra></extra>",
+        ))
+    fig.update_layout(
+        barmode='group', uniformtext=dict(minsize=10, mode='show'),
+        height=max(320, len(indicators) * (22 + 14 * len(series))),
+        margin=dict(l=10, r=40, t=10, b=10),
+        xaxis=dict(title="% of respondents", range=[0, 112], ticksuffix="%", gridcolor="#eee"),
+        yaxis=dict(autorange='reversed', automargin=True),
+        legend=dict(orientation='h', yanchor='bottom', y=1.0, xanchor='left', x=0),
+        showlegend=len(series) > 1,
+        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+        hoverlabel=dict(bgcolor="white", font_color="black"),
+    )
+
+    score_names = list(DQQ_SCORES_HANOI)
+    score_labels = [f"{n} (0-{mx})" for n, mx in DQQ_SCORES_HANOI.items()]
+    scores_fig = go.Figure()
+    for label, colour, vals in _dqq_series(breakdown, score_names):
+        scores_fig.add_trace(go.Bar(
+            x=score_labels, y=vals.values, name=label, marker_color=colour,
+            text=[f"{round_half_up(v, 2):.2f}" if pd.notna(v) else "" for v in vals.values], textposition='outside',
+            textfont=dict(size=11), cliponaxis=False,
+            hovertemplate="%{x}<br>" + label + ": %{y:.2f}<extra></extra>",
+        ))
+    scores_fig.update_layout(
+        barmode='group', height=340,
+        margin=dict(l=10, r=10, t=10, b=10),
+        yaxis=dict(title="Average score", gridcolor="#eee", rangemode='tozero'),
+        legend=dict(orientation='h', yanchor='bottom', y=1.0, xanchor='left', x=0),
+        showlegend=len(series) > 1,
+        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+        hoverlabel=dict(bgcolor="white", font_color="black"),
+    )
+    return fig, scores_fig
 
 
 # ── Drought Indicator callback ────────────────────────────────────────────────────────

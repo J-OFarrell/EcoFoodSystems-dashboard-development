@@ -1,0 +1,271 @@
+Sub,Indicator,All,Female,Male,Ward,Commune,Adult (19-60),Elderly (>60),Female - Adult (19-60),Female - Elderly (>60),Male - Adult (19-60),Male - Elderly (>60)
+Overall,All-5,35.25,,,,,,,,,,
+Overall,At least one animal-source food,98.97,,,,,,,,,,
+Overall,At least one fruit,90.24,,,,,,,,,,
+Overall,"At least one pulse, nut or seed",39.36,,,,,,,,,,
+Overall,At least one starchy staple food,99.59,,,,,,,,,,
+Overall,At least one vegetable,98.36,,,,,,,,,,
+Overall,"At least one whole grain, pulse, nut or seed",42.86,,,,,,,,,,
+Overall,Baked or grain-based sweets,12.74,,,,,,,,,,
+Overall,Cheese,0.62,,,,,,,,,,
+Overall,Citrus,24.46,,,,,,,,,,
+Overall,Dairy,45.63,,,,,,,,,,
+Overall,Dark green leafy vegetables,80.06,,,,,,,,,,
+Overall,Deep fried foods,6.68,,,,,,,,,,
+Overall,Dietary Diversity Score (DDS),5.95,,,,,,,,,,
+Overall,Eggs,53.03,,,,,,,,,,
+Overall,Fast food,0.21,,,,,,,,,,
+Overall,Fast food or instant noodles,8.94,,,,,,,,,,
+Overall,Fish or seafood,28.98,,,,,,,,,,
+Overall,Foods made from grains,98.97,,,,,,,,,,
+Overall,Fruit juice and fruit drinks,3.6,,,,,,,,,,
+Overall,GDR score,11.01,,,,,,,,,,
+Overall,Healthy diet pattern,33.2,,,,,,,,,,
+Overall,Instant noodles,8.74,,,,,,,,,,
+Overall,MDD-W,83.27,,,,,,,,,,
+Overall,"Meat, poultry, or fish",94.96,,,,,,,,,,
+Overall,Milk,24.77,,,,,,,,,,
+Overall,More than one salty ultra-processed food,3.6,,,,,,,,,,
+Overall,More than one sugary food or beverage,6.89,,,,,,,,,,
+Overall,NCD-Protect,3.29,,,,,,,,,,
+Overall,NCD-Risk,1.28,,,,,,,,,,
+Overall,Nuts or seeds,9.56,,,,,,,,,,
+Overall,Other fruits,78.52,,,,,,,,,,
+Overall,Other sweets,9.04,,,,,,,,,,
+Overall,Other vegetables,59.71,,,,,,,,,,
+Overall,Packaged ultra-processed salty snacks,3.29,,,,,,,,,,
+Overall,Poultry,30.63,,,,,,,,,,
+Overall,Processed meats,4.11,,,,,,,,,,
+Overall,Protective food consumption,39.16,,,,,,,,,,
+Overall,Pulses,34.74,,,,,,,,,,
+Overall,Salty or fried snacks,16.55,,,,,,,,,,
+Overall,"Soft drinks (soda, energy drinks, sports drinks)",2.98,,,,,,,,,,
+Overall,Sweet beverages,11,,,,,,,,,,
+Overall,Sweet foods,19.53,,,,,,,,,,
+Overall,"Sweet tea, coffee, or cocoa",5.55,,,,,,,,,,
+Overall,Unhealthy food consumption,11.72,,,,,,,,,,
+Overall,Unprocessed red meat,79.86,,,,,,,,,,
+Overall,Unprocessed red meat (non-ruminants),75.64,,,,,,,,,,
+Overall,Unprocessed red meat (ruminants),12.54,,,,,,,,,,
+Overall,Vitamin A-rich fruits,16.34,,,,,,,,,,
+Overall,Vitamin A-rich orange vegetables,16.44,,,,,,,,,,
+Overall,"White roots, tubers, or plantains",19.94,,,,,,,,,,
+Overall,Whole grains,8.74,,,,,,,,,,
+Overall,Yogurt,31.45,,,,,,,,,,
+Overall,Zero vegetable or fruit consumption,0,,,,,,,,,,
+Gender,All-5,,35.92,30,,,,,,,,
+Gender,At least one animal-source food,,98.97,98.89,,,,,,,,
+Gender,At least one fruit,,90.76,85.56,,,,,,,,
+Gender,"At least one pulse, nut or seed",,40.14,33.33,,,,,,,,
+Gender,At least one starchy staple food,,99.54,100,,,,,,,,
+Gender,At least one vegetable,,98.29,98.89,,,,,,,,
+Gender,"At least one whole grain, pulse, nut or seed",,43.67,36.67,,,,,,,,
+Gender,Baked or grain-based sweets,,13.11,10,,,,,,,,
+Gender,Cheese,,0.68,0,,,,,,,,
+Gender,Citrus,,25.09,17.78,,,,,,,,
+Gender,Dairy,,46.98,32.22,,,,,,,,
+Gender,Dark green leafy vegetables,,79.25,90,,,,,,,,
+Gender,Deep fried foods,,6.61,7.78,,,,,,,,
+Gender,Dietary Diversity Score (DDS),,5.96,5.89,,,,,,,,
+Gender,Eggs,,52.91,55.56,,,,,,,,
+Gender,Fast food,,0.23,0,,,,,,,,
+Gender,Fast food or instant noodles,,8.89,10,,,,,,,,
+Gender,Fish or seafood,,28.96,28.89,,,,,,,,
+Gender,Foods made from grains,,98.97,100,,,,,,,,
+Gender,Fruit juice and fruit drinks,,3.42,5.56,,,,,,,,
+Gender,GDR score,,11,11.09,,,,,,,,
+Gender,Healthy diet pattern,,33.41,32.22,,,,,,,,
+Gender,Instant noodles,,8.67,10,,,,,,,,
+Gender,MDD-W,,83.27,,,,,,,,,
+Gender,"Meat, poultry, or fish",,95.1,94.44,,,,,,,,
+Gender,Milk,,24.86,23.33,,,,,,,,
+Gender,More than one salty ultra-processed food,,3.76,2.22,,,,,,,,
+Gender,More than one sugary food or beverage,,7.18,4.44,,,,,,,,
+Gender,NCD-Protect,,3.29,3.23,,,,,,,,
+Gender,NCD-Risk,,1.29,1.14,,,,,,,,
+Gender,Nuts or seeds,,9.92,6.67,,,,,,,,
+Gender,Other fruits,,78.91,75.56,,,,,,,,
+Gender,Other sweets,,9.46,5.56,,,,,,,,
+Gender,Other vegetables,,59.75,58.89,,,,,,,,
+Gender,Packaged ultra-processed salty snacks,,3.42,2.22,,,,,,,,
+Gender,Poultry,,29.76,40,,,,,,,,
+Gender,Processed meats,,4.45,1.11,,,,,,,,
+Gender,Protective food consumption,,39.79,34.44,,,,,,,,
+Gender,Pulses,,35.23,31.11,,,,,,,,
+Gender,Salty or fried snacks,,16.42,18.89,,,,,,,,
+Gender,"Soft drinks (soda, energy drinks, sports drinks)",,3.19,1.11,,,,,,,,
+Gender,Sweet beverages,,10.83,13.33,,,,,,,,
+Gender,Sweet foods,,20.3,13.33,,,,,,,,
+Gender,"Sweet tea, coffee, or cocoa",,5.36,7.78,,,,,,,,
+Gender,Unhealthy food consumption,,12.43,5.56,,,,,,,,
+Gender,Unprocessed red meat,,80.27,76.67,,,,,,,,
+Gender,Unprocessed red meat (non-ruminants),,75.94,73.33,,,,,,,,
+Gender,Unprocessed red meat (ruminants),,12.2,16.67,,,,,,,,
+Gender,Vitamin A-rich fruits,,16.08,18.89,,,,,,,,
+Gender,Vitamin A-rich orange vegetables,,15.96,20,,,,,,,,
+Gender,"White roots, tubers, or plantains",,20.52,14.44,,,,,,,,
+Gender,Whole grains,,9.24,4.44,,,,,,,,
+Gender,Yogurt,,32.84,17.78,,,,,,,,
+Gender,Zero vegetable or fruit consumption,,0,0,,,,,,,,
+Urbancity,All-5,,,,34.85,35.38,,,,,,
+Urbancity,At least one animal-source food,,,,98.76,99.04,,,,,,
+Urbancity,At least one fruit,,,,93.78,89.07,,,,,,
+Urbancity,"At least one pulse, nut or seed",,,,36.51,40.3,,,,,,
+Urbancity,At least one starchy staple food,,,,100,99.45,,,,,,
+Urbancity,At least one vegetable,,,,97.1,98.77,,,,,,
+Urbancity,"At least one whole grain, pulse, nut or seed",,,,39.83,43.85,,,,,,
+Urbancity,Baked or grain-based sweets,,,,18.26,10.93,,,,,,
+Urbancity,Cheese,,,,0.83,0.55,,,,,,
+Urbancity,Citrus,,,,25.31,24.18,,,,,,
+Urbancity,Dairy,,,,48.55,44.67,,,,,,
+Urbancity,Dark green leafy vegetables,,,,77.59,80.87,,,,,,
+Urbancity,Deep fried foods,,,,7.05,6.56,,,,,,
+Urbancity,Dietary Diversity Score (DDS),,,,5.87,5.97,,,,,,
+Urbancity,Eggs,,,,51.45,53.55,,,,,,
+Urbancity,Fast food,,,,0.83,0,,,,,,
+Urbancity,Fast food or instant noodles,,,,11.62,8.06,,,,,,
+Urbancity,Fish or seafood,,,,29.05,28.96,,,,,,
+Urbancity,Foods made from grains,,,,99.17,98.91,,,,,,
+Urbancity,Fruit juice and fruit drinks,,,,2.9,3.83,,,,,,
+Urbancity,GDR score,,,,10.92,11.04,,,,,,
+Urbancity,Healthy diet pattern,,,,32.37,33.47,,,,,,
+Urbancity,Instant noodles,,,,10.79,8.06,,,,,,
+Urbancity,MDD-W,,,,75.86,85.25,,,,,,
+Urbancity,"Meat, poultry, or fish",,,,93.78,95.36,,,,,,
+Urbancity,Milk,,,,26.14,24.32,,,,,,
+Urbancity,More than one salty ultra-processed food,,,,5.39,3.01,,,,,,
+Urbancity,More than one sugary food or beverage,,,,4.98,7.51,,,,,,
+Urbancity,NCD-Protect,,,,3.24,3.3,,,,,,
+Urbancity,NCD-Risk,,,,1.32,1.26,,,,,,
+Urbancity,Nuts or seeds,,,,9.96,9.43,,,,,,
+Urbancity,Other fruits,,,,82.57,77.19,,,,,,
+Urbancity,Other sweets,,,,8.71,9.15,,,,,,
+Urbancity,Other vegetables,,,,53.53,61.75,,,,,,
+Urbancity,Packaged ultra-processed salty snacks,,,,2.9,3.42,,,,,,
+Urbancity,Poultry,,,,30.71,30.6,,,,,,
+Urbancity,Processed meats,,,,4.15,4.1,,,,,,
+Urbancity,Protective food consumption,,,,38.17,39.48,,,,,,
+Urbancity,Pulses,,,,31.12,35.93,,,,,,
+Urbancity,Salty or fried snacks,,,,18.26,15.98,,,,,,
+Urbancity,"Soft drinks (soda, energy drinks, sports drinks)",,,,0.83,3.69,,,,,,
+Urbancity,Sweet beverages,,,,8.71,11.75,,,,,,
+Urbancity,Sweet foods,,,,25.31,17.62,,,,,,
+Urbancity,"Sweet tea, coffee, or cocoa",,,,5.81,5.46,,,,,,
+Urbancity,Unhealthy food consumption,,,,11.2,11.89,,,,,,
+Urbancity,Unprocessed red meat,,,,78.42,80.33,,,,,,
+Urbancity,Unprocessed red meat (non-ruminants),,,,73.03,76.5,,,,,,
+Urbancity,Unprocessed red meat (ruminants),,,,17.01,11.07,,,,,,
+Urbancity,Vitamin A-rich fruits,,,,16.18,16.39,,,,,,
+Urbancity,Vitamin A-rich orange vegetables,,,,18.26,15.85,,,,,,
+Urbancity,"White roots, tubers, or plantains",,,,17.84,20.63,,,,,,
+Urbancity,Whole grains,,,,9.54,8.47,,,,,,
+Urbancity,Yogurt,,,,33.61,30.74,,,,,,
+Urbancity,Zero vegetable or fruit consumption,,,,0,0,,,,,,
+Age Group,All-5,,,,,,35.38,35.29,,,,
+Age Group,At least one animal-source food,,,,,,99.36,97.33,,,,
+Age Group,At least one fruit,,,,,,90.26,90.37,,,,
+Age Group,"At least one pulse, nut or seed",,,,,,39.62,39.04,,,,
+Age Group,At least one starchy staple food,,,,,,99.49,100,,,,
+Age Group,At least one vegetable,,,,,,98.08,99.47,,,,
+Age Group,"At least one whole grain, pulse, nut or seed",,,,,,42.44,45.45,,,,
+Age Group,Baked or grain-based sweets,,,,,,13.33,10.7,,,,
+Age Group,Cheese,,,,,,0.51,1.07,,,,
+Age Group,Citrus,,,,,,23.72,27.27,,,,
+Age Group,Dairy,,,,,,46.67,41.18,,,,
+Age Group,Dark green leafy vegetables,,,,,,78.85,86.1,,,,
+Age Group,Deep fried foods,,,,,,6.67,6.95,,,,
+Age Group,Dietary Diversity Score (DDS),,,,,,5.93,6.02,,,,
+Age Group,Eggs,,,,,,52.56,55.61,,,,
+Age Group,Fast food,,,,,,0.26,0,,,,
+Age Group,Fast food or instant noodles,,,,,,10,4.81,,,,
+Age Group,Fish or seafood,,,,,,28.59,30.48,,,,
+Age Group,Foods made from grains,,,,,,98.97,99.47,,,,
+Age Group,Fruit juice and fruit drinks,,,,,,3.33,4.81,,,,
+Age Group,GDR score,,,,,,10.93,11.34,,,,
+Age Group,Healthy diet pattern,,,,,,31.54,40.64,,,,
+Age Group,Instant noodles,,,,,,9.74,4.81,,,,
+Age Group,MDD-W,,,,,,83.27,,,,,
+Age Group,"Meat, poultry, or fish",,,,,,95.64,92.51,,,,
+Age Group,Milk,,,,,,24.74,24.6,,,,
+Age Group,More than one salty ultra-processed food,,,,,,4.23,1.07,,,,
+Age Group,More than one sugary food or beverage,,,,,,7.69,3.74,,,,
+Age Group,NCD-Protect,,,,,,3.26,3.41,,,,
+Age Group,NCD-Risk,,,,,,1.33,1.07,,,,
+Age Group,Nuts or seeds,,,,,,10.26,6.95,,,,
+Age Group,Other fruits,,,,,,79.62,74.33,,,,
+Age Group,Other sweets,,,,,,10.38,3.74,,,,
+Age Group,Other vegetables,,,,,,59.1,62.03,,,,
+Age Group,Packaged ultra-processed salty snacks,,,,,,3.72,1.6,,,,
+Age Group,Poultry,,,,,,32.31,24.06,,,,
+Age Group,Processed meats,,,,,,5,0.53,,,,
+Age Group,Protective food consumption,,,,,,38.46,42.78,,,,
+Age Group,Pulses,,,,,,34.23,37.43,,,,
+Age Group,Salty or fried snacks,,,,,,17.69,12.3,,,,
+Age Group,"Soft drinks (soda, energy drinks, sports drinks)",,,,,,3.59,0.53,,,,
+Age Group,Sweet beverages,,,,,,11.79,8.02,,,,
+Age Group,Sweet foods,,,,,,21.03,13.9,,,,
+Age Group,"Sweet tea, coffee, or cocoa",,,,,,6.03,3.74,,,,
+Age Group,Unhealthy food consumption,,,,,,13.33,5.35,,,,
+Age Group,Unprocessed red meat,,,,,,80.38,78.07,,,,
+Age Group,Unprocessed red meat (non-ruminants),,,,,,75.51,76.47,,,,
+Age Group,Unprocessed red meat (ruminants),,,,,,14.23,5.88,,,,
+Age Group,Vitamin A-rich fruits,,,,,,15.77,18.72,,,,
+Age Group,Vitamin A-rich orange vegetables,,,,,,16.03,17.65,,,,
+Age Group,"White roots, tubers, or plantains",,,,,,19.1,23.53,,,,
+Age Group,Whole grains,,,,,,8.33,10.7,,,,
+Age Group,Yogurt,,,,,,33.08,24.6,,,,
+Age Group,Zero vegetable or fruit consumption,,,,,,0,0,,,,
+Gender x Age Group,All-5,,,,,,,,35.74,36.81,29.79,30.23
+Gender x Age Group,At least one animal-source food,,,,,,,,99.32,97.22,100,97.67
+Gender x Age Group,At least one fruit,,,,,,,,90.45,92.36,87.23,83.72
+Gender x Age Group,"At least one pulse, nut or seed",,,,,,,,40.11,40.28,31.91,34.88
+Gender x Age Group,At least one starchy staple food,,,,,,,,99.45,100,100,100
+Gender x Age Group,At least one vegetable,,,,,,,,98.09,99.31,97.87,100
+Gender x Age Group,"At least one whole grain, pulse, nut or seed",,,,,,,,42.97,47.22,34.04,39.53
+Gender x Age Group,Baked or grain-based sweets,,,,,,,,13.37,11.81,12.77,6.98
+Gender x Age Group,Cheese,,,,,,,,0.55,1.39,0,0
+Gender x Age Group,Citrus,,,,,,,,24.56,27.78,10.64,25.58
+Gender x Age Group,Dairy,,,,,,,,48.02,41.67,25.53,39.53
+Gender x Age Group,Dark green leafy vegetables,,,,,,,,78.04,85.42,91.49,88.37
+Gender x Age Group,Deep fried foods,,,,,,,,6.41,7.64,10.64,4.65
+Gender x Age Group,Dietary Diversity Score (DDS),,,,,,,,5.95,5.99,5.7,6.09
+Gender x Age Group,Eggs,,,,,,,,52.25,56.25,57.45,53.49
+Gender x Age Group,Fast food,,,,,,,,0.27,0,0,0
+Gender x Age Group,Fast food or instant noodles,,,,,,,,9.69,4.86,14.89,4.65
+Gender x Age Group,Fish or seafood,,,,,,,,28.51,31.25,29.79,27.91
+Gender x Age Group,Foods made from grains,,,,,,,,98.91,99.31,100,100
+Gender x Age Group,Fruit juice and fruit drinks,,,,,,,,3.27,4.17,4.26,6.98
+Gender x Age Group,GDR score,,,,,,,,10.94,11.3,10.72,11.49
+Gender x Age Group,Healthy diet pattern,,,,,,,,31.65,42.36,29.79,34.88
+Gender x Age Group,Instant noodles,,,,,,,,9.41,4.86,14.89,4.65
+Gender x Age Group,MDD-W,,,,,,,,83.27,,,
+Gender x Age Group,"Meat, poultry, or fish",,,,,,,,95.63,92.36,95.74,93.02
+Gender x Age Group,Milk,,,,,,,,25.1,23.61,19.15,27.91
+Gender x Age Group,More than one salty ultra-processed food,,,,,,,,4.37,0.69,2.13,2.33
+Gender x Age Group,More than one sugary food or beverage,,,,,,,,7.91,3.47,4.26,4.65
+Gender x Age Group,NCD-Protect,,,,,,,,3.28,3.38,2.96,3.53
+Gender x Age Group,NCD-Risk,,,,,,,,1.34,1.08,1.23,1.05
+Gender x Age Group,Nuts or seeds,,,,,,,,10.64,6.25,4.26,9.3
+Gender x Age Group,Other fruits,,,,,,,,79.81,74.31,76.6,74.42
+Gender x Age Group,Other sweets,,,,,,,,10.64,3.47,6.38,4.65
+Gender x Age Group,Other vegetables,,,,,,,,59.75,59.72,48.94,69.77
+Gender x Age Group,Packaged ultra-processed salty snacks,,,,,,,,3.96,0.69,0,4.65
+Gender x Age Group,Poultry,,,,,,,,31.92,18.75,38.3,41.86
+Gender x Age Group,Processed meats,,,,,,,,5.18,0.69,2.13,0
+Gender x Age Group,Protective food consumption,,,,,,,,38.88,44.44,31.91,37.21
+Gender x Age Group,Pulses,,,,,,,,34.65,38.19,27.66,34.88
+Gender x Age Group,Salty or fried snacks,,,,,,,,17.19,12.5,25.53,11.63
+Gender x Age Group,"Soft drinks (soda, energy drinks, sports drinks)",,,,,,,,3.68,0.69,2.13,0
+Gender x Age Group,Sweet beverages,,,,,,,,11.73,6.25,12.77,13.95
+Gender x Age Group,Sweet foods,,,,,,,,21.42,14.58,14.89,11.63
+Gender x Age Group,"Sweet tea, coffee, or cocoa",,,,,,,,6,2.08,6.38,9.3
+Gender x Age Group,Unhealthy food consumption,,,,,,,,13.92,4.86,4.26,6.98
+Gender x Age Group,Unprocessed red meat,,,,,,,,80.76,77.78,74.47,79.07
+Gender x Age Group,Unprocessed red meat (non-ruminants),,,,,,,,75.99,75.69,68.09,79.07
+Gender x Age Group,Unprocessed red meat (ruminants),,,,,,,,13.64,4.86,23.4,9.3
+Gender x Age Group,Vitamin A-rich fruits,,,,,,,,15.55,18.75,19.15,18.6
+Gender x Age Group,Vitamin A-rich orange vegetables,,,,,,,,16.1,15.28,14.89,25.58
+Gender x Age Group,"White roots, tubers, or plantains",,,,,,,,19.65,25,10.64,18.6
+Gender x Age Group,Whole grains,,,,,,,,8.73,11.81,2.13,6.98
+Gender x Age Group,Yogurt,,,,,,,,34.38,25,12.77,23.26
+Gender x Age Group,Zero vegetable or fruit consumption,,,,,,,,0,0,0,0

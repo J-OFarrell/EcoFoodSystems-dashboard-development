@@ -7,6 +7,8 @@ import json
 import os
 import re
 
+from decimal import Decimal, ROUND_HALF_UP
+
 import numpy as np
 import pandas as pd
 from dash import html, dcc, dash_table
@@ -23,7 +25,7 @@ from data_access import (
     df_affordability_hanoi, df_indicators, df_policies_hanoi,
     atlas_records, outlets_geojson_files_hanoi,
     accessibility_outlet_options_hanoi, accessibility_population_options_hanoi,
-    accessibility_zonal_stats_hanoi, df_emissions_hanoi,
+    accessibility_zonal_stats_hanoi, df_emissions_hanoi, df_dqq_hanoi,
 )
 
 def _red_graph_loading(children, loading_id=None):
@@ -2966,6 +2968,241 @@ def nutritional_status_tab():
         "width": "100%", "height": "100%", "display": "flex", "flexDirection": "column",
         "padding": "6px", "backgroundColor": sidebar_colors['Hover (dark card)'], "overflowY": "auto",
     })
+
+# ── Dietary intake (DQQ) ─────────────────────────────────────────────────────
+# Only the DQQ indicators that have a row in the atlas (Outcomes > Dietary
+# intake) are shown; the CSV also carries ~28 food-group rows not yet in the
+# atlas. Names here are the CSV's 'Indicator' values.
+DQQ_INDICATOR_GROUPS_HANOI = {
+    "Food groups consumed": [
+        "All-5",
+        "At least one starchy staple food",
+        "At least one vegetable",
+        "At least one fruit",
+        "At least one pulse, nut or seed",
+        "At least one animal-source food",
+        "Whole grains",
+        "Pulses",
+        "Nuts or seeds",
+        "Unprocessed red meat",
+        "Zero vegetable or fruit consumption",
+    ],
+    "Healthy diet indicators": [
+        "MDD-W",
+        "Protective food consumption",
+        "Healthy diet pattern",
+    ],
+    "Foods to limit": [
+        "Unhealthy food consumption",
+        "Soft drinks (soda, energy drinks, sports drinks)",
+        "More than one sugary food or beverage",
+        "More than one salty ultra-processed food",
+        "Processed meats",
+        "Fast food or instant noodles",
+        "Deep fried foods",
+        "Sweet foods",
+    ],
+}
+
+DQQ_DATA_SOURCE_HANOI = "EFS Household Survey"
+
+# Scores (not percentages), with their possible range for labelling.
+DQQ_SCORES_HANOI = {
+    "Dietary Diversity Score (DDS)": 10,
+    "GDR score": 18,
+    "NCD-Protect": 9,
+    "NCD-Risk": 9,
+}
+
+# Breakdown key -> (CSV 'Sub' value, [(CSV column, display label, colour)])
+DQQ_BREAKDOWNS_HANOI = {
+    "overall": ("Overall", [("All", "All respondents", brand_colors['Teal'])]),
+    "gender": ("Gender", [
+        ("Female", "Female", brand_colors['Red']),
+        ("Male", "Male", brand_colors['Teal']),
+    ]),
+    "urbanicity": ("Urbancity", [
+        ("Ward", "Ward (urban)", brand_colors['Teal']),
+        ("Commune", "Commune (rural)", brand_colors['Dark green']),
+    ]),
+    "age": ("Age Group", [
+        ("Adult (19-60)", "Adult (19-60)", brand_colors['Teal']),
+        ("Elderly (>60)", "Elderly (>60)", brand_colors['Orange']),
+    ]),
+    "gender_age": ("Gender x Age Group", [
+        ("Female - Adult (19-60)", "Female, adult", brand_colors['Red']),
+        ("Female - Elderly (>60)", "Female, elderly", "#d87aa4"),
+        ("Male - Adult (19-60)", "Male, adult", brand_colors['Teal']),
+        ("Male - Elderly (>60)", "Male, elderly", brand_colors['Light Teal']),
+    ]),
+}
+
+
+def round_half_up(value, digits):
+    """Round like Excel/reports do (35.25 -> 35.3); Python's round() and f-strings
+    work on the binary float, which can turn 35.25 into 35.2."""
+    q = Decimal(1).scaleb(-digits)
+    return float(Decimal(str(value)).quantize(q, rounding=ROUND_HALF_UP))
+
+
+def _dqq_overall_value(indicator):
+    row = df_dqq_hanoi[(df_dqq_hanoi['Sub'] == 'Overall') & (df_dqq_hanoi['Indicator'] == indicator)]
+    return float(row['All'].iloc[0]) if not row.empty else None
+
+
+def _dqq_kpi_card(title, value, suffix, note):
+    # Same info button + tooltip as create_nutrition_kpi_card (Nutritional Status page).
+    info_btn_id = f"dqq-info-{hashlib.md5(title.encode()).hexdigest()[:8]}"
+    return dbc.Card(
+        dbc.CardBody([
+            html.Div([
+                html.Div(title, style={
+                    "fontWeight": "bold", "fontSize": "0.9em", "color": brand_colors['Brown'],
+                }),
+                dbc.Button("ⓘ", id=info_btn_id, style={
+                    "fontSize": "1.2em",
+                    "color": brand_colors['Red'],
+                    "background": "none",
+                    "border": "none",
+                    "padding": "0",
+                    "cursor": "pointer",
+                    "marginLeft": "8px",
+                }),
+                dbc.Tooltip(
+                    html.Div([
+                        html.Div([
+                            html.Span("Indicator: ", style={"fontWeight": "bold"}),
+                            html.Span(title, style={"fontWeight": "bold"}),
+                        ]),
+                        html.Div([
+                            html.Span("Data source: ", style={"fontStyle": "italic"}),
+                            html.Span(DQQ_DATA_SOURCE_HANOI, style={"fontStyle": "italic"}),
+                        ], style={"marginTop": "4px"}),
+                    ]),
+                    target=info_btn_id,
+                    placement="left",
+                    style={"fontSize": "0.85em", "maxWidth": "400px", "padding": "8px"},
+                ),
+            ], style={"display": "flex", "alignItems": "center", "justifyContent": "center", "marginBottom": "6px"}),
+            html.Div(f"{round_half_up(value, 1):.1f}{suffix}" if value is not None else "n/a", style={
+                "fontSize": "1.6em", "fontWeight": "bold", "color": brand_colors['Teal'],
+            }),
+            html.Div(note, style={"fontSize": "0.75em", "color": "#666", "marginTop": "4px"}),
+        ]),
+        style=kpi_card_style_2,
+    )
+
+
+def _dqq_section_card(title, body):
+    return dbc.Card([
+        dbc.CardHeader(
+            html.H4(title, style={"color": brand_colors['White'], "fontWeight": "bold", "margin": "0"}),
+            style={"backgroundColor": hero_gradient['50%'], "borderRadius": "9px 9px 0 0"},
+        ),
+        dbc.CardBody(body, style={"padding": "12px", "borderRadius": "10px", "backgroundColor": brand_colors['White']}),
+    ], style={
+        # Never shrink: the tab is a fixed-height flex column, and shrinking
+        # squashed the charts to a sliver instead of letting the tab scroll.
+        "flex": "0 0 auto",
+        "marginBottom": "14px",
+        "borderRadius": "10px",
+        "backgroundColor": sidebar_colors['Hover (dark card)'],
+        "boxShadow": "0 2px 6px rgba(0,0,0,0.1)",
+    })
+
+
+def dietary_intake_tab():
+    """Hà Nội dietary intake tab layout (Diet Quality Questionnaire results)"""
+    kpis = [
+        ("MDD-W", _dqq_overall_value("MDD-W"), "%", "Women meeting minimum dietary diversity"),
+        ("Healthy diet pattern", _dqq_overall_value("Healthy diet pattern"), "%", "Meeting all six healthy-diet criteria"),
+        ("All five food groups", _dqq_overall_value("All-5"), "%", "Ate from all five recommended groups"),
+        ("Dietary Diversity Score", _dqq_overall_value("Dietary Diversity Score (DDS)"), " / 10", "Average food groups eaten"),
+        ("GDR score", _dqq_overall_value("GDR score"), " / 18", "Global Dietary Recommendations met"),
+    ]
+
+    breakdown_options = [
+        {"label": "Overall", "value": "overall"},
+        {"label": "Female vs Male", "value": "gender"},
+        {"label": "Ward (urban) vs Commune (rural)", "value": "urbanicity"},
+        {"label": "Adult vs Elderly", "value": "age"},
+        {"label": "Gender x Age", "value": "gender_age"},
+    ]
+
+    return html.Div([
+        city_selector(selected_city='hanoi', visible=False),  # Hidden but present for callback
+
+        dbc.Card(dbc.CardBody([
+            html.H2("Dietary Intake", style=header_style),
+            html.P(
+                "Results from the Diet Quality Questionnaire (DQQ) in Hanoi: the share of people who ate "
+                "key food groups the previous day or night, and diet-quality scores linked to global dietary "
+                "recommendations. Use the selectors below to compare groups of respondents.",
+                style={"margin": "10px 6px", "fontSize": "clamp(0.6em, 0.8em, 1.0em)", "whiteSpace": "normal"},
+            ),
+        ]), style={
+            "flex": "0 0 auto", "padding": "6px", "marginBottom": "14px",
+            "boxShadow": "0 2px 12px rgba(0,0,0,0.08)", "backgroundColor": "#FFFFFF", "borderRadius": "12px",
+        }),
+
+        _dqq_section_card("Hanoi at a glance", dbc.Row([
+            dbc.Col(_dqq_kpi_card(*k), xs=12, sm=6, lg=True) for k in kpis
+        ])),
+
+        _dqq_section_card("Food consumption by group", [
+            dbc.Row([
+                dbc.Col([
+                    html.Label("Compare by", style={"fontWeight": "bold", "fontSize": "0.85em"}),
+                    dcc.Dropdown(
+                        id='dietary-intake-breakdown-hanoi',
+                        options=breakdown_options,
+                        value="gender",
+                        clearable=False,
+                        persistence=True,
+                        persistence_type='session',
+                    ),
+                ], xs=12, md=6),
+                dbc.Col([
+                    html.Label("Indicators", style={"fontWeight": "bold", "fontSize": "0.85em"}),
+                    dcc.Dropdown(
+                        id='dietary-intake-group-hanoi',
+                        options=[{"label": g, "value": g} for g in DQQ_INDICATOR_GROUPS_HANOI],
+                        value="Food groups consumed",
+                        clearable=False,
+                        persistence=True,
+                        persistence_type='session',
+                    ),
+                ], xs=12, md=6),
+            ], style={"marginBottom": "10px"}),
+            # Plain dcc.Loading rather than _red_graph_loading: the latter's
+            # height:100% wrapper pushed the notes below out of the card.
+            dcc.Loading(
+                dcc.Graph(id='dietary-intake-chart-hanoi', config={"displayModeBar": False}),
+                id="loading-dietary-intake-chart-hanoi", color=brand_colors['Red'],
+            ),
+            html.P(
+                "MDD-W is defined for women of reproductive age (15-49) only, so it is blank for men and elderly groups.",
+                style={"fontSize": "0.75em", "color": "#666", "margin": "6px 4px 0"},
+            ),
+        ]),
+
+        _dqq_section_card("Diet quality scores", [
+            html.P(
+                "Average scores, shown against their maximum possible value. Higher is better for DDS, GDR "
+                "and NCD-Protect; lower is better for NCD-Risk. Uses the same 'Compare by' selection as above.",
+                style={"fontSize": "0.8em", "color": "#555", "margin": "0 4px 8px"},
+            ),
+            dcc.Loading(
+                dcc.Graph(id='dietary-intake-scores-hanoi', config={"displayModeBar": False}),
+                id="loading-dietary-intake-scores-hanoi", color=brand_colors['Red'],
+            ),
+        ]),
+
+    ], style={
+        "width": "100%", "height": "100%", "display": "flex", "flexDirection": "column",
+        "padding": "6px", "backgroundColor": sidebar_colors['Hover (dark card)'], "overflowY": "auto",
+    })
+
 
 def income_growth_distribution_tab():
     """Hà Nội poverty tab layout"""

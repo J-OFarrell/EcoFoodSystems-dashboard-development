@@ -34,6 +34,7 @@ _HANOI_SUPPLY_DIR = os.path.join(_HANOI_ROOT, "food-supply-chains_production-sys
 _HANOI_PROCESSING_DIR = os.path.join(_HANOI_ROOT, "food-supply-chains_processing-and-packaging")
 _HANOI_AFFORDABILITY_DIR = os.path.join(_HANOI_ROOT, "food-environments_food-affordability")
 _HANOI_NUTRITION_DIR = os.path.join(_HANOI_ROOT, "outcomes_nutritional-status")
+_HANOI_DIETARY_INTAKE_DIR = os.path.join(_HANOI_ROOT, "outcomes_dietary-intake")
 _HANOI_FOOD_ENV_DIR = os.path.join(_HANOI_ROOT, "food-environments_vendor-properties")
 _HANOI_ENV_OUTCOMES_DIR = os.path.join(_HANOI_ROOT, "outcomes_environmental-impacts")
 
@@ -262,6 +263,13 @@ df_affordability_hanoi = pd.read_csv(
 # Dietary/nutrition data (Hanoi)
 df_diet_2_hanoi = pd.read_csv(
     os.path.join(_HANOI_NUTRITION_DIR, 'hanoi_out_ns_nut_health_indicators.csv')
+)
+
+# Diet Quality Questionnaire (DQQ) results (Hanoi) - one row per indicator per
+# breakdown ('Sub'), with the breakdown's groups as columns (All, Female/Male,
+# Ward/Commune, age groups, gender x age).
+df_dqq_hanoi = pd.read_csv(
+    os.path.join(_HANOI_DIETARY_INTAKE_DIR, 'hanoi_out_di_dqq_indicators.csv')
 )
 
 # Emissions / LCA indicators per food item (Hanoi) - Processing & Packing tab
