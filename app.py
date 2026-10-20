@@ -180,7 +180,11 @@ from hanoi_layouts import (
     PP_OTHER_INDICATORS_HANOI,
 )
 
-app = Dash(__name__, suppress_callback_exceptions=True, external_stylesheets=[dbc.themes.BOOTSTRAP])
+# title/update_title: browser tab shows the project name instead of "Dash", and
+# doesn't flicker to "Updating..." on every callback. The tab icon comes from
+# assets/favicon.ico (picked up by Dash automatically).
+app = Dash(__name__, suppress_callback_exceptions=True, external_stylesheets=[dbc.themes.BOOTSTRAP],
+           title="EcoFoodSystems Dashboard", update_title=None)
 app.server.secret_key = os.environ.get('SECRET_KEY') or os.urandom(24).hex()
 
 # Gzips JSON/HTML responses - cuts payload size for the geojson-heavy
