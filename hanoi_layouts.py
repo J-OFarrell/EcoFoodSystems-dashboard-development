@@ -3188,8 +3188,8 @@ def dietary_intake_tab():
 
         _dqq_section_card("Diet quality scores", [
             html.P(
-                "Average scores, shown against their maximum possible value. Higher is better for DDS, GDR "
-                "and NCD-Protect; lower is better for NCD-Risk. Uses the same 'Compare by' selection as above.",
+                "Note that higher is better for DDS, GDR and NCD-Protect; lower is better for NCD-Risk. "
+                "Uses the same 'Compare by' selection as above to change the grouping.",
                 style={"fontSize": "0.8em", "color": "#555", "margin": "0 4px 8px"},
             ),
             dcc.Loading(

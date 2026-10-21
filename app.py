@@ -3774,11 +3774,19 @@ def update_dietary_intake_hanoi(breakdown, group):
     series = list(_dqq_series(breakdown, indicators))
 
     y_labels = [{"All-5": "All five food groups"}.get(i, i) for i in indicators]
+    # Indicators that are 0% for every group (e.g. "Zero vegetable or fruit
+    # consumption") get one "0% in all groups" note instead of a stack of
+    # "0.0%" labels with no visible bars.
+    all_zero = [
+        len(series) > 1 and all(pd.isna(vals.iloc[k]) or vals.iloc[k] == 0 for _, _, vals in series)
+        for k in range(len(indicators))
+    ]
     fig = go.Figure()
     for label, colour, vals in series:
         fig.add_trace(go.Bar(
             y=y_labels, x=vals.values, name=label, orientation='h', marker_color=colour,
-            text=[f"{round_half_up(v, 1):.1f}%" if pd.notna(v) else "" for v in vals.values], textposition='outside',
+            text=["" if (pd.isna(v) or zero) else f"{round_half_up(v, 1):.1f}%" for v, zero in zip(vals.values, all_zero)],
+            textposition='outside',
             textfont=dict(size=11), cliponaxis=False,
             hovertemplate="%{y}<br>" + label + ": %{x:.1f}%<extra></extra>",
         ))
@@ -3793,6 +3801,10 @@ def update_dietary_intake_hanoi(breakdown, group):
         paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
         hoverlabel=dict(bgcolor="white", font_color="black"),
     )
+    for y_label, zero in zip(y_labels, all_zero):
+        if zero:
+            fig.add_annotation(x=0, y=y_label, text="0% in all groups", showarrow=False,
+                               xanchor='left', xshift=6, font=dict(size=11, color="#666"))
 
     score_names = list(DQQ_SCORES_HANOI)
     score_labels = [f"{n} (0-{mx})" for n, mx in DQQ_SCORES_HANOI.items()]
