@@ -1252,9 +1252,9 @@ def _resolve_subdomain_layout(route_city, subdomain_key):
     if _is_subdomain_coming_soon(route_city, subdomain_key):
         return html.Div([
             html.H3('Coming Soon', style={'textAlign': 'center', 'color': '#9ca3af', 'marginTop': '40px'}),
-            html.P('This section is currently under development. Check back soon!', 
+            html.P('This section is currently under development. Check back soon!',
                    style={'textAlign': 'center', 'color': '#9ca3af', 'fontSize': '16px'})
-        ], style={'padding': '20px'})
+        ], style={'padding': '20px', 'width': '100%', 'boxSizing': 'border-box'})
     
     if route_city == 'hanoi':
         if subdomain_key == 'environment-climate-change':
