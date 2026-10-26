@@ -2160,7 +2160,7 @@ def vendor_properties_tab(selected_city='hanoi'):
                                 ),
                             ], style={
                                 "height": "480px",
-                                "overflowY": "auto",
+                                "overflowY": "scroll",
                                 "width": "100%",
                                 "border": "1px solid #f0f0f0",
                                 "borderRadius": "4px"

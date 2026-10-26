@@ -1735,8 +1735,17 @@ def landing_page_layout(background_image=None, tab_backgrounds=None, selected_ci
                 'margin': '0 0 14px 0',
                 'textAlign': 'center',
             }),
-            html.P(
-                'Explore the EcoFoodSystems dashboard through six concise pillars adapted from the FAO food systems conceptual framework.',
+
+            html.P([
+                'Explore the EcoFoodSystems dashboard through six concise pillars adapted from the Food System Dashboard (FSD) conceptual framework. ',
+                html.A(
+                    "Read More", 
+                    href="https://www.foodsystemsdashboard.org/information/about-food-systems", 
+                    target="_blank",
+                    style={'color': 'white', 'textDecoration': 'underline'} # Force link to be white
+                )
+            ])
+            ],
                 style={
                     'color': 'rgba(255,255,255,0.85)',
                     'fontSize': '15px',
@@ -1745,10 +1754,10 @@ def landing_page_layout(background_image=None, tab_backgrounds=None, selected_ci
                     'margin': '0 auto 32px auto',
                     'lineHeight': '1.6',
                 }
-            ),
-        ], style={'padding': '16px 24px 0', 'textAlign': 'center'}),
-        # Tab bar — sits at the bottom edge of the hero
-        html.Div(tab_buttons, className='dash-hero-tab-bar'),
+            ), 
+
+            # Tab bar — sits at the bottom edge of the hero
+            html.Div(tab_buttons, className='dash-hero-tab-bar'),
     ], style={
         'background': 'linear-gradient(135deg, #0F2E2A 0%, #2A7A6F 50%, #5FA89A 100%)',
         'paddingBottom': '0',
