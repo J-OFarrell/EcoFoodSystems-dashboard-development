@@ -1744,7 +1744,6 @@ def landing_page_layout(background_image=None, tab_backgrounds=None, selected_ci
                     target="_blank",
                     style={'color': 'white', 'textDecoration': 'underline'} # Force link to be white
                 )
-            ])
             ],
                 style={
                     'color': 'rgba(255,255,255,0.85)',
@@ -1754,10 +1753,10 @@ def landing_page_layout(background_image=None, tab_backgrounds=None, selected_ci
                     'margin': '0 auto 32px auto',
                     'lineHeight': '1.6',
                 }
-            ), 
-
-            # Tab bar — sits at the bottom edge of the hero
-            html.Div(tab_buttons, className='dash-hero-tab-bar'),
+            ),
+        ], style={'padding': '16px 24px 0', 'textAlign': 'center'}),
+        # Tab bar — sits at the bottom edge of the hero
+        html.Div(tab_buttons, className='dash-hero-tab-bar'),
     ], style={
         'background': 'linear-gradient(135deg, #0F2E2A 0%, #2A7A6F 50%, #5FA89A 100%)',
         'paddingBottom': '0',
